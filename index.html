@@ -292,10 +292,42 @@
     padding:6px 12px;
     border-radius:10px;
   }
+  .auth-logged-pill {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:linear-gradient(#2ecc71,#1e8449);
+    border:2px solid #0e4a26;
+    padding:6px 14px 6px 6px;
+    border-radius:24px;
+    font-size:13px;
+    font-weight:bold;
+    color:#fff;
+    box-shadow:0 3px 0 #0e4a26;
+  }
+  .auth-avatar {
+    width:24px; height:24px;
+    border-radius:50%;
+    background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px;
+    color:#1e8449;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .auth-avatar img { width:100%; height:100%; object-fit:cover; }
+  .global-auth-badge {
+    position:absolute;
+    top:12px; left:12px;
+    z-index:30;
+    pointer-events:none;
+  }
+  .global-auth-badge .auth-logged-pill { pointer-events:auto; font-size:12px; padding:4px 10px 4px 4px; }
 </style>
 </head>
 <body>
 <div id="wrap">
+  <div id="globalAuthBadge" class="global-auth-badge"></div>
 
   <!-- MENU -->
   <div id="menuScreen" class="screen">
@@ -431,17 +463,42 @@
     showScreen('menu');
   }
 
+  function avatarHtml(){
+    const url = currentUser && currentUser.user_metadata && currentUser.user_metadata.avatar_url;
+    const letter = (currentUser && currentUser.email ? currentUser.email[0] : '?').toUpperCase();
+    return url
+      ? `<img src="${url}" alt="">`
+      : letter;
+  }
+
   function updateAuthUI(){
     const box = document.getElementById('authBox');
-    if(!box) return;
+    const corner = document.getElementById('globalAuthBadge');
     if(!supabaseReady){
-      box.innerHTML = '<div class="auth-note">Konta Google: nieskonfigurowane (uzupelnij SUPABASE_URL / KEY w kodzie)</div>';
-    } else if(currentUser){
-      box.innerHTML = `<div class="auth-note">Zalogowano: ${currentUser.email}</div><button class="menu-btn small" id="btnLogout">🚪 WYLOGUJ</button>`;
-      document.getElementById('btnLogout').onclick = signOut;
+      if(box) box.innerHTML = '<div class="auth-note">Konta Google: nieskonfigurowane (uzupelnij SUPABASE_URL / KEY w kodzie)</div>';
+      if(corner) corner.innerHTML = '';
+      return;
+    }
+    if(currentUser){
+      const name = currentUser.user_metadata?.full_name || currentUser.email;
+      if(box){
+        box.innerHTML = `
+          <div class="auth-logged-pill">
+            <div class="auth-avatar">${avatarHtml()}</div>
+            ✅ Zalogowano: ${name}
+          </div>
+          <button class="menu-btn small" id="btnLogout">🚪 WYLOGUJ</button>`;
+        document.getElementById('btnLogout').onclick = signOut;
+      }
+      if(corner){
+        corner.innerHTML = `<div class="auth-logged-pill"><div class="auth-avatar">${avatarHtml()}</div>✅ ${name}</div>`;
+      }
     } else {
-      box.innerHTML = '<button class="menu-btn small" id="btnLogin">🔵 ZALOGUJ PRZEZ GOOGLE</button>';
-      document.getElementById('btnLogin').onclick = signInWithGoogle;
+      if(box){
+        box.innerHTML = '<button class="menu-btn small" id="btnLogin">🔵 ZALOGUJ PRZEZ GOOGLE</button>';
+        document.getElementById('btnLogin').onclick = signInWithGoogle;
+      }
+      if(corner) corner.innerHTML = '';
     }
   }
 
@@ -480,6 +537,7 @@
     if(name==='levels') levelScreen.classList.remove('hidden');
     document.getElementById('menuCoins').textContent = state.wallet;
     document.getElementById('shopCoins').textContent = state.wallet;
+    document.getElementById('globalAuthBadge').style.display = (name==='game') ? 'none' : 'block';
   }
 
   document.getElementById('btnPlay').onclick = () => { showScreen('game'); startLevel(state.unlockedLevel); };
@@ -1085,7 +1143,7 @@
     return sk.colors;
   }
 
-  function drawCharacterSprite(targetCtx, c, bob){
+  function drawCharacterSprite(targetCtx, c, bob, airborne){
     const tctx = targetCtx;
     // ---- cien pod stopami ----
     tctx.fillStyle = 'rgba(0,0,0,.22)';
@@ -1093,17 +1151,31 @@
     tctx.ellipse(20, 57, 15, 4, 0, 0, Math.PI*2);
     tctx.fill();
 
-    // ---- buty ----
-    const shoeGrad = tctx.createRadialGradient(13,50,2,13,52,10);
-    shoeGrad.addColorStop(0,'#a9713a'); shoeGrad.addColorStop(1,'#6b4118');
-    tctx.fillStyle = shoeGrad;
-    tctx.beginPath(); tctx.ellipse(12, 52+bob, 9, 6, 0, 0, Math.PI*2); tctx.fill();
-    tctx.beginPath(); tctx.ellipse(28, 52-bob, 9, 6, 0, 0, Math.PI*2); tctx.fill();
+    if(airborne){
+      // ---- buty (podkurczone, skok) ----
+      const shoeGrad = tctx.createRadialGradient(13,44,2,13,46,10);
+      shoeGrad.addColorStop(0,'#a9713a'); shoeGrad.addColorStop(1,'#6b4118');
+      tctx.fillStyle = shoeGrad;
+      tctx.beginPath(); tctx.ellipse(13, 46, 8, 5.5, -0.3, 0, Math.PI*2); tctx.fill();
+      tctx.beginPath(); tctx.ellipse(27, 46, 8, 5.5, 0.3, 0, Math.PI*2); tctx.fill();
 
-    // ---- nogi (overall) ----
-    tctx.fillStyle = shade(c.overalls, -18);
-    roundRectOn(tctx, 6, 38, 12, 16+bob, 4); tctx.fill();
-    roundRectOn(tctx, 22, 38, 12, 16-bob, 4); tctx.fill();
+      // ---- nogi podkurczone ----
+      tctx.fillStyle = shade(c.overalls, -18);
+      roundRectOn(tctx, 7, 36, 12, 12, 4); tctx.fill();
+      roundRectOn(tctx, 21, 36, 12, 12, 4); tctx.fill();
+    } else {
+      // ---- buty ----
+      const shoeGrad = tctx.createRadialGradient(13,50,2,13,52,10);
+      shoeGrad.addColorStop(0,'#a9713a'); shoeGrad.addColorStop(1,'#6b4118');
+      tctx.fillStyle = shoeGrad;
+      tctx.beginPath(); tctx.ellipse(12, 52+bob, 9, 6, 0, 0, Math.PI*2); tctx.fill();
+      tctx.beginPath(); tctx.ellipse(28, 52-bob, 9, 6, 0, 0, Math.PI*2); tctx.fill();
+
+      // ---- nogi (overall) ----
+      tctx.fillStyle = shade(c.overalls, -18);
+      roundRectOn(tctx, 6, 38, 12, 16+bob, 4); tctx.fill();
+      roundRectOn(tctx, 22, 38, 12, 16-bob, 4); tctx.fill();
+    }
 
     // ---- tulow / kombinezon ----
     const bodyGrad = tctx.createLinearGradient(4,20,36,44);
@@ -1122,20 +1194,43 @@
     tctx.beginPath(); tctx.arc(13, 26, 2.6, 0, Math.PI*2); tctx.fill();
     tctx.beginPath(); tctx.arc(27, 26, 2.6, 0, Math.PI*2); tctx.fill();
 
-    // ---- rece / rekawy ----
-    const sleeveGrad = tctx.createLinearGradient(-4,16,4,34);
-    sleeveGrad.addColorStop(0, shade(c.shirt,16));
-    sleeveGrad.addColorStop(1, shade(c.shirt,-10));
-    tctx.fillStyle = sleeveGrad;
-    roundRectOn(tctx, -3, 17, 10, 20, 5); tctx.fill();
-    roundRectOn(tctx, 33, 17, 10, 20, 5); tctx.fill();
+    if(airborne){
+      // ---- rece uniesione w gore (skok) ----
+      const sleeveGrad = tctx.createLinearGradient(-4,0,4,20);
+      sleeveGrad.addColorStop(0, shade(c.shirt,16));
+      sleeveGrad.addColorStop(1, shade(c.shirt,-10));
+      tctx.fillStyle = sleeveGrad;
+      tctx.save();
+      tctx.translate(3, 20); tctx.rotate(-0.55);
+      roundRectOn(tctx, -5, -18, 10, 20, 5); tctx.fill();
+      tctx.restore();
+      tctx.save();
+      tctx.translate(37, 20); tctx.rotate(0.55);
+      roundRectOn(tctx, -5, -18, 10, 20, 5); tctx.fill();
+      tctx.restore();
 
-    // rekawiczki
-    const gloveGrad = tctx.createRadialGradient(1,36,1,1,36,7);
-    gloveGrad.addColorStop(0,'#ffffff'); gloveGrad.addColorStop(1,'#d8d8d8');
-    tctx.fillStyle = gloveGrad;
-    tctx.beginPath(); tctx.arc(2, 36-bob*1.5, 6.5, 0, Math.PI*2); tctx.fill();
-    tctx.beginPath(); tctx.arc(38, 36+bob*1.5, 6.5, 0, Math.PI*2); tctx.fill();
+      // rekawiczki uniesione
+      const gloveGrad = tctx.createRadialGradient(1,0,1,1,0,7);
+      gloveGrad.addColorStop(0,'#ffffff'); gloveGrad.addColorStop(1,'#d8d8d8');
+      tctx.fillStyle = gloveGrad;
+      tctx.beginPath(); tctx.arc(-3, -1, 6.5, 0, Math.PI*2); tctx.fill();
+      tctx.beginPath(); tctx.arc(43, -1, 6.5, 0, Math.PI*2); tctx.fill();
+    } else {
+      // ---- rece / rekawy ----
+      const sleeveGrad = tctx.createLinearGradient(-4,16,4,34);
+      sleeveGrad.addColorStop(0, shade(c.shirt,16));
+      sleeveGrad.addColorStop(1, shade(c.shirt,-10));
+      tctx.fillStyle = sleeveGrad;
+      roundRectOn(tctx, -3, 17, 10, 20, 5); tctx.fill();
+      roundRectOn(tctx, 33, 17, 10, 20, 5); tctx.fill();
+
+      // rekawiczki
+      const gloveGrad = tctx.createRadialGradient(1,36,1,1,36,7);
+      gloveGrad.addColorStop(0,'#ffffff'); gloveGrad.addColorStop(1,'#d8d8d8');
+      tctx.fillStyle = gloveGrad;
+      tctx.beginPath(); tctx.arc(2, 36-bob*1.5, 6.5, 0, Math.PI*2); tctx.fill();
+      tctx.beginPath(); tctx.arc(38, 36+bob*1.5, 6.5, 0, Math.PI*2); tctx.fill();
+    }
 
     // ---- koszula pod szyja ----
     tctx.fillStyle = shade(c.shirt, 6);
@@ -1156,15 +1251,19 @@
     tctx.strokeStyle = '#3a2a1a';
     tctx.lineWidth = 2.2;
     tctx.lineCap = 'round';
-    tctx.beginPath(); tctx.moveTo(20, 6); tctx.quadraticCurveTo(25, 4, 30, 6.5); tctx.stroke();
+    if(airborne){
+      tctx.beginPath(); tctx.moveTo(19, 5); tctx.quadraticCurveTo(25, 2, 31, 5); tctx.stroke();
+    } else {
+      tctx.beginPath(); tctx.moveTo(20, 6); tctx.quadraticCurveTo(25, 4, 30, 6.5); tctx.stroke();
+    }
 
-    // oczy
+    // oczy (szerzej otwarte w skoku)
     tctx.fillStyle = '#fff';
-    tctx.beginPath(); tctx.ellipse(24, 10, 3.4, 3.8, 0, 0, Math.PI*2); tctx.fill();
+    tctx.beginPath(); tctx.ellipse(24, airborne?9:10, 3.4, airborne?4.6:3.8, 0, 0, Math.PI*2); tctx.fill();
     tctx.fillStyle = '#2e6bd6';
-    tctx.beginPath(); tctx.arc(25, 10.5, 2, 0, Math.PI*2); tctx.fill();
+    tctx.beginPath(); tctx.arc(25, airborne?9.5:10.5, 2, 0, Math.PI*2); tctx.fill();
     tctx.fillStyle = '#111';
-    tctx.beginPath(); tctx.arc(25.6, 10.2, 0.9, 0, Math.PI*2); tctx.fill();
+    tctx.beginPath(); tctx.arc(25.6, airborne?9.2:10.2, 0.9, 0, Math.PI*2); tctx.fill();
 
     // nos
     tctx.fillStyle = shade(c.skin, 8);
@@ -1211,12 +1310,13 @@
     const py = player.y;
     // sprite zaprojektowany w lokalnym ukladzie: szer ~40, wys ~56 (0,0 = czubek czapki)
     const scale = player.w/40;
+    const airborne = !player.onGround;
     const bob = player.onGround ? Math.sin(player.animT)*1.5 : 0;
     ctx.save();
     ctx.translate(px + player.w/2, py);
     ctx.scale(player.facing*scale, scale);
     ctx.translate(-20, 0);
-    drawCharacterSprite(ctx, c, bob);
+    drawCharacterSprite(ctx, c, bob, airborne);
     ctx.restore();
   }
 
