@@ -417,7 +417,10 @@
 
   async function signInWithGoogle(){
     if(!sb) return;
-    await sb.auth.signInWithOAuth({ provider: 'google' });
+    await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.href }
+    });
   }
   async function signOut(){
     if(!sb) return;
