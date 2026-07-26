@@ -318,16 +318,52 @@
   .auth-avatar img { width:100%; height:100%; object-fit:cover; }
   .global-auth-badge {
     position:absolute;
-    top:12px; left:12px;
+    top:12px; right:12px;
     z-index:30;
     pointer-events:none;
   }
   .global-auth-badge .auth-logged-pill { pointer-events:auto; font-size:12px; padding:4px 10px 4px 4px; }
+
+  .leaderboard-panel {
+    position:absolute;
+    top:12px; left:12px;
+    z-index:30;
+    background:rgba(10,10,25,.55);
+    border:2px solid rgba(255,255,255,.25);
+    border-radius:12px;
+    padding:10px 14px;
+    min-width:190px;
+    backdrop-filter:blur(2px);
+    color:#fff;
+  }
+  .lb-title {
+    font-weight:900;
+    font-size:13px;
+    color:#ffd23f;
+    margin-bottom:6px;
+    letter-spacing:1px;
+  }
+  .lb-row {
+    display:grid;
+    grid-template-columns:18px 1fr auto auto;
+    gap:6px;
+    align-items:center;
+    font-size:12px;
+    padding:2px 0;
+    white-space:nowrap;
+  }
+  .lb-row.me { color:#ffd23f; font-weight:bold; }
+  .lb-rank { opacity:.7; }
+  .lb-name { overflow:hidden; text-overflow:ellipsis; max-width:70px; }
+  .lb-coins { color:#ffe27a; }
+  .lb-time { opacity:.75; }
+  .lb-empty { font-size:11px; color:#cfe3ff; opacity:.7; }
 </style>
 </head>
 <body>
 <div id="wrap">
   <div id="globalAuthBadge" class="global-auth-badge"></div>
+  <div id="leaderboardBox" class="leaderboard-panel"></div>
 
   <!-- MENU -->
   <div id="menuScreen" class="screen">
@@ -415,13 +451,20 @@
     ownedSkins: ['classic'],
     equippedSkin: 'classic',
     unlockedLevel: 0, // index najwyzszego odblokowanego poziomu
+    playtimeSeconds: 0,
+    displayName: '',
   };
 
+  function nameFromUser(user){
+    return (user.user_metadata && user.user_metadata.full_name) || (user.email ? user.email.split('@')[0] : 'Gracz');
+  }
+
   async function loadProfile(user){
+    state.displayName = nameFromUser(user);
     const { data, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
     if(error && error.code === 'PGRST116'){
       // brak profilu - tworzymy nowy z domyslnymi wartosciami
-      await sb.from('profiles').insert({ id: user.id });
+      await sb.from('profiles').insert({ id: user.id, display_name: state.displayName });
       return;
     }
     if(data){
@@ -429,6 +472,9 @@
       state.ownedSkins = data.owned_skins ?? ['classic'];
       state.equippedSkin = data.equipped_skin ?? 'classic';
       state.unlockedLevel = data.unlocked_level ?? 0;
+      state.playtimeSeconds = data.playtime_seconds ?? 0;
+      if(data.display_name) state.displayName = data.display_name;
+      else await sb.from('profiles').update({ display_name: state.displayName }).eq('id', user.id);
     }
   }
 
@@ -442,8 +488,11 @@
         owned_skins: state.ownedSkins,
         equipped_skin: state.equippedSkin,
         unlocked_level: state.unlockedLevel,
+        playtime_seconds: state.playtimeSeconds,
+        display_name: state.displayName,
         updated_at: new Date().toISOString(),
       });
+      refreshLeaderboard();
     }, 500);
   }
 
@@ -525,6 +574,7 @@
   const gameScreen = document.getElementById('gameScreen');
   const levelScreen = document.getElementById('levelScreen');
 
+  let gamePlaying = false;
   function showScreen(name){
     if(name !== 'shop') stopPreviewLoop();
     menuScreen.classList.add('hidden');
@@ -538,6 +588,46 @@
     document.getElementById('menuCoins').textContent = state.wallet;
     document.getElementById('shopCoins').textContent = state.wallet;
     document.getElementById('globalAuthBadge').style.display = (name==='game') ? 'none' : 'block';
+    const lb = document.getElementById('leaderboardBox');
+    if(lb) lb.style.display = (name==='game') ? 'none' : 'block';
+    gamePlaying = (name === 'game');
+    if(name !== 'game') refreshLeaderboard();
+  }
+
+  // licznik czasu gry (co sekunde, tylko podczas aktywnej rozgrywki)
+  setInterval(() => {
+    if(gamePlaying && !levelDone){
+      state.playtimeSeconds++;
+    }
+  }, 1000);
+  // okresowy autosave (co 20 sek) - zeby czas gry tez sie zapisywal na biezaco
+  setInterval(() => { if(currentUser) saveProfile(); }, 20000);
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  async function refreshLeaderboard(){
+    const el = document.getElementById('leaderboardBox');
+    if(!el) return;
+    if(!sb){
+      el.innerHTML = '<div class="lb-title">🏆 RANKING</div><div class="lb-empty">niedostępny bez konta</div>';
+      return;
+    }
+    const { data, error } = await sb.from('profiles')
+      .select('display_name,wallet,playtime_seconds')
+      .order('wallet', { ascending:false })
+      .limit(5);
+    if(error || !data || data.length === 0){
+      el.innerHTML = '<div class="lb-title">🏆 RANKING</div><div class="lb-empty">brak wynikow</div>';
+      return;
+    }
+    el.innerHTML = '<div class="lb-title">🏆 RANKING</div>' + data.map((row, i) => {
+      const hours = ((row.playtime_seconds || 0) / 3600).toFixed(1);
+      const name = escapeHtml(row.display_name || 'Gracz');
+      const isMe = currentUser && row.display_name === state.displayName;
+      return `<div class="lb-row${isMe?' me':''}"><span class="lb-rank">${i+1}.</span><span class="lb-name">${name}</span><span class="lb-coins">🪙${row.wallet}</span><span class="lb-time">${hours}h</span></div>`;
+    }).join('');
   }
 
   document.getElementById('btnPlay').onclick = () => { showScreen('game'); startLevel(state.unlockedLevel); };
