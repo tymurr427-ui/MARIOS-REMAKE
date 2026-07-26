@@ -152,7 +152,34 @@
     cursor:pointer;
   }
   .skin-card.selected { border-color:#ffd23f; box-shadow:0 0 12px #ffd23f; }
+  .skin-card.previewed { border-color:#7fd6ff; box-shadow:0 0 10px rgba(127,214,255,.6); }
   .skin-card.locked { opacity:.55; }
+  #btnBuyEquip:disabled { opacity:.5; cursor:not-allowed; filter:grayscale(.4); }
+  .settings-panel {
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    background:rgba(0,0,0,.3);
+    border:2px solid rgba(255,255,255,.2);
+    border-radius:14px;
+    padding:20px 28px;
+    min-width:320px;
+  }
+  .settings-row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    color:#fff;
+    font-weight:bold;
+    font-size:15px;
+  }
+  .volume-slider {
+    flex:1;
+    accent-color:#ffd23f;
+    height:6px;
+  }
+  #volumeValue { min-width:38px; text-align:right; font-size:13px; color:#ffe27a; }
   .skin-name { font-size:13px; font-weight:bold; }
   .skin-price { font-size:12px; color:#ffd23f; }
   .skin-thumb { width:64px; height:82px; }
@@ -374,8 +401,25 @@
     <button class="menu-btn purple" id="btnLevels">🗺 POZIOMY</button>
     <button class="menu-btn blue" id="btnShop">🛒 SKLEP</button>
     <button class="menu-btn green" id="btnExit">✖ WYJŚCIE</button>
-    <button class="menu-btn small" id="btnMuteMenu" style="margin-top:-4px;">🔊 MUZYKA: WŁĄCZONA</button>
+    <button class="menu-btn small" id="btnSettings" style="margin-top:-4px;">⚙ USTAWIENIA</button>
     <div id="authBox" class="auth-box"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="settingsScreen" class="screen hidden">
+    <div class="title" style="font-size:36px;">USTAWIENIA</div>
+    <div class="settings-panel">
+      <div class="settings-row">
+        <span>Muzyka</span>
+        <button class="menu-btn small" id="btnMuteMenu">🔊 WŁĄCZONA</button>
+      </div>
+      <div class="settings-row">
+        <span>Głośność</span>
+        <input type="range" id="volumeSlider" min="0" max="100" value="56" class="volume-slider">
+        <span id="volumeValue">56%</span>
+      </div>
+    </div>
+    <button class="menu-btn small" id="btnSettingsBack">⬅ POWRÓT</button>
   </div>
 
   <!-- LEVEL SELECT -->
@@ -395,6 +439,7 @@
         <canvas id="previewCanvas" width="180" height="240"></canvas>
         <div class="preview-name" id="previewName">Klasyczny</div>
         <button class="menu-btn small" id="btnRotate">🔄 OBRÓĆ</button>
+        <button class="menu-btn" id="btnBuyEquip">✅ ZAŁÓŻ</button>
       </div>
     </div>
     <button class="menu-btn small" id="btnBack">⬅ POWRÓT</button>
@@ -573,6 +618,7 @@
   const shopScreen = document.getElementById('shopScreen');
   const gameScreen = document.getElementById('gameScreen');
   const levelScreen = document.getElementById('levelScreen');
+  const settingsScreen = document.getElementById('settingsScreen');
 
   let gamePlaying = false;
   function showScreen(name){
@@ -581,10 +627,12 @@
     shopScreen.classList.add('hidden');
     gameScreen.classList.add('hidden');
     levelScreen.classList.add('hidden');
+    settingsScreen.classList.add('hidden');
     if(name==='menu') menuScreen.classList.remove('hidden');
     if(name==='shop') shopScreen.classList.remove('hidden');
     if(name==='game') gameScreen.classList.remove('hidden');
     if(name==='levels') levelScreen.classList.remove('hidden');
+    if(name==='settings') settingsScreen.classList.remove('hidden');
     document.getElementById('menuCoins').textContent = state.wallet;
     document.getElementById('shopCoins').textContent = state.wallet;
     document.getElementById('globalAuthBadge').style.display = (name==='game') ? 'none' : 'block';
@@ -635,6 +683,8 @@
   document.getElementById('btnBack').onclick = () => showScreen('menu');
   document.getElementById('btnLevels').onclick = () => { showScreen('levels'); renderLevels(); };
   document.getElementById('btnLevelsBack').onclick = () => showScreen('menu');
+  document.getElementById('btnSettings').onclick = () => showScreen('settings');
+  document.getElementById('btnSettingsBack').onclick = () => showScreen('menu');
   document.getElementById('pauseBtn').onclick = () => { cancelAnimationFrame(rafId); showScreen('menu'); };
   document.getElementById('fsBtn').onclick = () => {
     const el = document.getElementById('wrap');
@@ -647,11 +697,20 @@
 
   function updateMuteLabels(){
     const on = AudioEngine.isOn();
-    document.getElementById('btnMuteMenu').textContent = on ? '🔊 MUZYKA: WŁĄCZONA' : '🔇 MUZYKA: WYŁĄCZONA';
+    document.getElementById('btnMuteMenu').textContent = on ? '🔊 WŁĄCZONA' : '🔇 WYŁĄCZONA';
     document.getElementById('muteBtn').textContent = on ? '🔊' : '🔇';
   }
   document.getElementById('btnMuteMenu').onclick = () => { AudioEngine.toggleMusic(); updateMuteLabels(); };
   document.getElementById('muteBtn').onclick = () => { AudioEngine.toggleMusic(); updateMuteLabels(); };
+
+  const volumeSlider = document.getElementById('volumeSlider');
+  const volumeValue = document.getElementById('volumeValue');
+  volumeSlider.oninput = () => {
+    const pct = Number(volumeSlider.value);
+    volumeValue.textContent = pct + '%';
+    AudioEngine.setVolume(pct / 100 * 0.5);
+    AudioEngine.ensureCtx();
+  };
 
   let previewSkinId = state.equippedSkin;
   let previewFacing = 1;
@@ -697,14 +756,49 @@
 
   document.getElementById('btnRotate').onclick = () => { previewFacing *= -1; };
 
+  function updateBuyEquipButton(){
+    const sk = SKINS.find(s => s.id === previewSkinId) || SKINS[0];
+    const owned = state.ownedSkins.includes(sk.id);
+    const equipped = state.equippedSkin === sk.id;
+    const btn = document.getElementById('btnBuyEquip');
+    if(!btn) return;
+    if(equipped){
+      btn.textContent = '✅ ZAŁOŻONE';
+      btn.disabled = true;
+    } else if(owned){
+      btn.textContent = '👕 ZAŁÓŻ';
+      btn.disabled = false;
+    } else {
+      btn.textContent = `🪙 KUP ZA ${sk.price}`;
+      btn.disabled = state.wallet < sk.price;
+    }
+  }
+
+  document.getElementById('btnBuyEquip').onclick = () => {
+    const sk = SKINS.find(s => s.id === previewSkinId) || SKINS[0];
+    const owned = state.ownedSkins.includes(sk.id);
+    if(owned){
+      state.equippedSkin = sk.id;
+      renderShop();
+      saveProfile();
+    } else if(state.wallet >= sk.price){
+      state.wallet -= sk.price;
+      state.ownedSkins.push(sk.id);
+      state.equippedSkin = sk.id;
+      renderShop();
+      saveProfile();
+    }
+  };
+
   function renderShop(){
     const grid = document.getElementById('shopGrid');
     grid.innerHTML = '';
     SKINS.forEach(sk => {
       const owned = state.ownedSkins.includes(sk.id);
       const equipped = state.equippedSkin === sk.id;
+      const previewed = previewSkinId === sk.id;
       const card = document.createElement('div');
-      card.className = 'skin-card' + (equipped ? ' selected':'') + (!owned && state.wallet < sk.price ? ' locked':'');
+      card.className = 'skin-card' + (equipped ? ' selected':'') + (previewed && !equipped ? ' previewed':'') + (!owned && state.wallet < sk.price ? ' locked':'');
       card.innerHTML = `
         <canvas class="skin-thumb" width="70" height="90"></canvas>
         <div class="skin-name">${sk.name}</div>
@@ -713,19 +807,7 @@
       card.onclick = () => {
         previewSkinId = sk.id;
         document.getElementById('previewName').textContent = sk.name;
-        if(owned){
-          state.equippedSkin = sk.id;
-          renderShop();
-          saveProfile();
-        } else if(state.wallet >= sk.price){
-          state.wallet -= sk.price;
-          state.ownedSkins.push(sk.id);
-          state.equippedSkin = sk.id;
-          renderShop();
-          saveProfile();
-        } else {
-          renderShop();
-        }
+        renderShop();
       };
       grid.appendChild(card);
       drawThumb(card.querySelector('.skin-thumb'), sk.colors);
@@ -733,6 +815,7 @@
     document.getElementById('shopCoins').textContent = state.wallet;
     const previewSk = SKINS.find(s => s.id === previewSkinId) || SKINS[0];
     document.getElementById('previewName').textContent = previewSk.name;
+    updateBuyEquipButton();
     startPreviewLoop();
   }
 
@@ -757,6 +840,7 @@
     let musicOn = true;
     let melodyTimer = null;
     let melodyIndex = 0;
+    let volume = 0.28; // 0..0.5 (glosnosc bazowa)
 
     // prosta, oryginalna melodyjka w stylu chiptune (nuty w Hz, dlugosc w sek; 0 = pauza)
     const MELODY = [
@@ -770,7 +854,7 @@
       if(!ctx){
         ctx = new (window.AudioContext||window.webkitAudioContext)();
         masterGain = ctx.createGain();
-        masterGain.gain.value = 0.28;
+        masterGain.gain.value = volume;
         masterGain.connect(ctx.destination);
       }
       if(ctx.state === 'suspended') ctx.resume();
@@ -810,6 +894,11 @@
       if(musicOn) scheduleMusic(); else stopMusic();
       return musicOn;
     }
+    function setVolume(v){
+      volume = Math.max(0, Math.min(0.5, v));
+      if(masterGain) masterGain.gain.value = volume;
+    }
+    function getVolume(){ return volume; }
 
     return {
       ensureCtx,
@@ -821,6 +910,8 @@
       sfxWin(){ ensureCtx(); [523,659,784,1046].forEach((f,i)=>tone(f,i*0.13,0.18,'square',0.3)); },
       sfxLose(){ ensureCtx(); [392,349,311,262].forEach((f,i)=>tone(f,i*0.16,0.22,'sawtooth',0.3)); },
       toggleMusic,
+      setVolume,
+      getVolume,
       isOn(){ return musicOn; }
     };
   })();
@@ -1716,6 +1807,8 @@
   resizeCanvas();
   updateAuthUI();
   showScreen('menu');
+  volumeSlider.value = Math.round(AudioEngine.getVolume() / 0.5 * 100);
+  volumeValue.textContent = volumeSlider.value + '%';
 
   if(sb){
     sb.auth.getSession().then(({data}) => {
