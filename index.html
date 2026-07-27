@@ -804,7 +804,7 @@
     tctx.translate(canvas.width/2, 4);
     tctx.scale(scale, scale);
     tctx.translate(-20, 0);
-    drawCharacterSprite(tctx, colors, 0);
+    drawCharacterSprite(tctx, colors, 0, false, false, true, false);
     tctx.restore();
   }
 
@@ -821,7 +821,7 @@
     pctx.translate(canvas.width/2, 12);
     pctx.scale(previewFacing*scale, scale);
     pctx.translate(-20, 0);
-    drawCharacterSprite(pctx, sk.colors, bob);
+    drawCharacterSprite(pctx, sk.colors, bob, false, false, true, true);
     pctx.restore();
     previewRaf = requestAnimationFrame(renderPreviewFrame);
   }
@@ -1275,7 +1275,7 @@
     level.platforms.forEach(p => { if(p.y === undefined) p.y = GROUND_Y; });
     player = {
       x:40, y:GROUND_Y-54, w:38, h:54,
-      vx:0, vy:0, onGround:false, facing:1, animT:0, invuln:0
+      vx:0, vy:0, onGround:false, facing:1, animT:0, invuln:0, airTime:0
     };
     camera = {x:0};
     runCoins = 0;
@@ -1293,6 +1293,7 @@
   function resetPlayerPosition(){
     player.x = 40; player.y = GROUND_Y-54; player.vx=0; player.vy=0;
     player.invuln = 60;
+    player.airTime = 0;
     camera.x = 0;
   }
 
@@ -1414,6 +1415,7 @@
     }
 
     if(player.invuln > 0) player.invuln--;
+    player.airTime = player.onGround ? 0 : player.airTime + 1;
 
     if(player.y > H + 150){
       takeDamage();
@@ -1490,7 +1492,7 @@
     return sk.colors;
   }
 
-  function drawCharacterSprite(targetCtx, c, bob, airborne, flat){
+  function drawCharacterSprite(targetCtx, c, bob, airborne, flat, shine, sparkle){
     const tctx = targetCtx;
     // ---- cien pod stopami ----
     if(!flat){
@@ -1665,6 +1667,46 @@
     // znaczek na czapce
     tctx.fillStyle = '#fff';
     tctx.beginPath(); tctx.arc(19, 1, 4.6, 0, Math.PI*2); tctx.fill();
+
+    // HIGH+: polysk na czapce i kombinezonie (dodaje "blasku")
+    if(shine && !flat){
+      tctx.save();
+      tctx.globalAlpha = 0.25;
+      tctx.fillStyle = '#ffffff';
+      tctx.beginPath();
+      tctx.ellipse(11, 0, 7, 3, -0.4, 0, Math.PI*2);
+      tctx.fill();
+      tctx.beginPath();
+      tctx.ellipse(11, 28, 6, 10, -0.3, 0, Math.PI*2);
+      tctx.fill();
+      tctx.restore();
+      // delikatna obwodka wokol glowy (rim light)
+      tctx.strokeStyle = 'rgba(255,255,255,.35)';
+      tctx.lineWidth = 1;
+      tctx.beginPath(); tctx.ellipse(20, 12, 13, 12, 0, -2.4, -0.6); tctx.stroke();
+    }
+
+    // ULTRA: iskierki
+    if(sparkle){
+      const t = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.004;
+      drawSparkle(tctx, 34, -2, 3 + Math.sin(t)*1.2, t);
+      drawSparkle(tctx, -1, 30, 2.4 + Math.cos(t*1.3)*1, t*1.4);
+    }
+  }
+
+  function drawSparkle(tctx, x, y, r, rot){
+    tctx.save();
+    tctx.translate(x,y);
+    tctx.rotate(rot);
+    tctx.fillStyle = 'rgba(255,255,255,.85)';
+    tctx.beginPath();
+    tctx.moveTo(0,-r); tctx.lineTo(r*0.25,-r*0.25);
+    tctx.lineTo(r,0); tctx.lineTo(r*0.25,r*0.25);
+    tctx.lineTo(0,r); tctx.lineTo(-r*0.25,r*0.25);
+    tctx.lineTo(-r,0); tctx.lineTo(-r*0.25,-r*0.25);
+    tctx.closePath();
+    tctx.fill();
+    tctx.restore();
   }
 
   function roundRectOn(tctx, x,y,w,h,r){
@@ -1688,6 +1730,10 @@
     const bob = player.onGround ? Math.sin(player.animT)*1.5 : 0;
     const flat = gfxQuality === 0;
     const running = player.onGround && Math.abs(player.vx) > 3.5;
+    const shine = gfxQuality >= 2;
+    const sparkle = gfxQuality >= 3;
+    // kolowrotek w powietrzu - pelny obrot narastajacy z czasem lotu
+    const spinAngle = airborne ? player.airTime * 0.2 : 0;
 
     // ULTRA: smugi predkosci przy biegu
     if(gfxQuality >= 3 && running){
@@ -1702,6 +1748,17 @@
       }
       ctx.restore();
     }
+    // ULTRA: smuga wirowania podczas kolowrotka
+    if(sparkle && airborne){
+      ctx.save();
+      ctx.globalAlpha = 0.2;
+      ctx.strokeStyle = '#ffe27a';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(px+player.w/2, py+player.h/2, player.w*0.75, spinAngle-1.4, spinAngle);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     ctx.save();
     // HIGH+: miekki cien/poswiata pod postacia
@@ -1710,10 +1767,12 @@
       ctx.shadowBlur = airborne && gfxQuality>=3 ? 14 : 8;
       ctx.shadowOffsetY = 3;
     }
-    ctx.translate(px + player.w/2, py);
+    // pivot w przyblizonym srodku sylwetki, zeby kolowrotek obracal sie "w miejscu"
+    ctx.translate(px + player.w/2, py + 28*scale);
+    if(spinAngle) ctx.rotate(spinAngle);
     ctx.scale(player.facing*scale, scale);
-    ctx.translate(-20, 0);
-    drawCharacterSprite(ctx, c, bob, airborne, flat);
+    ctx.translate(-20, -28);
+    drawCharacterSprite(ctx, c, bob, airborne, flat, shine, sparkle);
     ctx.restore();
   }
 
@@ -1945,6 +2004,23 @@
       if(gfxQuality >= 1){
         ctx.fillStyle = 'rgba(0,0,0,.25)';
         ctx.beginPath(); ctx.ellipse(cx, e.y+e.h+5, e.w/2, 4.5, 0, 0, Math.PI*2); ctx.fill();
+      }
+
+      // ULTRA: pulsujaca mroczna aura + drobinki
+      if(gfxQuality >= 3){
+        const pulse = 0.5 + Math.sin((e.animT||0)*1.5)*0.5;
+        ctx.save();
+        ctx.globalAlpha = 0.18 + pulse*0.12;
+        ctx.fillStyle = '#c084f5';
+        ctx.beginPath(); ctx.ellipse(cx, cy, bodyW*1.5, bodyH*1.5, 0, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+        for(let i=0;i<2;i++){
+          const pt = ((e.animT||0)*0.6 + i*3.1) % 6.28;
+          const px2 = cx + Math.cos(pt)*(bodyW*1.6);
+          const py2 = cy + Math.sin(pt)*(bodyH*1.6);
+          ctx.fillStyle = 'rgba(200,132,245,.6)';
+          ctx.beginPath(); ctx.arc(px2, py2, 1.6, 0, Math.PI*2); ctx.fill();
+        }
       }
 
       // nozki (przebieranie)
