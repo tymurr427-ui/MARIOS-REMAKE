@@ -180,6 +180,69 @@
     height:6px;
   }
   #volumeValue { min-width:38px; text-align:right; font-size:13px; color:#ffe27a; }
+  .mp-code-input {
+    width:100%;
+    padding:10px;
+    font-size:22px;
+    text-align:center;
+    letter-spacing:6px;
+    font-weight:900;
+    text-transform:uppercase;
+    border-radius:8px;
+    border:2px solid rgba(255,255,255,.3);
+    background:rgba(255,255,255,.1);
+    color:#fff;
+  }
+  .mp-code-input::placeholder { color:rgba(255,255,255,.4); letter-spacing:4px; }
+  .mp-error { color:#ff8a8a; font-size:13px; min-height:18px; font-weight:bold; }
+  .mp-code-box {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+  .mp-code-display {
+    font-size:48px;
+    font-weight:900;
+    letter-spacing:10px;
+    color:#ffd23f;
+    background:rgba(0,0,0,.35);
+    padding:14px 24px;
+    border-radius:14px;
+    border:3px solid rgba(255,255,255,.25);
+  }
+  .mp-status {
+    font-size:15px;
+    color:#cfe3ff;
+    min-height:22px;
+  }
+  .remote-nametag {
+    position:absolute;
+    background:rgba(0,0,0,.55);
+    color:#fff;
+    font-size:11px;
+    font-weight:bold;
+    padding:2px 8px;
+    border-radius:10px;
+    transform:translate(-50%,-100%);
+    white-space:nowrap;
+    z-index:4;
+    pointer-events:none;
+  }
+  .mp-hud-pill {
+    position:absolute;
+    top:14px;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(217,102,14,.75);
+    border:2px solid #7a3a05;
+    color:#fff;
+    font-weight:bold;
+    font-size:13px;
+    padding:5px 14px;
+    border-radius:16px;
+    z-index:5;
+  }
   .quality-buttons {
     display:flex;
     gap:6px;
@@ -421,9 +484,36 @@
     <button class="menu-btn" id="btnPlay">▶ GRAJ</button>
     <button class="menu-btn purple" id="btnLevels">🗺 POZIOMY</button>
     <button class="menu-btn blue" id="btnShop">🛒 SKLEP</button>
-    <button class="menu-btn green" id="btnExit">✖ WYJŚCIE</button>
-    <button class="menu-btn small" id="btnSettings" style="margin-top:-4px;">⚙ USTAWIENIA</button>
+    <button class="menu-btn" id="btnMultiplayer" style="background:linear-gradient(#ff9f4a,#d9660e); border-color:#7a3a05; box-shadow:0 6px 0 #7a3a05,0 8px 10px rgba(0,0,0,.4);">👥 MULTIPLAYER</button>
+    <button class="menu-btn green" id="btnSettings">⚙ USTAWIENIA</button>
     <div id="authBox" class="auth-box"></div>
+  </div>
+
+  <!-- MULTIPLAYER: WYBOR -->
+  <div id="mpChoiceScreen" class="screen hidden">
+    <div class="title" style="font-size:36px;">MULTIPLAYER</div>
+    <div class="small-note">Graj razem ze znajomym na dwoch ekranach naraz.</div>
+    <button class="menu-btn" id="btnMpCreate">🆕 STWÓRZ LOBBY</button>
+    <div class="settings-panel" style="min-width:280px;">
+      <div class="settings-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+        <span>Dołącz z kodem</span>
+        <input type="text" id="mpCodeInput" maxlength="5" placeholder="np. AB3XQ" class="mp-code-input">
+        <button class="menu-btn small" id="btnMpJoin" style="align-self:center;">🔗 DOŁĄCZ</button>
+      </div>
+    </div>
+    <div id="mpError" class="mp-error"></div>
+    <button class="menu-btn small" id="btnMpChoiceBack">⬅ POWRÓT</button>
+  </div>
+
+  <!-- MULTIPLAYER: LOBBY / OCZEKIWANIE -->
+  <div id="mpLobbyScreen" class="screen hidden">
+    <div class="title" style="font-size:32px;">LOBBY</div>
+    <div id="mpLobbyCodeBox" class="mp-code-box hidden">
+      <div class="small-note">Podaj ten kod znajomemu:</div>
+      <div id="mpLobbyCode" class="mp-code-display">-----</div>
+    </div>
+    <div id="mpLobbyStatus" class="mp-status">Łączenie...</div>
+    <button class="menu-btn small" id="btnMpCancel">✖ ANULUJ</button>
   </div>
 
   <!-- SETTINGS -->
@@ -485,6 +575,8 @@
     <button id="fsBtn">⛶ PEŁNY EKRAN</button>
     <button id="muteBtn" style="left:auto;">🔊</button>
     <button id="pauseBtn">MENU</button>
+    <div id="mpHudPill" class="mp-hud-pill hidden"></div>
+    <div id="remoteNametag" class="remote-nametag hidden"></div>
     <canvas id="game"></canvas>
   </div>
 
@@ -519,6 +611,174 @@
   const sb = supabaseReady ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   let currentUser = null;
   let saveTimer = null;
+
+  // ---------- MULTIPLAYER (Supabase Realtime: Broadcast + Presence) ----------
+  const myId = 'p-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  let mpChannel = null;
+  let mpCode = '';
+  let isHost = false;
+  let mpConnected = false;
+  let remotePlayer = null;      // ostatnie dane o pozycji drugiego gracza
+  let remoteLastSeen = 0;
+  let mpBroadcastTimer = 0;
+
+  function generateLobbyCode(){
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // bez znakow latwych do pomylenia
+    let out = '';
+    for(let i=0;i<5;i++) out += chars[Math.floor(Math.random()*chars.length)];
+    return out;
+  }
+
+  function leaveMultiplayer(){
+    if(mpChannel){
+      try { sb.removeChannel(mpChannel); } catch(e){}
+    }
+    mpChannel = null;
+    mpConnected = false;
+    isHost = false;
+    mpCode = '';
+    remotePlayer = null;
+    document.getElementById('mpHudPill').classList.add('hidden');
+    document.getElementById('remoteNametag').classList.add('hidden');
+  }
+
+  function setupMpChannel(code, hosting){
+    if(!sb){
+      document.getElementById('mpError').textContent = 'Multiplayer wymaga skonfigurowanego konta (Supabase).';
+      return;
+    }
+    if(mpChannel){ try{ sb.removeChannel(mpChannel); }catch(e){} }
+    mpCode = code;
+    isHost = hosting;
+    mpConnected = false;
+    remotePlayer = null;
+
+    mpChannel = sb.channel('mp-' + code, { config: { presence: { key: myId }, broadcast: { self: false } } });
+
+    mpChannel.on('broadcast', { event: 'state' }, ({ payload }) => {
+      if(!payload || payload.from === myId) return;
+      remotePlayer = payload;
+      remoteLastSeen = Date.now();
+    });
+
+    mpChannel.on('broadcast', { event: 'coin' }, ({ payload }) => {
+      if(!payload || payload.from === myId) return;
+      if(level && level.coins && level.coins[payload.idx]){
+        level.coins[payload.idx].taken = true;
+      }
+    });
+
+    mpChannel.on('broadcast', { event: 'enemy_dead' }, ({ payload }) => {
+      if(!payload || payload.from === myId) return;
+      if(level && level.enemies && level.enemies[payload.idx]){
+        level.enemies[payload.idx].alive = false;
+      }
+    });
+
+    mpChannel.on('presence', { event: 'sync' }, () => {
+      const st = mpChannel.presenceState();
+      const count = Object.keys(st).length;
+      const statusEl = document.getElementById('mpLobbyStatus');
+      if(count >= 2){
+        mpConnected = true;
+        if(statusEl) statusEl.textContent = '✅ Gracz 2 dołączył! Startujemy...';
+        setTimeout(() => {
+          if(mpConnected) startMultiplayerGame();
+        }, 700);
+      } else if(statusEl){
+        statusEl.textContent = isHost
+          ? 'Czekam na drugiego gracza...'
+          : 'Łączenie z lobby ' + code + '...';
+      }
+    });
+
+    mpChannel.subscribe(async (status) => {
+      if(status === 'SUBSCRIBED'){
+        await mpChannel.track({ joinedAt: Date.now() });
+      } else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
+        const statusEl = document.getElementById('mpLobbyStatus');
+        if(statusEl) statusEl.textContent = '⚠ Nie udało się połączyć. Spróbuj ponownie.';
+      }
+    });
+  }
+
+  function createMpLobby(){
+    const code = generateLobbyCode();
+    document.getElementById('mpLobbyCodeBox').classList.remove('hidden');
+    document.getElementById('mpLobbyCode').textContent = code;
+    document.getElementById('mpLobbyStatus').textContent = 'Czekam na drugiego gracza...';
+    showScreen('mpLobby');
+    setupMpChannel(code, true);
+  }
+
+  function joinMpLobby(code){
+    document.getElementById('mpLobbyCodeBox').classList.add('hidden');
+    document.getElementById('mpLobbyStatus').textContent = 'Łączenie z lobby ' + code + '...';
+    showScreen('mpLobby');
+    setupMpChannel(code, false);
+  }
+
+  function startMultiplayerGame(){
+    showScreen('game');
+    startLevel(0); // multiplayer zawsze startuje na 1. poziomie, obaj gracze razem
+    document.getElementById('mpHudPill').classList.remove('hidden');
+    document.getElementById('mpHudPill').textContent = '👥 MULTIPLAYER · ' + mpCode;
+  }
+
+  function broadcastEvent(event, data){
+    if(!mpChannel || !mpConnected) return;
+    mpChannel.send({ type: 'broadcast', event, payload: { from: myId, ...data } });
+  }
+
+  function broadcastOwnState(){
+    if(!mpChannel || !mpConnected) return;
+    const now = performance.now();
+    if(now - mpBroadcastTimer < 66) return; // ~15x/sek
+    mpBroadcastTimer = now;
+    mpChannel.send({
+      type: 'broadcast',
+      event: 'state',
+      payload: {
+        from: myId,
+        name: state.displayName || 'Gracz 2',
+        skin: state.equippedSkin,
+        x: player.x, y: player.y,
+        facing: player.facing,
+        onGround: player.onGround,
+        vx: player.vx,
+      }
+    });
+  }
+
+  function drawRemotePlayer(){
+    const tag = document.getElementById('remoteNametag');
+    if(!mpChannel || !remotePlayer || Date.now() - remoteLastSeen > 4000){
+      tag.classList.add('hidden');
+      return;
+    }
+    const sk = SKINS.find(s => s.id === remotePlayer.skin) || SKINS[0];
+    const rx = remotePlayer.x - camera.x;
+    const ry = remotePlayer.y;
+    const scale = 38/40;
+    const airborne = !remotePlayer.onGround;
+    ctx.save();
+    ctx.globalAlpha = 0.92;
+    ctx.translate(rx + 19, ry + 28*scale);
+    ctx.scale((remotePlayer.facing||1)*scale, scale);
+    ctx.translate(-20, -28);
+    drawCharacterSprite(ctx, sk.colors, 0, airborne, gfxQuality===0, gfxQuality>=2, false);
+    ctx.restore();
+
+    // dymek z nazwa nad postacia (pozycjonowany w ukladzie DOM, nie canvas)
+    const canvasRect = document.getElementById('game').getBoundingClientRect();
+    const scaleX = canvasRect.width / W;
+    const scaleY = canvasRect.height / H;
+    tag.textContent = remotePlayer.name || 'Gracz 2';
+    tag.style.left = (canvasRect.left + rx*scaleX + 19*scaleX) + 'px';
+    tag.style.top = (canvasRect.top + ry*scaleY - 6*scaleY) + 'px';
+    tag.classList.remove('hidden');
+  }
+
 
   // ---------- STATE ----------
   const state = {
@@ -679,6 +939,9 @@
   const settingsScreen = document.getElementById('settingsScreen');
 
   let gamePlaying = false;
+  const mpChoiceScreen = document.getElementById('mpChoiceScreen');
+  const mpLobbyScreen = document.getElementById('mpLobbyScreen');
+
   function showScreen(name){
     if(name !== 'shop') stopPreviewLoop();
     menuScreen.classList.add('hidden');
@@ -686,11 +949,15 @@
     gameScreen.classList.add('hidden');
     levelScreen.classList.add('hidden');
     settingsScreen.classList.add('hidden');
+    mpChoiceScreen.classList.add('hidden');
+    mpLobbyScreen.classList.add('hidden');
     if(name==='menu') menuScreen.classList.remove('hidden');
     if(name==='shop') shopScreen.classList.remove('hidden');
     if(name==='game') gameScreen.classList.remove('hidden');
     if(name==='levels') levelScreen.classList.remove('hidden');
     if(name==='settings') settingsScreen.classList.remove('hidden');
+    if(name==='mpChoice') mpChoiceScreen.classList.remove('hidden');
+    if(name==='mpLobby') mpLobbyScreen.classList.remove('hidden');
     document.getElementById('menuCoins').textContent = state.wallet;
     document.getElementById('shopCoins').textContent = state.wallet;
     document.getElementById('globalAuthBadge').style.display = (name==='game') ? 'none' : 'block';
@@ -743,14 +1010,34 @@
   document.getElementById('btnLevelsBack').onclick = () => showScreen('menu');
   document.getElementById('btnSettings').onclick = () => showScreen('settings');
   document.getElementById('btnSettingsBack').onclick = () => showScreen('menu');
-  document.getElementById('pauseBtn').onclick = () => { cancelAnimationFrame(rafId); showScreen('menu'); };
+
+  document.getElementById('btnMultiplayer').onclick = () => {
+    document.getElementById('mpError').textContent = '';
+    document.getElementById('mpCodeInput').value = '';
+    showScreen('mpChoice');
+  };
+  document.getElementById('btnMpChoiceBack').onclick = () => showScreen('menu');
+  document.getElementById('btnMpCreate').onclick = () => createMpLobby();
+  document.getElementById('btnMpJoin').onclick = () => {
+    const code = document.getElementById('mpCodeInput').value.trim().toUpperCase();
+    if(code.length !== 5){
+      document.getElementById('mpError').textContent = 'Kod ma 5 znaków, np. AB3XQ.';
+      return;
+    }
+    joinMpLobby(code);
+  };
+  document.getElementById('mpCodeInput').oninput = (e) => {
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  };
+  document.getElementById('btnMpCancel').onclick = () => {
+    leaveMultiplayer();
+    showScreen('menu');
+  };
+  document.getElementById('pauseBtn').onclick = () => { cancelAnimationFrame(rafId); leaveMultiplayer(); showScreen('menu'); };
   document.getElementById('fsBtn').onclick = () => {
     const el = document.getElementById('wrap');
     if(!document.fullscreenElement){ el.requestFullscreen && el.requestFullscreen(); }
     else { document.exitFullscreen && document.exitFullscreen(); }
-  };
-  document.getElementById('btnExit').onclick = () => {
-    document.body.innerHTML = '<div style="color:#fff;font-family:sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;font-size:24px;background:#111;">Dzięki za grę! 👋 Możesz zamknąć tę kartę.</div>';
   };
 
   function updateMuteLabels(){
@@ -1437,8 +1724,8 @@
   }
 
   function updateEnemies(){
-    for(const e of level.enemies){
-      if(!e.alive) continue;
+    level.enemies.forEach((e, idx) => {
+      if(!e.alive) return;
       e.animT = (e.animT||0) + 0.18;
 
       if(e.type === 'flyer'){
@@ -1466,12 +1753,13 @@
             document.getElementById('hudCoins').textContent = runCoins;
             AudioEngine.sfxStomp();
             spawnCoinPop();
+            broadcastEvent('enemy_dead', { idx });
           } else {
             takeDamage();
           }
         }
       }
-    }
+    });
   }
 
   function updateHazards(){
@@ -1512,6 +1800,7 @@
   function update(){
     if(levelDone) return;
     timeAlive++;
+    broadcastOwnState();
 
     const running = keys['ShiftLeft'] || keys['ShiftRight'];
     const maxSpeed = running ? RUN_MAX : WALK_MAX;
@@ -1589,7 +1878,7 @@
     updateHazards();
     if(levelDone) return;
 
-    for(const c of level.coins){
+    level.coins.forEach((c, idx) => {
       if(!c.taken){
         c.t += 0.15;
         const cb = {x:c.x-10,y:c.y-10,w:20,h:20};
@@ -1599,9 +1888,10 @@
           document.getElementById('hudCoins').textContent = runCoins;
           spawnCoinPop();
           AudioEngine.sfxCoin();
+          broadcastEvent('coin', { idx });
         }
       }
-    }
+    });
 
     if(rectsOverlap(player, level.flag)){
       levelDone = true;
@@ -1620,6 +1910,11 @@
     }
     saveProfile();
     setTimeout(() => {
+      if(mpChannel){
+        const msg = won ? 'POZIOM UKOŃCZONY!\n+' + runCoins + ' monet' : 'GAME OVER\n+' + runCoins + ' monet zebranych';
+        showBanner(msg, () => { leaveMultiplayer(); showScreen('menu'); });
+        return;
+      }
       if(won){
         if(currentLevelIndex < LEVELS.length-1){
           showBanner('POZIOM UKOŃCZONY!\n+' + runCoins + ' monet', () => startLevel(currentLevelIndex+1));
@@ -2375,6 +2670,7 @@
     drawCoins();
     drawEnemies();
     drawFlag();
+    if(mpChannel) drawRemotePlayer();
     drawPlayer();
   }
 
