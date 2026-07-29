@@ -455,6 +455,42 @@
     pointer-events:none;
   }
   .global-auth-badge .auth-logged-pill { pointer-events:auto; font-size:12px; padding:4px 10px 4px 4px; }
+  .auth-corner-row {
+    display:flex;
+    align-items:center;
+    gap:6px;
+    pointer-events:auto;
+  }
+  .stats-btn {
+    background:rgba(0,0,0,.45);
+    border:2px solid rgba(255,255,255,.3);
+    color:#fff;
+    font-size:14px;
+    width:30px; height:30px;
+    border-radius:50%;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .stats-btn:hover { background:rgba(0,0,0,.65); }
+  .stats-panel {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    background:rgba(0,0,0,.3);
+    border:2px solid rgba(255,255,255,.2);
+    border-radius:14px;
+    padding:22px 30px;
+    min-width:320px;
+  }
+  .stats-row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    color:#fff;
+    font-size:15px;
+  }
+  .stats-row b { color:#ffd23f; font-size:17px; }
 
   .leaderboard-panel {
     position:absolute;
@@ -535,6 +571,13 @@
     </div>
     <div id="mpLobbyStatus" class="mp-status">Łączenie...</div>
     <button class="menu-btn small" id="btnMpCancel">✖ ANULUJ</button>
+  </div>
+
+  <!-- STATYSTYKI -->
+  <div id="statsScreen" class="screen hidden">
+    <div class="title" style="font-size:36px;">STATYSTYKI</div>
+    <div class="stats-panel" id="statsPanel"></div>
+    <button class="menu-btn small" id="btnStatsBack">⬅ POWRÓT</button>
   </div>
 
   <!-- SETTINGS -->
@@ -846,6 +889,9 @@
     volumeUI: 56,
     graphicsQuality: 'medium',
     extraLives: 0,
+    totalCoinsEarned: 0,
+    deathCount: 0,
+    totalSpent: 0,
   };
 
   function nameFromUser(user){
@@ -870,6 +916,9 @@
       state.volumeUI = data.volume ?? 56;
       state.graphicsQuality = data.graphics_quality ?? 'medium';
       state.extraLives = data.extra_lives ?? 0;
+      state.totalCoinsEarned = data.total_coins_earned ?? 0;
+      state.deathCount = data.death_count ?? 0;
+      state.totalSpent = data.total_spent ?? 0;
       if(data.display_name) state.displayName = data.display_name;
       else await sb.from('profiles').update({ display_name: state.displayName }).eq('id', user.id);
     }
@@ -910,6 +959,9 @@
         volume: state.volumeUI,
         graphics_quality: state.graphicsQuality,
         extra_lives: state.extraLives,
+        total_coins_earned: state.totalCoinsEarned,
+        death_count: state.deathCount,
+        total_spent: state.totalSpent,
         updated_at: new Date().toISOString(),
       });
       refreshLeaderboard();
@@ -960,7 +1012,8 @@
         document.getElementById('btnLogout').onclick = signOut;
       }
       if(corner){
-        corner.innerHTML = `<div class="auth-logged-pill"><div class="auth-avatar">${avatarHtml()}</div>✅ ${name}</div>`;
+        corner.innerHTML = `<div class="auth-corner-row"><div class="auth-logged-pill"><div class="auth-avatar">${avatarHtml()}</div>✅ ${name}</div><button class="stats-btn" id="btnStatsCorner">📊</button></div>`;
+        document.getElementById('btnStatsCorner').onclick = () => { renderStats(); showScreen('stats'); };
       }
     } else {
       if(box){
@@ -986,6 +1039,11 @@
     { id:'neon',    name:'Neonowy', price:75, colors:{hat:'#ff2e9e', shirt:'#ff2e9e', overalls:'#00e5c7', skin:'#f6b17a'} },
     { id:'gold',    name:'Złoty VIP', price:80, colors:{hat:'#ffd23f', shirt:'#ffd23f', overalls:'#b8860b', skin:'#f6b17a'} },
     { id:'cosmic',  name:'Kosmiczny', price:100, colors:{hat:'#1a1440', shirt:'#2e2870', overalls:'#0a0820', skin:'#c9b8ff'} },
+    { id:'warrior', name:'Wojownik', price:90, colors:{hat:'#8a1a1a', shirt:'#9a9aa0', overalls:'#5a1010', skin:'#e0a86e'} },
+    { id:'forest',  name:'Leśny', price:85, colors:{hat:'#3a5a2e', shirt:'#5a6e3e', overalls:'#4a3620', skin:'#e0a86e'} },
+    { id:'vampire', name:'Wampir', price:95, colors:{hat:'#1a0e14', shirt:'#3a0a14', overalls:'#0e0a12', skin:'#d8c8d8'} },
+    { id:'beach',   name:'Plażowy', price:65, colors:{hat:'#ff8a3d', shirt:'#ffd23f', overalls:'#2e86c9', skin:'#e0a86e'} },
+    { id:'diamond', name:'Diamentowy', price:120, colors:{hat:'#bfeaff', shirt:'#8fdcf5', overalls:'#2ea8c9', skin:'#f6b17a'} },
   ];
 
   // ---------- SCREENS ----------
@@ -994,6 +1052,7 @@
   const gameScreen = document.getElementById('gameScreen');
   const levelScreen = document.getElementById('levelScreen');
   const settingsScreen = document.getElementById('settingsScreen');
+  const statsScreen = document.getElementById('statsScreen');
 
   let gamePlaying = false;
   const mpChoiceScreen = document.getElementById('mpChoiceScreen');
@@ -1006,6 +1065,7 @@
     gameScreen.classList.add('hidden');
     levelScreen.classList.add('hidden');
     settingsScreen.classList.add('hidden');
+    statsScreen.classList.add('hidden');
     mpChoiceScreen.classList.add('hidden');
     mpLobbyScreen.classList.add('hidden');
     if(name==='menu') menuScreen.classList.remove('hidden');
@@ -1013,6 +1073,7 @@
     if(name==='game') gameScreen.classList.remove('hidden');
     if(name==='levels') levelScreen.classList.remove('hidden');
     if(name==='settings') settingsScreen.classList.remove('hidden');
+    if(name==='stats') statsScreen.classList.remove('hidden');
     if(name==='mpChoice') mpChoiceScreen.classList.remove('hidden');
     if(name==='mpLobby') mpLobbyScreen.classList.remove('hidden');
     document.getElementById('menuCoins').textContent = state.wallet;
@@ -1067,6 +1128,26 @@
   document.getElementById('btnLevelsBack').onclick = () => showScreen('menu');
   document.getElementById('btnSettings').onclick = () => showScreen('settings');
   document.getElementById('btnSettingsBack').onclick = () => showScreen('menu');
+  document.getElementById('btnStatsBack').onclick = () => showScreen('menu');
+
+  function formatPlaytime(totalSeconds){
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = Math.floor(totalSeconds % 60);
+    return `${h}h ${m}m ${s}s`;
+  }
+
+  function renderStats(){
+    const panel = document.getElementById('statsPanel');
+    panel.innerHTML = `
+      <div class="stats-row"><span>🪙 Aktualne monety</span><b>${state.wallet}</b></div>
+      <div class="stats-row"><span>💰 Łącznie zarobione monety</span><b>${state.totalCoinsEarned}</b></div>
+      <div class="stats-row"><span>🛒 Wydane monety</span><b>${state.totalSpent}</b></div>
+      <div class="stats-row"><span>⏱ Dokładny czas gry</span><b>${formatPlaytime(state.playtimeSeconds)}</b></div>
+      <div class="stats-row"><span>💀 Liczba śmierci</span><b>${state.deathCount}</b></div>
+      <div class="stats-row"><span>👕 Posiadane skiny</span><b>${state.ownedSkins.length} / ${SKINS.length}</b></div>
+    `;
+  }
 
   document.getElementById('btnMultiplayer').onclick = () => {
     document.getElementById('mpError').textContent = '';
@@ -1206,6 +1287,7 @@
       saveProfile();
     } else if(state.wallet >= sk.price){
       state.wallet -= sk.price;
+      state.totalSpent += sk.price;
       state.ownedSkins.push(sk.id);
       state.equippedSkin = sk.id;
       renderShop();
@@ -1216,6 +1298,7 @@
   document.getElementById('btnBuyLife').onclick = () => {
     if(state.wallet >= 100){
       state.wallet -= 100;
+      state.totalSpent += 100;
       state.extraLives += 1;
       renderShop();
       saveProfile();
@@ -1800,6 +1883,8 @@
     document.getElementById('hudLives').textContent = lives;
     AudioEngine.sfxHurt();
     if(lives <= 0){
+      state.deathCount++;
+      saveProfile();
       if(mpChannel && !player.spectating){
         player.spectating = true;
         document.getElementById('hudLives').textContent = 0;
@@ -2029,6 +2114,7 @@
 
   function finishRun(won){
     state.wallet += runCoins;
+    state.totalCoinsEarned += runCoins;
     if(won) AudioEngine.sfxWin(); else AudioEngine.sfxLose();
     if(won && currentLevelIndex === state.unlockedLevel && currentLevelIndex < LEVELS.length-1){
       state.unlockedLevel = currentLevelIndex + 1;
