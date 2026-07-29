@@ -675,6 +675,16 @@
       }
     });
 
+    mpChannel.on('broadcast', { event: 'level_advance' }, ({ payload }) => {
+      if(!payload || payload.from === myId) return;
+      if(payload.idx === null){
+        showBanner('TWÓJ WSPÓŁGRACZ UKOŃCZYŁ WSZYSTKIE POZIOMY!', () => { leaveMultiplayer(); showScreen('menu'); });
+      } else {
+        levelDone = true;
+        showBanner('WSPÓŁGRACZ PRZESZEDŁ DALEJ!\nPrzechodzimy razem...', () => startLevel(payload.idx));
+      }
+    });
+
     mpChannel.on('presence', { event: 'sync' }, () => {
       const st = mpChannel.presenceState();
       const count = Object.keys(st).length;
@@ -1350,9 +1360,9 @@
     row(150, GROUND_Y-60, 3, 26);
     row(880, GROUND_Y-60, 5, 30);
     const enemies = [
-      {x:520, y:GROUND_Y-34, w:34, h:34, vx:1.5, minX:460, maxX:700, alive:true},
-      {x:1150, y:GROUND_Y-134, w:34, h:34, vx:1.4, minX:1130, maxX:1235, alive:true},
-      {x:1580, y:GROUND_Y-34, w:34, h:34, vx:1.6, minX:1550, maxX:1720, alive:true},
+      {x:520, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:460, maxX:700, alive:true},
+      {x:1150, y:GROUND_Y-134, w:34, h:34, vx:0.56, minX:1130, maxX:1235, alive:true},
+      {x:1580, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:1550, maxX:1720, alive:true},
     ];
     return { name:'Zielone Wzgórza', platforms, pipes, coins, enemies, flag:{x:1900,y:GROUND_Y-220,w:14,h:220}, width:2000, bg:'day' };
   }
@@ -1386,10 +1396,10 @@
     row(1430, GROUND_Y-140, 4, 26);
     row(1610, GROUND_Y-200, 3, 26);
     const enemies = [
-      {x:150, y:GROUND_Y-34, w:34, h:34, vx:1.5, minX:60, maxX:340, alive:true},
-      {x:600, y:GROUND_Y-34, w:34, h:34, vx:1.6, minX:560, maxX:740, alive:true},
-      {x:1040, y:GROUND_Y-144, w:34, h:34, vx:1.3, minX:1010, maxX:1100, alive:true},
-      {x:1400, y:GROUND_Y-34, w:34, h:34, vx:1.7, minX:1360, maxX:1560, alive:true},
+      {x:150, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:60, maxX:340, alive:true},
+      {x:600, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:560, maxX:740, alive:true},
+      {x:1040, y:GROUND_Y-144, w:34, h:34, vx:0.52, minX:1010, maxX:1100, alive:true},
+      {x:1400, y:GROUND_Y-34, w:34, h:34, vx:0.68, minX:1360, maxX:1560, alive:true},
     ];
     return { name:'Skoki nad Przepaścią', platforms, pipes, coins, enemies, flag:{x:2100,y:GROUND_Y-220,w:14,h:220}, width:2200, bg:'day' };
   }
@@ -1427,10 +1437,10 @@
     row(1370, GROUND_Y-210, 3, 26);
     row(1630, GROUND_Y-180, 3, 26);
     const enemies = [
-      {x:80, y:GROUND_Y-34, w:34, h:34, vx:1.4, minX:60, maxX:170, alive:true},
-      {x:1050, y:GROUND_Y-224, w:34, h:34, vx:1.2, minX:1030, maxX:1100, alive:true},
-      {x:1470, y:GROUND_Y-34, w:34, h:34, vx:1.5, minX:1460, maxX:1530, alive:true},
-      {x:1900, y:GROUND_Y-34, w:34, h:34, vx:1.6, minX:1850, maxX:2050, alive:true},
+      {x:80, y:GROUND_Y-34, w:34, h:34, vx:0.56, minX:60, maxX:170, alive:true},
+      {x:1050, y:GROUND_Y-224, w:34, h:34, vx:0.48, minX:1030, maxX:1100, alive:true},
+      {x:1470, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:1460, maxX:1530, alive:true},
+      {x:1900, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:1850, maxX:2050, alive:true},
     ];
     return { name:'Kamienny Labirynt', platforms, pipes, coins, enemies, flag:{x:2200,y:GROUND_Y-220,w:14,h:220}, width:2300, bg:'dusk' };
   }
@@ -1464,10 +1474,10 @@
     row(1660, GROUND_Y-220, 3, 26);
     row(1830, GROUND_Y-140, 3, 26);
     const enemies = [
-      {x:100, y:GROUND_Y-34, w:34, h:34, vx:1.5, minX:40, maxX:220, alive:true},
-      {x:920, y:GROUND_Y-34, w:34, h:34, vx:1.6, minX:880, maxX:1020, alive:true},
-      {x:1500, y:GROUND_Y-274, w:34, h:34, vx:1.2, minX:1480, maxX:1540, alive:true},
-      {x:2100, y:GROUND_Y-34, w:34, h:34, vx:1.7, minX:2040, maxX:2300, alive:true},
+      {x:100, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:40, maxX:220, alive:true},
+      {x:920, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:880, maxX:1020, alive:true},
+      {x:1500, y:GROUND_Y-274, w:34, h:34, vx:0.48, minX:1480, maxX:1540, alive:true},
+      {x:2100, y:GROUND_Y-34, w:34, h:34, vx:0.68, minX:2040, maxX:2300, alive:true},
     ];
     return { name:'Wieża Chmur', platforms, pipes, coins, enemies, flag:{x:2400,y:GROUND_Y-220,w:14,h:220}, width:2500, bg:'night' };
   }
@@ -1505,12 +1515,12 @@
     row(1370, GROUND_Y-210, 3, 26);
     row(1630, GROUND_Y-180, 3, 26);
     const enemies = [
-      {x:80, y:GROUND_Y-34, w:34, h:34, vx:1.5, minX:60, maxX:170, alive:true},
-      {x:800, y:GROUND_Y-34, w:34, h:34, vx:1.7, minX:770, maxX:900, alive:true},
-      {x:1050, y:GROUND_Y-224, w:34, h:34, vx:1.3, minX:1030, maxX:1100, alive:true},
-      {x:1470, y:GROUND_Y-34, w:34, h:34, vx:1.6, minX:1460, maxX:1530, alive:true},
-      {x:1900, y:GROUND_Y-34, w:34, h:34, vx:1.8, minX:1850, maxX:2050, alive:true},
-      {x:2150, y:GROUND_Y-34, w:34, h:34, vx:1.5, minX:2100, maxX:2250, alive:true},
+      {x:80, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:60, maxX:170, alive:true},
+      {x:800, y:GROUND_Y-34, w:34, h:34, vx:0.68, minX:770, maxX:900, alive:true},
+      {x:1050, y:GROUND_Y-224, w:34, h:34, vx:0.52, minX:1030, maxX:1100, alive:true},
+      {x:1470, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:1460, maxX:1530, alive:true},
+      {x:1900, y:GROUND_Y-34, w:34, h:34, vx:0.72, minX:1850, maxX:2050, alive:true},
+      {x:2150, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2100, maxX:2250, alive:true},
     ];
     return { name:'Wulkaniczna Otchłań', platforms, pipes, coins, enemies, flag:{x:2200,y:GROUND_Y-220,w:14,h:220}, width:2300, bg:'volcano' };
   }
@@ -1544,11 +1554,11 @@
     row(1660, GROUND_Y-220, 3, 26);
     row(1830, GROUND_Y-140, 3, 26);
     const enemies = [
-      {x:100, y:GROUND_Y-34, w:34, h:34, vx:1.6, minX:40, maxX:220, alive:true},
-      {x:920, y:GROUND_Y-34, w:34, h:34, vx:1.7, minX:880, maxX:1020, alive:true},
-      {x:1500, y:GROUND_Y-274, w:34, h:34, vx:1.3, minX:1480, maxX:1540, alive:true},
-      {x:2050, y:GROUND_Y-34, w:34, h:34, vx:1.8, minX:2040, maxX:2160, alive:true},
-      {x:2280, y:GROUND_Y-34, w:34, h:34, vx:1.6, minX:2200, maxX:2400, alive:true},
+      {x:100, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:40, maxX:220, alive:true},
+      {x:920, y:GROUND_Y-34, w:34, h:34, vx:0.68, minX:880, maxX:1020, alive:true},
+      {x:1500, y:GROUND_Y-274, w:34, h:34, vx:0.52, minX:1480, maxX:1540, alive:true},
+      {x:2050, y:GROUND_Y-34, w:34, h:34, vx:0.72, minX:2040, maxX:2160, alive:true},
+      {x:2280, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:2200, maxX:2400, alive:true},
     ];
     return { name:'Lodowa Twierdza', platforms, pipes, coins, enemies, flag:{x:2400,y:GROUND_Y-220,w:14,h:220}, width:2500, bg:'ice' };
   }
@@ -1585,10 +1595,10 @@
       {x:2200, y:GROUND_Y-24, w:60, h:24},
     ];
     const enemies = [
-      {x:530, y:GROUND_Y-140, w:32, h:32, vx:1.3, minX:400, maxX:750, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
-      {x:950, y:GROUND_Y-34, w:34, h:34, vx:1.5, minX:920, maxX:1080, alive:true},
-      {x:1450, y:GROUND_Y-150, w:32, h:32, vx:1.4, minX:1300, maxX:1600, baseY:GROUND_Y-150, amp:40, type:'flyer', alive:true},
-      {x:1950, y:GROUND_Y-34, w:34, h:34, vx:1.6, minX:1900, maxX:2100, alive:true},
+      {x:530, y:GROUND_Y-140, w:32, h:32, vx:0.52, minX:400, maxX:750, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
+      {x:950, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:920, maxX:1080, alive:true},
+      {x:1450, y:GROUND_Y-150, w:32, h:32, vx:0.56, minX:1300, maxX:1600, baseY:GROUND_Y-150, amp:40, type:'flyer', alive:true},
+      {x:1950, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:1900, maxX:2100, alive:true},
     ];
     return { name:'Latający Szlak', platforms, pipes, coins, enemies, movers, hazards, flag:{x:2350,y:GROUND_Y-220,w:14,h:220}, width:2450, bg:'desert' };
   }
@@ -1623,7 +1633,7 @@
     const enemies = [
       {x:900, y:GROUND_Y-34, w:34, h:34, jumpHeight:70, baseY:GROUND_Y-34, type:'jumper', alive:true},
       {x:1250, y:GROUND_Y-124, w:32, h:32, jumpHeight:60, baseY:GROUND_Y-124, type:'jumper', alive:true},
-      {x:1700, y:GROUND_Y-34, w:34, h:34, vx:1.6, minX:1650, maxX:1850, alive:true},
+      {x:1700, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:1650, maxX:1850, alive:true},
       {x:1980, y:GROUND_Y-34, w:34, h:34, jumpHeight:80, baseY:GROUND_Y-34, type:'jumper', alive:true},
     ];
     return { name:'Pustynia Kolców', platforms, pipes, coins, enemies, movers, hazards, flag:{x:2020,y:GROUND_Y-220,w:14,h:220}, width:2150, bg:'desert' };
@@ -1668,13 +1678,13 @@
       {x:2350, y:GROUND_Y-24, w:60, h:24},
     ];
     const enemies = [
-      {x:500, y:GROUND_Y-140, w:32, h:32, vx:1.4, minX:350, maxX:750, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
+      {x:500, y:GROUND_Y-140, w:32, h:32, vx:0.56, minX:350, maxX:750, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
       {x:1100, y:GROUND_Y-34, w:34, h:34, jumpHeight:75, baseY:GROUND_Y-34, type:'jumper', alive:true},
-      {x:1200, y:GROUND_Y-34, w:34, h:34, vx:1.6, minX:1160, maxX:1250, alive:true},
-      {x:1650, y:GROUND_Y-150, w:32, h:32, vx:1.5, minX:1500, maxX:1800, baseY:GROUND_Y-150, amp:40, type:'flyer', alive:true},
-      {x:2280, y:GROUND_Y-34, w:34, h:34, vx:1.6, minX:2250, maxX:2450, alive:true},
+      {x:1200, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:1160, maxX:1250, alive:true},
+      {x:1650, y:GROUND_Y-150, w:32, h:32, vx:0.6, minX:1500, maxX:1800, baseY:GROUND_Y-150, amp:40, type:'flyer', alive:true},
+      {x:2280, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:2250, maxX:2450, alive:true},
       {x:2480, y:GROUND_Y-34, w:34, h:34, jumpHeight:80, baseY:GROUND_Y-34, type:'jumper', alive:true},
-      {x:2680, y:GROUND_Y-34, w:34, h:34, vx:1.7, minX:2650, maxX:2760, alive:true},
+      {x:2680, y:GROUND_Y-34, w:34, h:34, vx:0.68, minX:2650, maxX:2760, alive:true},
     ];
     return { name:'Ostateczna Próba', platforms, pipes, coins, enemies, movers, hazards, flag:{x:2750,y:GROUND_Y-220,w:14,h:220}, width:2850, bg:'night' };
   }
@@ -1726,7 +1736,7 @@
   function updateEnemies(){
     level.enemies.forEach((e, idx) => {
       if(!e.alive) return;
-      e.animT = (e.animT||0) + 0.18;
+      e.animT = (e.animT||0) + 0.09;
 
       if(e.type === 'flyer'){
         e.x += e.vx;
@@ -1911,8 +1921,18 @@
     saveProfile();
     setTimeout(() => {
       if(mpChannel){
-        const msg = won ? 'POZIOM UKOŃCZONY!\n+' + runCoins + ' monet' : 'GAME OVER\n+' + runCoins + ' monet zebranych';
-        showBanner(msg, () => { leaveMultiplayer(); showScreen('menu'); });
+        if(won){
+          if(currentLevelIndex < LEVELS.length-1){
+            const nextIdx = currentLevelIndex + 1;
+            broadcastEvent('level_advance', { idx: nextIdx });
+            showBanner('POZIOM UKOŃCZONY!\n+' + runCoins + ' monet', () => startLevel(nextIdx));
+          } else {
+            broadcastEvent('level_advance', { idx: null });
+            showBanner('UKOŃCZYLIŚCIE WSZYSTKIE POZIOMY!\n+' + runCoins + ' monet', () => { leaveMultiplayer(); showScreen('menu'); });
+          }
+        } else {
+          showBanner('GAME OVER\n+' + runCoins + ' monet zebranych', () => { leaveMultiplayer(); showScreen('menu'); });
+        }
         return;
       }
       if(won){
@@ -2149,8 +2169,9 @@
     // ULTRA: iskierki
     if(sparkle){
       const t = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.004;
-      drawSparkle(tctx, 34, -2, 3 + Math.sin(t)*1.2, t);
-      drawSparkle(tctx, -1, 30, 2.4 + Math.cos(t*1.3)*1, t*1.4);
+      drawSparkle(tctx, 34, -2, 4.5 + Math.sin(t)*1.8, t);
+      drawSparkle(tctx, -1, 30, 3.6 + Math.cos(t*1.3)*1.5, t*1.4);
+      drawSparkle(tctx, 39, 30, 3.2 + Math.sin(t*1.6)*1.4, t*1.7);
     }
   }
 
@@ -2195,6 +2216,19 @@
     // kolowrotek w powietrzu - pelny obrot narastajacy z czasem lotu
     const spinAngle = airborne ? player.airTime * 0.2 : 0;
 
+    // HIGH/ULTRA: wyrazna, zawsze widoczna aura wokol postaci (latwo widoczna roznica vs LOW)
+    if(gfxQuality >= 2){
+      ctx.save();
+      const auraR = gfxQuality >= 3 ? 34 : 22;
+      const pulse = gfxQuality >= 3 ? (0.75 + Math.sin((timeAlive||0)*0.08)*0.25) : 1;
+      const aura = ctx.createRadialGradient(px+player.w/2, py+player.h/2, 4, px+player.w/2, py+player.h/2, auraR*pulse);
+      aura.addColorStop(0, gfxQuality>=3 ? 'rgba(255,225,120,.45)' : 'rgba(255,255,255,.18)');
+      aura.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath(); ctx.arc(px+player.w/2, py+player.h/2, auraR*pulse, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+
     // ULTRA: smugi predkosci przy biegu
     if(gfxQuality >= 3 && running){
       ctx.save();
@@ -2223,8 +2257,8 @@
     ctx.save();
     // HIGH+: miekki cien/poswiata pod postacia
     if(gfxQuality >= 2){
-      ctx.shadowColor = airborne && gfxQuality>=3 ? 'rgba(255,230,120,.55)' : 'rgba(0,0,0,.35)';
-      ctx.shadowBlur = airborne && gfxQuality>=3 ? 14 : 8;
+      ctx.shadowColor = airborne && gfxQuality>=3 ? 'rgba(255,230,120,.75)' : 'rgba(0,0,0,.35)';
+      ctx.shadowBlur = airborne && gfxQuality>=3 ? 22 : 10;
       ctx.shadowOffsetY = 3;
     }
     // pivot w przyblizonym srodku sylwetki, zeby kolowrotek obracal sie "w miejscu"
@@ -2532,20 +2566,20 @@
         ctx.beginPath(); ctx.ellipse(cx, e.y+e.h+5, e.w/2, 4.5, 0, 0, Math.PI*2); ctx.fill();
       }
 
-      // ULTRA: pulsujaca mroczna aura + drobinki
+      // ULTRA: pulsujaca aura + drobinki (kolor zgodny z typem wroga)
       if(gfxQuality >= 3){
         const pulse = 0.5 + Math.sin((e.animT||0)*1.5)*0.5;
         ctx.save();
-        ctx.globalAlpha = 0.18 + pulse*0.12;
-        ctx.fillStyle = '#c084f5';
-        ctx.beginPath(); ctx.ellipse(cx, cy, bodyW*1.5, bodyH*1.5, 0, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 0.28 + pulse*0.18;
+        ctx.fillStyle = palette.mid;
+        ctx.beginPath(); ctx.ellipse(cx, cy, bodyW*1.8, bodyH*1.8, 0, 0, Math.PI*2); ctx.fill();
         ctx.restore();
-        for(let i=0;i<2;i++){
-          const pt = ((e.animT||0)*0.6 + i*3.1) % 6.28;
-          const px2 = cx + Math.cos(pt)*(bodyW*1.6);
-          const py2 = cy + Math.sin(pt)*(bodyH*1.6);
-          ctx.fillStyle = 'rgba(200,132,245,.6)';
-          ctx.beginPath(); ctx.arc(px2, py2, 1.6, 0, Math.PI*2); ctx.fill();
+        for(let i=0;i<3;i++){
+          const pt = ((e.animT||0)*0.6 + i*2.1) % 6.28;
+          const px2 = cx + Math.cos(pt)*(bodyW*1.9);
+          const py2 = cy + Math.sin(pt)*(bodyH*1.9);
+          ctx.fillStyle = palette.light;
+          ctx.beginPath(); ctx.arc(px2, py2, 2.2, 0, Math.PI*2); ctx.fill();
         }
       }
 
