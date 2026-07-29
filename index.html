@@ -113,6 +113,26 @@
     align-items:flex-start;
     justify-content:center;
   }
+  .lives-shop {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:20px;
+    background:rgba(0,0,0,.3);
+    border:2px solid rgba(255,255,255,.2);
+    border-radius:12px;
+    padding:12px 20px;
+    margin-top:6px;
+    flex-wrap:wrap;
+  }
+  .lives-shop-info {
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    color:#fff;
+    font-weight:bold;
+    font-size:14px;
+  }
   .shop-preview {
     display:flex;
     flex-direction:column;
@@ -154,7 +174,7 @@
   .skin-card.selected { border-color:#ffd23f; box-shadow:0 0 12px #ffd23f; }
   .skin-card.previewed { border-color:#7fd6ff; box-shadow:0 0 10px rgba(127,214,255,.6); }
   .skin-card.locked { opacity:.55; }
-  #btnBuyEquip:disabled { opacity:.5; cursor:not-allowed; filter:grayscale(.4); }
+  #btnBuyEquip:disabled, #btnBuyLife:disabled { opacity:.5; cursor:not-allowed; filter:grayscale(.4); }
   .settings-panel {
     display:flex;
     flex-direction:column;
@@ -562,6 +582,13 @@
         <button class="menu-btn" id="btnBuyEquip">✅ ZAŁÓŻ</button>
       </div>
     </div>
+    <div class="lives-shop">
+      <div class="lives-shop-info">
+        <span>❤ Dodatkowe życia: <b id="extraLivesCount">0</b></span>
+        <span class="small-note">Doliczane do startowych 3 żyć przy następnej grze</span>
+      </div>
+      <button class="menu-btn small" id="btnBuyLife">🪙 KUP ŻYCIE (100)</button>
+    </div>
     <button class="menu-btn small" id="btnBack">⬅ POWRÓT</button>
   </div>
 
@@ -817,6 +844,7 @@
     musicOn: true,
     volumeUI: 56,
     graphicsQuality: 'medium',
+    extraLives: 0,
   };
 
   function nameFromUser(user){
@@ -840,6 +868,7 @@
       state.musicOn = data.music_on ?? true;
       state.volumeUI = data.volume ?? 56;
       state.graphicsQuality = data.graphics_quality ?? 'medium';
+      state.extraLives = data.extra_lives ?? 0;
       if(data.display_name) state.displayName = data.display_name;
       else await sb.from('profiles').update({ display_name: state.displayName }).eq('id', user.id);
     }
@@ -879,6 +908,7 @@
         music_on: state.musicOn,
         volume: state.volumeUI,
         graphics_quality: state.graphicsQuality,
+        extra_lives: state.extraLives,
         updated_at: new Date().toISOString(),
       });
       refreshLeaderboard();
@@ -1182,6 +1212,16 @@
     }
   };
 
+  document.getElementById('btnBuyLife').onclick = () => {
+    if(state.wallet >= 100){
+      state.wallet -= 100;
+      state.extraLives += 1;
+      renderShop();
+      saveProfile();
+      AudioEngine.sfxCoin();
+    }
+  };
+
   function renderShop(){
     const grid = document.getElementById('shopGrid');
     grid.innerHTML = '';
@@ -1209,6 +1249,9 @@
     document.getElementById('previewName').textContent = previewSk.name;
     updateBuyEquipButton();
     startPreviewLoop();
+    document.getElementById('extraLivesCount').textContent = state.extraLives;
+    const buyLifeBtn = document.getElementById('btnBuyLife');
+    buyLifeBtn.disabled = state.wallet < 100;
   }
 
   function renderLevels(){
@@ -1622,6 +1665,8 @@
   function level8(){
     const platforms = [
       mkGround(0, 260),
+      {x:420, y:GROUND_Y-40, w:90, h:22},
+      {x:590, y:GROUND_Y-40, w:90, h:22},
       mkGround(700, 200),
       {x:1220, y:GROUND_Y-90, w:90, h:22},
       {x:1400, y:GROUND_Y-150, w:90, h:22},
@@ -1636,6 +1681,8 @@
     const coins = [];
     function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
     row(80, GROUND_Y-100, 3, 26);
+    row(430, GROUND_Y-90, 3, 26);
+    row(600, GROUND_Y-90, 3, 26);
     row(720, GROUND_Y-100, 4, 26);
     row(1230, GROUND_Y-130, 3, 26);
     row(1410, GROUND_Y-190, 3, 26);
@@ -1718,7 +1765,11 @@
     };
     camera = {x:0};
     runCoins = 0;
-    lives = 3;
+    lives = 3 + (state.extraLives || 0);
+    if(state.extraLives > 0){
+      state.extraLives = 0;
+      saveProfile();
+    }
     levelDone = false;
     timeAlive = 0;
     document.getElementById('hudCoins').textContent = runCoins;
