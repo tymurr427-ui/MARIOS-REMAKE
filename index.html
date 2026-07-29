@@ -154,10 +154,11 @@
   }
   .shop-grid {
     display:grid;
-    grid-template-columns:repeat(3, 150px);
-    gap:16px;
+    grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));
+    gap:14px;
     margin:10px 0;
     max-height:44vh;
+    max-width:780px;
     overflow-y:auto;
   }
   .skin-card {
@@ -1832,7 +1833,7 @@
         if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
         e.y = e.baseY + Math.sin(e.animT*0.6) * (e.amp||30);
       } else if(e.type === 'jumper'){
-        const hop = Math.abs(Math.sin(e.animT*0.5));
+        const hop = Math.abs(Math.sin(e.animT*0.25));
         e.y = e.baseY - hop*(e.jumpHeight||70);
       } else {
         e.x += e.vx;
@@ -1911,7 +1912,7 @@
           if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
           e.y = e.baseY + Math.sin(e.animT*0.6) * (e.amp||30);
         } else if(e.type === 'jumper'){
-          const hop = Math.abs(Math.sin(e.animT*0.5));
+          const hop = Math.abs(Math.sin(e.animT*0.25));
           e.y = e.baseY - hop*(e.jumpHeight||70);
         } else {
           e.x += e.vx;
