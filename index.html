@@ -620,6 +620,8 @@
   let mpConnected = false;
   let remotePlayer = null;      // ostatnie dane o pozycji drugiego gracza
   let remoteLastSeen = 0;
+  let remoteDead = false;       // czy drugi gracz stracil wszystkie zycia
+  let mpRestarting = false;     // zabezpieczenie przed podwojnym restartem
   let mpBroadcastTimer = 0;
 
   function generateLobbyCode(){
@@ -677,11 +679,25 @@
 
     mpChannel.on('broadcast', { event: 'level_advance' }, ({ payload }) => {
       if(!payload || payload.from === myId) return;
+      mpRestarting = false;
+      remoteDead = false;
       if(payload.idx === null){
         showBanner('TWÓJ WSPÓŁGRACZ UKOŃCZYŁ WSZYSTKIE POZIOMY!', () => { leaveMultiplayer(); showScreen('menu'); });
       } else {
         levelDone = true;
         showBanner('WSPÓŁGRACZ PRZESZEDŁ DALEJ!\nPrzechodzimy razem...', () => startLevel(payload.idx));
+      }
+    });
+
+    mpChannel.on('broadcast', { event: 'player_dead' }, ({ payload }) => {
+      if(!payload || payload.from === myId) return;
+      remoteDead = true;
+      if(player.spectating && !mpRestarting){
+        mpRestarting = true;
+        broadcastEvent('level_advance', { idx: currentLevelIndex });
+        showBanner('OBAJ PRZEGRALIŚCIE - RESTART POZIOMU', () => startLevel(currentLevelIndex));
+      } else if(!player.spectating){
+        document.getElementById('mpHudPill').textContent = '👥 MULTIPLAYER · ' + mpCode + ' · współgracz zginął, gra dalej!';
       }
     });
 
@@ -1698,7 +1714,7 @@
     level.platforms.forEach(p => { if(p.y === undefined) p.y = GROUND_Y; });
     player = {
       x:40, y:GROUND_Y-54, w:38, h:54,
-      vx:0, vy:0, onGround:false, facing:1, animT:0, invuln:0, airTime:0
+      vx:0, vy:0, onGround:false, facing:1, animT:0, invuln:0, airTime:0, spectating:false
     };
     camera = {x:0};
     runCoins = 0;
@@ -1708,6 +1724,12 @@
     document.getElementById('hudCoins').textContent = runCoins;
     document.getElementById('hudLives').textContent = lives;
     document.getElementById('hudLevel').textContent = (index+1) + ' - ' + level.name;
+    if(mpChannel){
+      remoteDead = false;
+      mpRestarting = false;
+      document.getElementById('mpHudPill').classList.remove('hidden');
+      document.getElementById('mpHudPill').textContent = '👥 MULTIPLAYER · ' + mpCode;
+    }
     cancelAnimationFrame(rafId);
     resizeCanvas();
     loop();
@@ -1726,8 +1748,23 @@
     document.getElementById('hudLives').textContent = lives;
     AudioEngine.sfxHurt();
     if(lives <= 0){
-      levelDone = true;
-      finishRun(false);
+      if(mpChannel && !player.spectating){
+        player.spectating = true;
+        document.getElementById('hudLives').textContent = 0;
+        broadcastEvent('player_dead', {});
+        if(remoteDead && !mpRestarting){
+          mpRestarting = true;
+          broadcastEvent('level_advance', { idx: currentLevelIndex });
+          showBanner('OBAJ PRZEGRALIŚCIE - RESTART POZIOMU', () => startLevel(currentLevelIndex));
+        } else {
+          showBanner('NIE ŻYJESZ\nOglądasz współgracza...', () => {});
+          document.getElementById('mpHudPill').classList.remove('hidden');
+          document.getElementById('mpHudPill').textContent = '💀 Nie żyjesz - oglądasz współgracza';
+        }
+      } else if(!mpChannel){
+        levelDone = true;
+        finishRun(false);
+      }
     } else {
       resetPlayerPosition();
     }
@@ -1799,17 +1836,43 @@
   // ---------- ORYGINALNE TEMPO MARIO ----------
   // Klasyczne NES Mario: chód ~1.5 px/klatke w jednostkach gry, bieg szybszy,
   // przyspieszenie/tarcie zamiast natychmiastowej predkosci, skok zmiennej wysokosci.
-  const WALK_MAX = 3.7;
-  const RUN_MAX = 6.3;
-  const ACCEL = 0.42;
-  const DECEL_GROUND = 0.42;
-  const DECEL_AIR = 0.2;
+  const WALK_MAX = 2.6;
+  const RUN_MAX = 5.0;
+  const ACCEL = 0.32;
+  const DECEL_GROUND = 0.36;
+  const DECEL_AIR = 0.16;
   const JUMP_VELOCITY = -12.6;
   const JUMP_CUT = 0.45; // puszczenie skoku wczesniej -> nizszy skok
 
   function update(){
     if(levelDone) return;
     timeAlive++;
+
+    if(player.spectating){
+      updateMovers();
+      level.coins.forEach(c => { if(!c.taken) c.t += 0.15; });
+      level.enemies.forEach(e => {
+        if(!e.alive) return;
+        e.animT = (e.animT||0) + 0.09;
+        if(e.type === 'flyer'){
+          e.x += e.vx;
+          if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
+          if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
+          e.y = e.baseY + Math.sin(e.animT*0.6) * (e.amp||30);
+        } else if(e.type === 'jumper'){
+          const hop = Math.abs(Math.sin(e.animT*0.5));
+          e.y = e.baseY - hop*(e.jumpHeight||70);
+        } else {
+          e.x += e.vx;
+          if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
+          if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
+        }
+      });
+      const followX = remotePlayer ? remotePlayer.x : player.x;
+      camera.x = Math.max(0, Math.min(followX - W/2, level.width - W));
+      return;
+    }
+
     broadcastOwnState();
 
     const running = keys['ShiftLeft'] || keys['ShiftRight'];
@@ -1931,7 +1994,9 @@
             showBanner('UKOŃCZYLIŚCIE WSZYSTKIE POZIOMY!\n+' + runCoins + ' monet', () => { leaveMultiplayer(); showScreen('menu'); });
           }
         } else {
-          showBanner('GAME OVER\n+' + runCoins + ' monet zebranych', () => { leaveMultiplayer(); showScreen('menu'); });
+          const restartIdx = currentLevelIndex;
+          broadcastEvent('level_advance', { idx: restartIdx });
+          showBanner('PRZEGRANA - RESTART POZIOMU\n+' + runCoins + ' monet zebranych', () => startLevel(restartIdx));
         }
         return;
       }
@@ -2705,7 +2770,7 @@
     drawEnemies();
     drawFlag();
     if(mpChannel) drawRemotePlayer();
-    drawPlayer();
+    if(!player.spectating) drawPlayer();
   }
 
   function loop(){
