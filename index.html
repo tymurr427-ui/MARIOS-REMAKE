@@ -362,6 +362,17 @@
     text-shadow:0 1px 0 rgba(255,255,255,.5);
   }
   .hud-heart-icon { font-size:20px; filter:drop-shadow(1px 2px 0 #000); }
+  .shield-pill {
+    background:rgba(80,180,255,.55) !important;
+    border-color:rgba(150,220,255,.6) !important;
+  }
+  .shield-pill.active {
+    animation: shieldPulse 1s infinite;
+  }
+  @keyframes shieldPulse {
+    0%, 100% { box-shadow:0 0 6px rgba(120,200,255,.8); }
+    50% { box-shadow:0 0 16px rgba(120,200,255,1); }
+  }
   #hudCoins, #hudLives { font-size:20px; }
   .coin-pop {
     position:absolute;
@@ -633,6 +644,13 @@
       </div>
       <button class="menu-btn small" id="btnBuyLife">🪙 KUP ŻYCIE (100)</button>
     </div>
+    <div class="lives-shop">
+      <div class="lives-shop-info">
+        <span>🛡 Tarcze: <b id="shieldsCount">0</b></span>
+        <span class="small-note">W grze naciśnij Q, by aktywować na 30 sekund - zabija każdego wroga dotykiem i chroni przed obrażeniami</span>
+      </div>
+      <button class="menu-btn small" id="btnBuyShield">🪙 KUP TARCZĘ (150)</button>
+    </div>
     <button class="menu-btn small" id="btnBack">⬅ POWRÓT</button>
   </div>
 
@@ -642,6 +660,7 @@
       <div class="hud-pill"><div class="hud-coin-icon"></div><span id="hudCoins">0</span></div>
       <div class="hud-pill"><span class="hud-heart-icon">❤</span><span id="hudLives">3</span></div>
       <div class="hud-pill">Poziom <span id="hudLevel">1</span></div>
+      <div class="hud-pill shield-pill hidden" id="hudShieldPill">🛡 <span id="hudShieldText">0</span></div>
     </div>
     <button id="fsBtn">⛶ PEŁNY EKRAN</button>
     <button id="muteBtn" style="left:auto;">🔊</button>
@@ -889,6 +908,7 @@
     volumeUI: 56,
     graphicsQuality: 'medium',
     extraLives: 0,
+    shields: 0,
     totalCoinsEarned: 0,
     deathCount: 0,
     totalSpent: 0,
@@ -916,6 +936,7 @@
       state.volumeUI = data.volume ?? 56;
       state.graphicsQuality = data.graphics_quality ?? 'medium';
       state.extraLives = data.extra_lives ?? 0;
+      state.shields = data.shields ?? 0;
       state.totalCoinsEarned = data.total_coins_earned ?? 0;
       state.deathCount = data.death_count ?? 0;
       state.totalSpent = data.total_spent ?? 0;
@@ -959,6 +980,7 @@
         volume: state.volumeUI,
         graphics_quality: state.graphicsQuality,
         extra_lives: state.extraLives,
+        shields: state.shields,
         total_coins_earned: state.totalCoinsEarned,
         death_count: state.deathCount,
         total_spent: state.totalSpent,
@@ -1306,6 +1328,17 @@
     }
   };
 
+  document.getElementById('btnBuyShield').onclick = () => {
+    if(state.wallet >= 150){
+      state.wallet -= 150;
+      state.totalSpent += 150;
+      state.shields += 1;
+      renderShop();
+      saveProfile();
+      AudioEngine.sfxCoin();
+    }
+  };
+
   function renderShop(){
     const grid = document.getElementById('shopGrid');
     grid.innerHTML = '';
@@ -1336,6 +1369,9 @@
     document.getElementById('extraLivesCount').textContent = state.extraLives;
     const buyLifeBtn = document.getElementById('btnBuyLife');
     buyLifeBtn.disabled = state.wallet < 100;
+    document.getElementById('shieldsCount').textContent = state.shields;
+    const buyShieldBtn = document.getElementById('btnBuyShield');
+    buyShieldBtn.disabled = state.wallet < 150;
   }
 
   function renderLevels(){
@@ -1468,8 +1504,20 @@
   window.addEventListener('keydown', e => {
     keys[e.code] = true;
     if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+    if(e.code === 'KeyQ') activateShield();
   });
   window.addEventListener('keyup', e => keys[e.code] = false);
+
+  function activateShield(){
+    if(!gamePlaying || !player || player.spectating) return;
+    if(player.shieldActive) return;
+    if(state.shields <= 0) return;
+    state.shields--;
+    player.shieldActive = true;
+    player.shieldTimer = 30;
+    saveProfile();
+    AudioEngine.sfxWin();
+  }
 
   let level, player, camera, runCoins, lives, levelDone, timeAlive, currentLevelIndex;
 
@@ -1773,7 +1821,6 @@
     row(1650, GROUND_Y-100, 5, 26);
     row(1900, GROUND_Y-100, 4, 26);
     const hazards = [
-      {x:120, y:GROUND_Y-18, w:36, h:18},
       {x:800, y:GROUND_Y-18, w:40, h:18},
       {x:1850, y:GROUND_Y-18, w:36, h:18},
     ];
@@ -1845,7 +1892,8 @@
     level.platforms.forEach(p => { if(p.y === undefined) p.y = GROUND_Y; });
     player = {
       x:40, y:GROUND_Y-54, w:38, h:54,
-      vx:0, vy:0, onGround:false, facing:1, animT:0, invuln:0, airTime:0, spectating:false, ridingMover:null
+      vx:0, vy:0, onGround:false, facing:1, animT:0, invuln:0, airTime:0, spectating:false, ridingMover:null,
+      shieldActive:false, shieldTimer:0
     };
     camera = {x:0};
     runCoins = 0;
@@ -1859,6 +1907,7 @@
     document.getElementById('hudCoins').textContent = runCoins;
     document.getElementById('hudLives').textContent = lives;
     document.getElementById('hudLevel').textContent = (index+1) + ' - ' + level.name;
+    updateShieldHud();
     if(mpChannel){
       remoteDead = false;
       mpRestarting = false;
@@ -1878,8 +1927,25 @@
     camera.x = 0;
   }
 
+  function updateShieldHud(){
+    const pill = document.getElementById('hudShieldPill');
+    const txt = document.getElementById('hudShieldText');
+    if(!pill) return;
+    if(player.shieldActive){
+      pill.classList.remove('hidden');
+      pill.classList.add('active');
+      txt.textContent = Math.ceil(player.shieldTimer) + 's';
+    } else if(state.shields > 0){
+      pill.classList.remove('hidden');
+      pill.classList.remove('active');
+      txt.textContent = state.shields + ' (Q)';
+    } else {
+      pill.classList.add('hidden');
+    }
+  }
+
   function takeDamage(){
-    if(player.invuln > 0) return;
+    if(player.invuln > 0 || player.shieldActive) return;
     lives--;
     document.getElementById('hudLives').textContent = lives;
     AudioEngine.sfxHurt();
@@ -1927,7 +1993,16 @@
         if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
       }
 
-      if(player.invuln <= 0){
+      if(player.shieldActive){
+        if(rectsOverlap(player, e)){
+          e.alive = false;
+          runCoins += 1;
+          document.getElementById('hudCoins').textContent = runCoins;
+          AudioEngine.sfxStomp();
+          spawnCoinPop();
+          broadcastEvent('enemy_dead', { idx });
+        }
+      } else if(player.invuln <= 0){
         if(rectsOverlap(player, e)){
           const stomp = player.vy > 0 && (player.y + player.h - e.y) < 20;
           if(stomp){
@@ -2088,6 +2163,15 @@
 
     if(player.invuln > 0) player.invuln--;
     player.airTime = player.onGround ? 0 : player.airTime + 1;
+
+    if(player.shieldActive){
+      player.shieldTimer -= 1/60;
+      if(player.shieldTimer <= 0){
+        player.shieldActive = false;
+        player.shieldTimer = 0;
+      }
+    }
+    updateShieldHud();
 
     if(player.y > H + 150){
       takeDamage();
@@ -2464,6 +2548,20 @@
       ctx.beginPath();
       ctx.arc(px+player.w/2, py+player.h/2, player.w*0.75, spinAngle-1.4, spinAngle);
       ctx.stroke();
+      ctx.restore();
+    }
+
+    // TARCZA: pulsujacy niebieski babelek ochronny (widoczny niezaleznie od jakosci grafiki)
+    if(player.shieldActive){
+      ctx.save();
+      const pulse = 0.6 + Math.sin((timeAlive||0)*0.3)*0.4;
+      ctx.strokeStyle = `rgba(120,210,255,${0.5+pulse*0.4})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.ellipse(px+player.w/2, py+player.h/2, player.w*0.85+pulse*3, player.h*0.62+pulse*3, 0, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(120,210,255,${0.08+pulse*0.08})`;
+      ctx.fill();
       ctx.restore();
     }
 
