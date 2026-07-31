@@ -709,6 +709,7 @@
   let isHost = false;
   let mpConnected = false;
   let remotePlayer = null;      // ostatnie dane o pozycji drugiego gracza
+  let remoteDisplay = null;     // wygladzona (interpolowana) pozycja do rysowania
   let remoteLastSeen = 0;
   let remoteDead = false;       // czy drugi gracz stracil wszystkie zycia
   let mpRestarting = false;     // zabezpieczenie przed podwojnym restartem
@@ -849,7 +850,7 @@
   function broadcastOwnState(){
     if(!mpChannel || !mpConnected) return;
     const now = performance.now();
-    if(now - mpBroadcastTimer < 66) return; // ~15x/sek
+    if(now - mpBroadcastTimer < 50) return; // ~20x/sek
     mpBroadcastTimer = now;
     mpChannel.send({
       type: 'broadcast',
@@ -870,11 +871,25 @@
     const tag = document.getElementById('remoteNametag');
     if(!mpChannel || !remotePlayer || Date.now() - remoteLastSeen > 4000){
       tag.classList.add('hidden');
+      remoteDisplay = null;
       return;
     }
+    if(!remoteDisplay){
+      remoteDisplay = { x: remotePlayer.x, y: remotePlayer.y };
+    } else {
+      // jesli roznica jest ogromna (np. skok miedzy poziomami), przeskocz od razu
+      const dist = Math.hypot(remotePlayer.x - remoteDisplay.x, remotePlayer.y - remoteDisplay.y);
+      if(dist > 400){
+        remoteDisplay.x = remotePlayer.x;
+        remoteDisplay.y = remotePlayer.y;
+      } else {
+        remoteDisplay.x += (remotePlayer.x - remoteDisplay.x) * 0.3;
+        remoteDisplay.y += (remotePlayer.y - remoteDisplay.y) * 0.3;
+      }
+    }
     const sk = SKINS.find(s => s.id === remotePlayer.skin) || SKINS[0];
-    const rx = remotePlayer.x - camera.x;
-    const ry = remotePlayer.y;
+    const rx = remoteDisplay.x - camera.x;
+    const ry = remoteDisplay.y;
     const scale = 38/40;
     const airborne = !remotePlayer.onGround;
     ctx.save();
@@ -1317,8 +1332,17 @@
     }
   };
 
+  function isTester(){
+    return !!(currentUser && currentUser.email === 'tymurr427@gmail.com');
+  }
+
   document.getElementById('btnBuyLife').onclick = () => {
-    if(state.wallet >= 100){
+    if(isTester()){
+      state.extraLives += 1;
+      renderShop();
+      saveProfile();
+      AudioEngine.sfxCoin();
+    } else if(state.wallet >= 100){
       state.wallet -= 100;
       state.totalSpent += 100;
       state.extraLives += 1;
@@ -1329,7 +1353,12 @@
   };
 
   document.getElementById('btnBuyShield').onclick = () => {
-    if(state.wallet >= 150){
+    if(isTester()){
+      state.shields += 1;
+      renderShop();
+      saveProfile();
+      AudioEngine.sfxCoin();
+    } else if(state.wallet >= 150){
       state.wallet -= 150;
       state.totalSpent += 150;
       state.shields += 1;
@@ -1368,10 +1397,19 @@
     startPreviewLoop();
     document.getElementById('extraLivesCount').textContent = state.extraLives;
     const buyLifeBtn = document.getElementById('btnBuyLife');
-    buyLifeBtn.disabled = state.wallet < 100;
     document.getElementById('shieldsCount').textContent = state.shields;
     const buyShieldBtn = document.getElementById('btnBuyShield');
-    buyShieldBtn.disabled = state.wallet < 150;
+    if(isTester()){
+      buyLifeBtn.disabled = false;
+      buyLifeBtn.textContent = '🆓 KUP ŻYCIE (DARMOWE)';
+      buyShieldBtn.disabled = false;
+      buyShieldBtn.textContent = '🆓 KUP TARCZĘ (DARMOWE)';
+    } else {
+      buyLifeBtn.disabled = state.wallet < 100;
+      buyLifeBtn.textContent = '🪙 KUP ŻYCIE (100)';
+      buyShieldBtn.disabled = state.wallet < 150;
+      buyShieldBtn.textContent = '🪙 KUP TARCZĘ (150)';
+    }
   }
 
   function renderLevels(){
