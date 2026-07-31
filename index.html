@@ -1845,7 +1845,7 @@
     level.platforms.forEach(p => { if(p.y === undefined) p.y = GROUND_Y; });
     player = {
       x:40, y:GROUND_Y-54, w:38, h:54,
-      vx:0, vy:0, onGround:false, facing:1, animT:0, invuln:0, airTime:0, spectating:false
+      vx:0, vy:0, onGround:false, facing:1, animT:0, invuln:0, airTime:0, spectating:false, ridingMover:null
     };
     camera = {x:0};
     runCoins = 0;
@@ -1874,6 +1874,7 @@
     player.x = 40; player.y = GROUND_Y-54; player.vx=0; player.vy=0;
     player.invuln = 60;
     player.airTime = 0;
+    player.ridingMover = null;
     camera.x = 0;
   }
 
@@ -2047,6 +2048,15 @@
     updateMovers();
     const movers = level.movers || [];
 
+    // jesli w poprzedniej klatce gracz stal na ruchomej platformie, przenosimy go
+    // razem z nia (w X i Y) ZANIM policzymy jego wlasny ruch/kolizje - inaczej przy
+    // szybszym ruchu platformy (zwlaszcza w pionie) samo wykrywanie nakladania
+    // "gubilo" gracza i spadal
+    if(player.ridingMover && movers.includes(player.ridingMover)){
+      player.x += player.ridingMover.dx;
+      player.y += player.ridingMover.dy;
+    }
+
     // ruch poziomy + kolizje
     player.x += player.vx;
     for(const p of [...level.platforms, ...level.pipes, ...movers]){
@@ -2074,7 +2084,7 @@
         }
       }
     }
-    if(standingOnMover) player.x += standingOnMover.dx;
+    player.ridingMover = standingOnMover;
 
     if(player.invuln > 0) player.invuln--;
     player.airTime = player.onGround ? 0 : player.airTime + 1;
