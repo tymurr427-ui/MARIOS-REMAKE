@@ -1906,7 +1906,6 @@
     row(2500, GROUND_Y-220, 3, 26);
     row(2650, GROUND_Y-100, 5, 26);
     const hazards = [
-      {x:150, y:GROUND_Y-18, w:36, h:18},
       {x:2350, y:GROUND_Y-18, w:36, h:18},
     ];
     const enemies = [
@@ -1921,7 +1920,101 @@
     return { name:'Ostateczna Próba', platforms, pipes, coins, enemies, movers, hazards, flag:{x:2750,y:GROUND_Y-220,w:14,h:220}, width:2850, bg:'night' };
   }
 
-  const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9];
+  function level10(){
+    const platforms = [
+      mkGround(0, 260),
+      mkGround(500, 220),
+      mkGround(1250, 200),
+      mkGround(2000, 600),
+    ];
+    const pipes = [];
+    const movers = [
+      {baseX:343, baseY:GROUND_Y-40, x:343, y:GROUND_Y-40, w:90, h:20, axis:'x', range:58, speed:1.0, isMover:true},
+      {baseX:820, baseY:GROUND_Y-40, x:820, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:1010, baseY:GROUND_Y-40, x:1010, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:1200, baseY:GROUND_Y-40, x:1200, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:1550, baseY:GROUND_Y-40, x:1550, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:1740, baseY:GROUND_Y-40, x:1740, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:1930, baseY:GROUND_Y-40, x:1930, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+    ];
+    const coins = [];
+    function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
+    row(120, GROUND_Y-100, 3, 26);
+    row(343, GROUND_Y-90, 3, 26);
+    row(560, GROUND_Y-100, 3, 26);
+    row(820, GROUND_Y-90, 3, 26);
+    row(1010, GROUND_Y-90, 3, 26);
+    row(1200, GROUND_Y-90, 3, 26);
+    row(1300, GROUND_Y-100, 3, 26);
+    row(1550, GROUND_Y-90, 3, 26);
+    row(1740, GROUND_Y-90, 3, 26);
+    row(1930, GROUND_Y-90, 3, 26);
+    row(2100, GROUND_Y-100, 5, 26);
+    const hazards = [
+      {x:600, y:GROUND_Y-18, w:40, h:18},
+      {x:2300, y:GROUND_Y-18, w:40, h:18},
+    ];
+    const enemies = [
+      {x:560, y:GROUND_Y-34, w:34, h:34, vx:0.55, minX:520, maxX:680, alive:true},
+      {x:1300, y:GROUND_Y-34, w:34, h:34, jumpHeight:70, baseY:GROUND_Y-34, type:'jumper', alive:true},
+      {x:2100, y:GROUND_Y-140, w:32, h:32, vx:0.5, minX:2050, maxX:2400, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
+      {x:2450, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2400, maxX:2550, alive:true},
+    ];
+    return { name:'Podniebna Forteca', platforms, pipes, coins, enemies, movers, hazards, flag:{x:2450,y:GROUND_Y-220,w:14,h:220}, width:2600, bg:'ice' };
+  }
+
+  function level11(){
+    const platforms = [
+      mkGround(0, 240),
+      mkGround(650, 200),
+      mkGround(1500, 220),
+      mkGround(2450, 600),
+    ];
+    const pipes = [];
+    const movers = [
+      {baseX:380, baseY:GROUND_Y-40, x:380, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:570, baseY:GROUND_Y-40, x:570, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:950, baseY:GROUND_Y-40, x:950, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:1140, baseY:GROUND_Y-40, x:1140, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:1330, baseY:GROUND_Y-40, x:1330, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:1820, baseY:GROUND_Y-40, x:1820, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+      {baseX:2010, baseY:GROUND_Y-40, x:2010, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+      {baseX:2200, baseY:GROUND_Y-40, x:2200, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+      // bonusowa winda pionowa na ostatniej wyspie
+      {baseX:2750, baseY:GROUND_Y-160, x:2750, y:GROUND_Y-160, w:90, h:20, axis:'y', range:110, speed:0.8, isMover:true},
+    ];
+    const coins = [];
+    function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
+    row(100, GROUND_Y-100, 3, 26);
+    row(380, GROUND_Y-90, 3, 26);
+    row(570, GROUND_Y-90, 3, 26);
+    row(700, GROUND_Y-100, 4, 26);
+    row(950, GROUND_Y-90, 3, 26);
+    row(1140, GROUND_Y-90, 3, 26);
+    row(1330, GROUND_Y-90, 3, 26);
+    row(1550, GROUND_Y-100, 4, 26);
+    row(1820, GROUND_Y-90, 3, 26);
+    row(2010, GROUND_Y-90, 3, 26);
+    row(2200, GROUND_Y-90, 3, 26);
+    row(2750, GROUND_Y-230, 3, 26);
+    row(2900, GROUND_Y-100, 5, 26);
+    const hazards = [
+      {x:700, y:GROUND_Y-18, w:40, h:18},
+      {x:1550, y:GROUND_Y-18, w:40, h:18},
+      {x:2650, y:GROUND_Y-18, w:40, h:18},
+    ];
+    const enemies = [
+      {x:700, y:GROUND_Y-34, w:34, h:34, vx:0.55, minX:670, maxX:820, alive:true},
+      {x:1550, y:GROUND_Y-140, w:32, h:32, vx:0.5, minX:1520, maxX:1680, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
+      {x:1650, y:GROUND_Y-34, w:34, h:34, jumpHeight:70, baseY:GROUND_Y-34, type:'jumper', alive:true},
+      {x:2500, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2470, maxX:2620, alive:true},
+      {x:2700, y:GROUND_Y-34, w:34, h:34, jumpHeight:75, baseY:GROUND_Y-34, type:'jumper', alive:true},
+      {x:2980, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2950, maxX:3040, alive:true},
+    ];
+    return { name:'Mroczny Finał', platforms, pipes, coins, enemies, movers, hazards, flag:{x:2950,y:GROUND_Y-220,w:14,h:220}, width:3050, bg:'volcano' };
+  }
+
+  const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11];
 
   function startLevel(index){
     currentLevelIndex = index;
