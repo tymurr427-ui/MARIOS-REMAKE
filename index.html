@@ -496,6 +496,23 @@
     pointer-events:none;
   }
   .global-auth-badge .auth-logged-pill { pointer-events:auto; font-size:12px; padding:4px 10px 4px 4px; }
+  .create-level-corner {
+    position:absolute;
+    top:58px; right:12px;
+    z-index:30;
+    background:linear-gradient(#ff9f4a,#d9660e);
+    border:2px solid #7a3a05;
+    color:#fff;
+    font-weight:bold;
+    font-size:11px;
+    padding:6px 12px;
+    border-radius:16px;
+    cursor:pointer;
+    box-shadow:0 3px 0 #7a3a05;
+    letter-spacing:.5px;
+  }
+  .create-level-corner:hover { filter:brightness(1.1); }
+  .create-level-corner:active { transform:translateY(2px); box-shadow:0 1px 0 #7a3a05; }
   .auth-corner-row {
     display:flex;
     align-items:center;
@@ -532,6 +549,91 @@
     font-size:15px;
   }
   .stats-row b { color:#ffd23f; font-size:17px; }
+
+  .editor-wrap {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    padding:14px;
+    max-width:1140px;
+    width:100%;
+  }
+  .editor-toolbar {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+    justify-content:center;
+    width:100%;
+  }
+  .editor-name-input, .editor-bg-select {
+    padding:8px 12px;
+    border-radius:8px;
+    border:2px solid rgba(255,255,255,.3);
+    background:rgba(255,255,255,.1);
+    color:#fff;
+    font-weight:bold;
+    font-size:13px;
+  }
+  .editor-name-input::placeholder { color:rgba(255,255,255,.5); }
+  .editor-bg-select option { color:#000; }
+  .editor-tools {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    justify-content:center;
+  }
+  .editor-tool {
+    background:rgba(255,255,255,.1);
+    border:2px solid rgba(255,255,255,.25);
+    color:#fff;
+    font-weight:bold;
+    font-size:11px;
+    padding:6px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .editor-tool:hover { background:rgba(255,255,255,.2); }
+  .editor-tool.active {
+    background:linear-gradient(#ffd23f,#c8860a);
+    border-color:#8a5a00;
+    color:#3a2600;
+  }
+  #editorCanvas {
+    background:#5c94fc;
+    border:3px solid rgba(255,255,255,.3);
+    border-radius:10px;
+    cursor:crosshair;
+    max-width:100%;
+  }
+  .editor-actions {
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+  }
+  .editor-save-result {
+    font-size:14px;
+    color:#ffd23f;
+    font-weight:bold;
+    min-height:20px;
+    text-align:center;
+  }
+  .editor-load-row {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:#fff;
+    font-size:13px;
+    flex-wrap:wrap;
+    justify-content:center;
+    background:rgba(0,0,0,.25);
+    padding:10px 16px;
+    border-radius:10px;
+    margin-top:6px;
+  }
 
   .leaderboard-panel {
     position:absolute;
@@ -572,6 +674,7 @@
 <body>
 <div id="wrap">
   <div id="globalAuthBadge" class="global-auth-badge"></div>
+  <button id="createLevelCorner" class="create-level-corner">🛠️ CREATE LEVEL</button>
   <div id="leaderboardBox" class="leaderboard-panel"></div>
 
   <!-- MENU -->
@@ -618,8 +721,57 @@
     </div>
     <div class="lobby-players" id="lobbyPlayers"></div>
     <div id="mpLobbyStatus" class="mp-status">Łączenie...</div>
+    <div id="mpCustomLevelBox" class="editor-load-row hidden">
+      <span>Zagrajcie na poziomie własnym (opcjonalnie):</span>
+      <input type="text" id="mpCustomCodeInput" maxlength="5" placeholder="kod poziomu" class="mp-code-input" style="width:120px; font-size:15px;">
+    </div>
     <button class="menu-btn" id="btnMpStart" style="display:none;">▶ START</button>
     <button class="menu-btn small" id="btnMpCancel">✖ ANULUJ</button>
+  </div>
+
+  <!-- EDYTOR POZIOMÓW -->
+  <div id="editorScreen" class="screen hidden">
+    <div class="editor-wrap">
+      <div class="editor-toolbar">
+        <input type="text" id="editorLevelName" maxlength="24" placeholder="Nazwa poziomu" class="editor-name-input">
+        <select id="editorBgSelect" class="editor-bg-select">
+          <option value="day">☀️ Dzień</option>
+          <option value="night">🌙 Noc</option>
+          <option value="dusk">🌆 Zmierzch</option>
+          <option value="volcano">🌋 Wulkan</option>
+          <option value="ice">❄️ Lód</option>
+          <option value="desert">🏜️ Pustynia</option>
+        </select>
+        <div class="editor-tools" id="editorTools">
+          <button class="editor-tool active" data-tool="ground">🟫 Grunt</button>
+          <button class="editor-tool" data-tool="platform">▬ Platforma</button>
+          <button class="editor-tool" data-tool="pipe">🟢 Rura</button>
+          <button class="editor-tool" data-tool="coin">🪙 Moneta</button>
+          <button class="editor-tool" data-tool="walker">🟣 Wróg</button>
+          <button class="editor-tool" data-tool="flyer">🔵 Latacz</button>
+          <button class="editor-tool" data-tool="jumper">🟢 Skoczek</button>
+          <button class="editor-tool" data-tool="hazard">▲ Kolce</button>
+          <button class="editor-tool" data-tool="mover">🟪 Ruchoma platf.</button>
+          <button class="editor-tool" data-tool="spawn">🏁 Start gracza</button>
+          <button class="editor-tool" data-tool="flag">🚩 Flaga (meta)</button>
+          <button class="editor-tool" data-tool="erase">🧹 Gumka</button>
+        </div>
+      </div>
+      <canvas id="editorCanvas" width="1100" height="380"></canvas>
+      <div class="editor-actions">
+        <button class="menu-btn small" id="btnEditorClear">🗑 WYCZYŚĆ</button>
+        <button class="menu-btn small" id="btnEditorTest">▶ TESTUJ</button>
+        <button class="menu-btn" id="btnEditorSave">💾 ZAPISZ I POKAŻ KOD</button>
+        <button class="menu-btn small" id="btnEditorBack">⬅ POWRÓT</button>
+      </div>
+      <div id="editorSaveResult" class="editor-save-result"></div>
+      <div class="editor-load-row">
+        <span>Masz kod poziomu od znajomego?</span>
+        <input type="text" id="editorLoadCodeInput" maxlength="5" placeholder="np. AB3XQ" class="mp-code-input" style="width:130px; font-size:16px;">
+        <button class="menu-btn small" id="btnEditorLoadCode">▶ ZAGRAJ</button>
+      </div>
+      <div id="editorLoadError" class="mp-error"></div>
+    </div>
   </div>
 
   <!-- STATYSTYKI -->
@@ -852,7 +1004,7 @@
       if(!payload || payload.from === myId) return;
       if(!mpGameStarted){
         mpConnected = true;
-        startMultiplayerGame();
+        startMultiplayerGame(payload.customData || null);
       }
     });
 
@@ -860,19 +1012,23 @@
       const count = renderLobbyPlayers();
       const statusEl = document.getElementById('mpLobbyStatus');
       const startBtn = document.getElementById('btnMpStart');
+      const customBox = document.getElementById('mpCustomLevelBox');
       if(count >= 2){
         mpConnected = true;
         if(isHost){
           statusEl.textContent = '✅ Wszyscy gotowi - możesz zaczynać!';
           startBtn.style.display = 'inline-block';
+          customBox.classList.remove('hidden');
         } else {
           statusEl.textContent = 'Czekam aż host rozpocznie grę...';
           startBtn.style.display = 'none';
+          customBox.classList.add('hidden');
         }
       } else {
         mpConnected = false;
         statusEl.textContent = isHost ? 'Czekam na drugiego gracza...' : ('Łączenie z lobby ' + code + '...');
         startBtn.style.display = 'none';
+        customBox.classList.add('hidden');
       }
     });
 
@@ -911,10 +1067,14 @@
     setupMpChannel(code, false);
   }
 
-  function startMultiplayerGame(){
+  function startMultiplayerGame(customData){
     mpGameStarted = true;
     showScreen('game');
-    startLevel(0); // multiplayer zawsze startuje na 1. poziomie, obaj gracze razem
+    if(customData){
+      startLevel('custom', customData);
+    } else {
+      startLevel(0); // multiplayer bez wskazanego kodu startuje na 1. wbudowanym poziomie
+    }
     document.getElementById('mpHudPill').classList.remove('hidden');
     document.getElementById('mpHudPill').textContent = '👥 MULTIPLAYER · ' + mpCode;
   }
@@ -1167,6 +1327,7 @@
   const levelScreen = document.getElementById('levelScreen');
   const settingsScreen = document.getElementById('settingsScreen');
   const statsScreen = document.getElementById('statsScreen');
+  const editorScreen = document.getElementById('editorScreen');
 
   let gamePlaying = false;
   const mpChoiceScreen = document.getElementById('mpChoiceScreen');
@@ -1180,6 +1341,7 @@
     levelScreen.classList.add('hidden');
     settingsScreen.classList.add('hidden');
     statsScreen.classList.add('hidden');
+    editorScreen.classList.add('hidden');
     mpChoiceScreen.classList.add('hidden');
     mpLobbyScreen.classList.add('hidden');
     if(name==='menu') menuScreen.classList.remove('hidden');
@@ -1188,11 +1350,13 @@
     if(name==='levels') levelScreen.classList.remove('hidden');
     if(name==='settings') settingsScreen.classList.remove('hidden');
     if(name==='stats') statsScreen.classList.remove('hidden');
+    if(name==='editor'){ editorScreen.classList.remove('hidden'); redrawEditor(); }
     if(name==='mpChoice') mpChoiceScreen.classList.remove('hidden');
     if(name==='mpLobby') mpLobbyScreen.classList.remove('hidden');
     document.getElementById('menuCoins').textContent = state.wallet;
     document.getElementById('shopCoins').textContent = state.wallet;
     document.getElementById('globalAuthBadge').style.display = (name==='game') ? 'none' : 'block';
+    document.getElementById('createLevelCorner').style.display = (name==='game') ? 'none' : 'block';
     const lb = document.getElementById('leaderboardBox');
     if(lb) lb.style.display = (name==='game') ? 'none' : 'block';
     gamePlaying = (name === 'game');
@@ -1288,10 +1452,22 @@
   document.getElementById('mpCodeInput').oninput = (e) => {
     e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
   };
-  document.getElementById('btnMpStart').onclick = () => {
+  document.getElementById('btnMpStart').onclick = async () => {
     if(!isHost || !mpConnected) return;
-    broadcastEvent('game_start', {});
-    startMultiplayerGame();
+    const customCode = document.getElementById('mpCustomCodeInput').value.trim().toUpperCase();
+    if(customCode){
+      document.getElementById('mpLobbyStatus').textContent = 'Wczytywanie poziomu własnego...';
+      const res = await loadCustomLevelByCode(customCode);
+      if(res.error){
+        document.getElementById('mpLobbyStatus').textContent = '⚠ ' + res.error;
+        return;
+      }
+      broadcastEvent('game_start', { customData: res.data });
+      startMultiplayerGame(res.data);
+    } else {
+      broadcastEvent('game_start', {});
+      startMultiplayerGame();
+    }
   };
   document.getElementById('btnMpCancel').onclick = () => {
     leaveMultiplayer();
@@ -1604,6 +1780,218 @@
     document.removeEventListener('click', initAudioOnce);
   });
 
+  // ---------- EDYTOR POZIOMÓW ----------
+  const EDITOR_LEVEL_W = 2000;
+  const EDITOR_LEVEL_H = 720;
+  const editorCanvas = document.getElementById('editorCanvas');
+  const editorCtx = editorCanvas.getContext('2d');
+  const editorScale = editorCanvas.height / EDITOR_LEVEL_H;
+  const EDITOR_GROUND_Y = EDITOR_LEVEL_H - 60;
+
+  let editorTool = 'ground';
+  let editorElements = []; // {kind, x, y, w, enemyType, axis}
+  let editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
+  let editorFlag = { x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220 };
+
+  function editorSnap(v, grid){ return Math.round(v/grid)*grid; }
+
+  function editorBgPreviewColors(bg){
+    if(bg==='night') return {sky1:'#0b1233', sky2:'#1c2a5e', hill:'#152a4a'};
+    if(bg==='dusk') return {sky1:'#8a4a8f', sky2:'#e0764f', hill:'#3d2352'};
+    if(bg==='volcano') return {sky1:'#3a0e0e', sky2:'#b8451c', hill:'#2a0a0a'};
+    if(bg==='ice') return {sky1:'#bfe9ff', sky2:'#eaf7ff', hill:'#6fb8d8'};
+    if(bg==='desert') return {sky1:'#ffdca0', sky2:'#ffb877', hill:'#c9862f'};
+    return {sky1:'#5c94fc', sky2:'#a8d8ff', hill:'#3fae4a'};
+  }
+
+  function redrawEditor(){
+    const c = editorBgPreviewColors(document.getElementById('editorBgSelect').value);
+    const grad = editorCtx.createLinearGradient(0,0,0,editorCanvas.height);
+    grad.addColorStop(0, c.sky1); grad.addColorStop(1, c.sky2);
+    editorCtx.fillStyle = grad;
+    editorCtx.fillRect(0,0,editorCanvas.width, editorCanvas.height);
+
+    // linia gruntu (poziom, na ktorym stoja bloki ziemi)
+    editorCtx.strokeStyle = 'rgba(255,255,255,.3)';
+    editorCtx.setLineDash([6,4]);
+    editorCtx.beginPath();
+    editorCtx.moveTo(0, EDITOR_GROUND_Y*editorScale);
+    editorCtx.lineTo(editorCanvas.width, EDITOR_GROUND_Y*editorScale);
+    editorCtx.stroke();
+    editorCtx.setLineDash([]);
+
+    for(const el of editorElements){
+      const ex = el.x*editorScale, ey = el.y*editorScale;
+      editorCtx.save();
+      if(el.kind==='ground'){
+        editorCtx.fillStyle = '#8a5a2b';
+        editorCtx.fillRect(ex, ey, el.w*editorScale, (editorCanvas.height-ey));
+        editorCtx.fillStyle = '#3fae4a';
+        editorCtx.fillRect(ex, ey, el.w*editorScale, 4);
+      } else if(el.kind==='platform'){
+        editorCtx.fillStyle = '#c96a2e';
+        editorCtx.fillRect(ex, ey, el.w*editorScale, 10);
+      } else if(el.kind==='pipe'){
+        editorCtx.fillStyle = '#1e9e46';
+        editorCtx.fillRect(ex, (EDITOR_GROUND_Y-60)*editorScale, el.w*editorScale, 60*editorScale);
+      } else if(el.kind==='coin'){
+        editorCtx.fillStyle = '#ffd23f';
+        editorCtx.beginPath(); editorCtx.arc(ex, ey, 5, 0, Math.PI*2); editorCtx.fill();
+      } else if(el.kind==='enemy'){
+        editorCtx.fillStyle = el.enemyType==='flyer' ? '#4f9fe0' : el.enemyType==='jumper' ? '#4fc463' : '#a655d6';
+        editorCtx.beginPath(); editorCtx.arc(ex, ey, 7, 0, Math.PI*2); editorCtx.fill();
+      } else if(el.kind==='hazard'){
+        editorCtx.fillStyle = '#c0c5cb';
+        editorCtx.beginPath();
+        editorCtx.moveTo(ex, EDITOR_GROUND_Y*editorScale);
+        editorCtx.lineTo(ex+el.w*editorScale/2, EDITOR_GROUND_Y*editorScale-14);
+        editorCtx.lineTo(ex+el.w*editorScale, EDITOR_GROUND_Y*editorScale);
+        editorCtx.fill();
+      } else if(el.kind==='mover'){
+        editorCtx.fillStyle = '#c9a5f5';
+        editorCtx.fillRect(ex-20, ey, 40, 8);
+      }
+      editorCtx.restore();
+    }
+
+    // start gracza
+    editorCtx.fillStyle = '#e74c3c';
+    editorCtx.beginPath(); editorCtx.arc(editorSpawn.x*editorScale, editorSpawn.y*editorScale, 8, 0, Math.PI*2); editorCtx.fill();
+    editorCtx.fillStyle = '#fff'; editorCtx.font = 'bold 9px sans-serif';
+    editorCtx.fillText('START', editorSpawn.x*editorScale-14, editorSpawn.y*editorScale-12);
+
+    // flaga
+    if(editorFlag){
+      editorCtx.fillStyle = '#e74c3c';
+      const fx = editorFlag.x*editorScale, fy = editorFlag.y*editorScale;
+      editorCtx.fillRect(fx, fy, 2, 220*editorScale);
+      editorCtx.beginPath();
+      editorCtx.moveTo(fx+2, fy+4); editorCtx.lineTo(fx+16, fy+10); editorCtx.lineTo(fx+2, fy+16);
+      editorCtx.fill();
+    }
+  }
+
+  function editorPlaceAt(levelX, levelY){
+    if(editorTool === 'erase'){
+      let bestIdx = -1, bestDist = 9999;
+      editorElements.forEach((el,i) => {
+        const d = Math.hypot(el.x-levelX, el.y-levelY);
+        if(d < bestDist){ bestDist = d; bestIdx = i; }
+      });
+      if(bestIdx >= 0 && bestDist < 120) editorElements.splice(bestIdx,1);
+      redrawEditor();
+      return;
+    }
+    if(editorTool === 'spawn'){ editorSpawn = {x:levelX, y:levelY}; redrawEditor(); return; }
+    if(editorTool === 'flag'){ editorFlag = {x:levelX, y:levelY}; redrawEditor(); return; }
+    if(editorTool === 'ground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w:200}); }
+    else if(editorTool === 'platform'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:90, h:22}); }
+    else if(editorTool === 'pipe'){ editorElements.push({kind:'pipe', x:levelX, w:46, h:60}); }
+    else if(editorTool === 'coin'){ editorElements.push({kind:'coin', x:levelX, y:levelY}); }
+    else if(editorTool === 'walker'){ editorElements.push({kind:'enemy', enemyType:'walker', x:levelX, y:EDITOR_GROUND_Y-34}); }
+    else if(editorTool === 'flyer'){ editorElements.push({kind:'enemy', enemyType:'flyer', x:levelX, y:levelY}); }
+    else if(editorTool === 'jumper'){ editorElements.push({kind:'enemy', enemyType:'jumper', x:levelX, y:EDITOR_GROUND_Y-34}); }
+    else if(editorTool === 'hazard'){ editorElements.push({kind:'hazard', x:levelX, w:40}); }
+    else if(editorTool === 'mover'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'x'}); }
+    redrawEditor();
+  }
+
+  editorCanvas.addEventListener('click', (e) => {
+    const rect = editorCanvas.getBoundingClientRect();
+    const cx = (e.clientX-rect.left) * (editorCanvas.width/rect.width);
+    const cy = (e.clientY-rect.top) * (editorCanvas.height/rect.height);
+    const levelX = editorSnap(cx/editorScale, 20);
+    const levelY = editorSnap(cy/editorScale, 20);
+    editorPlaceAt(levelX, levelY);
+  });
+
+  document.querySelectorAll('.editor-tool').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.editor-tool').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      editorTool = btn.dataset.tool;
+    };
+  });
+
+  document.getElementById('createLevelCorner').onclick = () => {
+    showScreen('editor');
+  };
+  document.getElementById('btnEditorBack').onclick = () => showScreen('menu');
+  document.getElementById('btnEditorClear').onclick = () => {
+    editorElements = [];
+    editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
+    editorFlag = { x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220 };
+    document.getElementById('editorSaveResult').textContent = '';
+    redrawEditor();
+  };
+  document.getElementById('editorBgSelect').onchange = redrawEditor;
+
+  function collectEditorData(){
+    const grounds = editorElements.filter(e=>e.kind==='ground').map(e=>({x:e.x,w:e.w}));
+    const platforms = editorElements.filter(e=>e.kind==='platform').map(e=>({x:e.x,y:e.y,w:e.w,h:e.h}));
+    const pipes = editorElements.filter(e=>e.kind==='pipe').map(e=>({x:e.x,w:e.w,h:e.h}));
+    const coins = editorElements.filter(e=>e.kind==='coin').map(e=>({x:e.x,y:e.y}));
+    const enemies = editorElements.filter(e=>e.kind==='enemy').map(e=>({x:e.x,y:e.y,enemyType:e.enemyType}));
+    const hazards = editorElements.filter(e=>e.kind==='hazard').map(e=>({x:e.x,w:e.w}));
+    const movers = editorElements.filter(e=>e.kind==='mover').map(e=>({x:e.x,y:e.y,axis:e.axis}));
+    return {
+      name: document.getElementById('editorLevelName').value.trim() || 'Poziom bez nazwy',
+      bg: document.getElementById('editorBgSelect').value,
+      width: EDITOR_LEVEL_W,
+      grounds, platforms, pipes, coins, enemies, hazards, movers,
+      flag: editorFlag, spawn: editorSpawn,
+    };
+  }
+
+  document.getElementById('btnEditorTest').onclick = () => {
+    const data = collectEditorData();
+    if(data.grounds.length === 0){
+      document.getElementById('editorSaveResult').textContent = '⚠ Dodaj chociaż jeden kawałek gruntu!';
+      return;
+    }
+    showScreen('game');
+    startLevel('custom', data);
+  };
+
+  document.getElementById('btnEditorSave').onclick = async () => {
+    const resultEl = document.getElementById('editorSaveResult');
+    if(!sb){ resultEl.textContent = '⚠ Zapis wymaga konta (Supabase).'; return; }
+    const data = collectEditorData();
+    if(data.grounds.length === 0){
+      resultEl.textContent = '⚠ Dodaj chociaż jeden kawałek gruntu, zanim zapiszesz!';
+      return;
+    }
+    resultEl.textContent = 'Zapisywanie...';
+    const code = generateLobbyCode();
+    const { error } = await sb.from('custom_levels').insert({
+      code, creator_name: state.displayName || 'Gracz', level_data: data
+    });
+    if(error){
+      resultEl.textContent = '⚠ Błąd zapisu: ' + error.message;
+      return;
+    }
+    resultEl.innerHTML = `✅ Zapisano! Kod poziomu: <b style="font-size:20px;letter-spacing:4px;">${code}</b> — podaj go znajomemu, żeby zagrał na tym samym poziomie (też w multiplayer).`;
+  };
+
+  async function loadCustomLevelByCode(code){
+    if(!sb) return { error: 'Multiplayer/poziomy własne wymagają konta (Supabase).' };
+    const { data, error } = await sb.from('custom_levels').select('level_data').eq('code', code).single();
+    if(error || !data) return { error: 'Nie znaleziono poziomu o tym kodzie.' };
+    return { data: data.level_data };
+  }
+
+  document.getElementById('btnEditorLoadCode').onclick = async () => {
+    const code = document.getElementById('editorLoadCodeInput').value.trim().toUpperCase();
+    const errEl = document.getElementById('editorLoadError');
+    if(code.length !== 5){ errEl.textContent = 'Kod ma 5 znaków.'; return; }
+    errEl.textContent = 'Wczytywanie...';
+    const res = await loadCustomLevelByCode(code);
+    if(res.error){ errEl.textContent = '⚠ ' + res.error; return; }
+    errEl.textContent = '';
+    showScreen('game');
+    startLevel('custom', res.data);
+  };
+
   // ---------- GAME ----------
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
@@ -1647,6 +2035,7 @@
   }
 
   let level, player, camera, runCoins, lives, levelDone, timeAlive, currentLevelIndex;
+  let customLevelActive = false;
 
   // ---------- LEVEL DEFINITIONS ----------
   function mkGround(x,w){ return {x, y:GROUND_Y, w, h:200, isGround:true}; }
@@ -2104,13 +2493,40 @@
 
   const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11];
 
-  function startLevel(index){
+  function buildLevelFromCustomData(data){
+    const platforms = [];
+    (data.grounds||[]).forEach(g => platforms.push({x:g.x, y:GROUND_Y, w:g.w, h:200, isGround:true}));
+    (data.platforms||[]).forEach(p => platforms.push({x:p.x, y:p.y, w:p.w, h:p.h}));
+    const pipes = (data.pipes||[]).map(p => ({x:p.x, y:GROUND_Y-p.h, w:p.w, h:p.h}));
+    const coins = (data.coins||[]).map(c => ({x:c.x, y:c.y, taken:false, t:Math.random()*10}));
+    const hazards = (data.hazards||[]).map(h => ({x:h.x, y:GROUND_Y-18, w:h.w, h:18}));
+    const movers = (data.movers||[]).map(m => ({
+      baseX:m.x, baseY:m.y, x:m.x, y:m.y, w:90, h:20,
+      axis:m.axis||'x', range:60, speed:1.0, isMover:true
+    }));
+    const enemies = (data.enemies||[]).map(e => {
+      if(e.enemyType==='flyer') return {x:e.x, y:e.y, w:32, h:32, alive:true, type:'flyer', vx:0.5, minX:Math.max(0,e.x-100), maxX:e.x+100, baseY:e.y, amp:35};
+      if(e.enemyType==='jumper') return {x:e.x, y:e.y, w:34, h:34, alive:true, type:'jumper', jumpHeight:70, baseY:e.y};
+      return {x:e.x, y:e.y, w:34, h:34, alive:true, vx:0.55, minX:Math.max(0,e.x-90), maxX:e.x+90};
+    });
+    const flag = data.flag ? {x:data.flag.x, y:data.flag.y, w:14, h:220} : {x:(data.width||2000)-150, y:GROUND_Y-220, w:14, h:220};
+    return {
+      name: data.name || 'Poziom własny',
+      platforms, pipes, coins, enemies, hazards, movers, flag,
+      width: data.width || 2000,
+      bg: data.bg || 'day'
+    };
+  }
+
+  function startLevel(index, customData){
     currentLevelIndex = index;
-    level = LEVELS[index]();
+    customLevelActive = !!customData;
+    level = customData ? buildLevelFromCustomData(customData) : LEVELS[index]();
     // popraw isGround po ewentualnym resize
     level.platforms.forEach(p => { if(p.y === undefined) p.y = GROUND_Y; });
+    const spawn = (customData && customData.spawn) ? customData.spawn : { x:40, y:GROUND_Y-54 };
     player = {
-      x:40, y:GROUND_Y-54, w:38, h:54,
+      x:spawn.x, y:spawn.y, w:38, h:54,
       vx:0, vy:0, onGround:false, facing:1, animT:0, invuln:0, airTime:0, spectating:false, ridingMover:null,
       shieldActive:false, shieldTimer:0
     };
@@ -2125,7 +2541,7 @@
     timeAlive = 0;
     document.getElementById('hudCoins').textContent = runCoins;
     document.getElementById('hudLives').textContent = lives;
-    document.getElementById('hudLevel').textContent = (index+1) + ' - ' + level.name;
+    document.getElementById('hudLevel').textContent = customData ? ('Własny: ' + level.name) : ((index+1) + ' - ' + level.name);
     updateShieldHud();
     if(mpChannel){
       remoteDead = false;
@@ -2429,11 +2845,16 @@
     state.wallet += runCoins;
     state.totalCoinsEarned += runCoins;
     if(won) AudioEngine.sfxWin(); else AudioEngine.sfxLose();
-    if(won && currentLevelIndex === state.unlockedLevel && currentLevelIndex < LEVELS.length-1){
+    if(!customLevelActive && won && currentLevelIndex === state.unlockedLevel && currentLevelIndex < LEVELS.length-1){
       state.unlockedLevel = currentLevelIndex + 1;
     }
     saveProfile();
     setTimeout(() => {
+      if(customLevelActive){
+        const msg = won ? ('POZIOM WŁASNY UKOŃCZONY!\n+' + runCoins + ' monet') : ('GAME OVER\n+' + runCoins + ' monet zebranych');
+        showBanner(msg, () => { if(mpChannel) leaveMultiplayer(); showScreen('menu'); });
+        return;
+      }
       if(mpChannel){
         if(won){
           if(currentLevelIndex < LEVELS.length-1){
