@@ -237,6 +237,36 @@
     color:#cfe3ff;
     min-height:22px;
   }
+  .lobby-players {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    min-width:260px;
+  }
+  .lobby-player-row {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:rgba(255,255,255,.08);
+    border:2px solid rgba(255,255,255,.2);
+    border-radius:10px;
+    padding:8px 14px;
+    font-weight:bold;
+    color:#fff;
+    font-size:15px;
+  }
+  .lobby-player-row .host-tag {
+    font-size:10px;
+    background:#ffd23f;
+    color:#3a2600;
+    padding:2px 7px;
+    border-radius:8px;
+    margin-left:auto;
+  }
+  .lobby-player-row.waiting {
+    opacity:.4;
+    font-style:italic;
+  }
   .remote-nametag {
     position:absolute;
     background:rgba(0,0,0,.55);
@@ -561,6 +591,12 @@
   <div id="mpChoiceScreen" class="screen hidden">
     <div class="title" style="font-size:36px;">MULTIPLAYER</div>
     <div class="small-note">Graj razem ze znajomym na dwoch ekranach naraz.</div>
+    <div class="settings-panel" style="min-width:280px;">
+      <div class="settings-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+        <span>Twój nick</span>
+        <input type="text" id="mpNickInput" maxlength="14" placeholder="np. Tymur" class="mp-code-input" style="letter-spacing:1px; font-size:16px; text-transform:none;">
+      </div>
+    </div>
     <button class="menu-btn" id="btnMpCreate">🆕 STWÓRZ LOBBY</button>
     <div class="settings-panel" style="min-width:280px;">
       <div class="settings-row" style="flex-direction:column; align-items:stretch; gap:10px;">
@@ -580,7 +616,9 @@
       <div class="small-note">Podaj ten kod znajomemu:</div>
       <div id="mpLobbyCode" class="mp-code-display">-----</div>
     </div>
+    <div class="lobby-players" id="lobbyPlayers"></div>
     <div id="mpLobbyStatus" class="mp-status">Łączenie...</div>
+    <button class="menu-btn" id="btnMpStart" style="display:none;">▶ START</button>
     <button class="menu-btn small" id="btnMpCancel">✖ ANULUJ</button>
   </div>
 
@@ -714,6 +752,8 @@
   let remoteDead = false;       // czy drugi gracz stracil wszystkie zycia
   let mpRestarting = false;     // zabezpieczenie przed podwojnym restartem
   let mpBroadcastTimer = 0;
+  let mpNickname = '';
+  let mpGameStarted = false;
 
   function generateLobbyCode(){
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // bez znakow latwych do pomylenia
@@ -730,9 +770,24 @@
     mpConnected = false;
     isHost = false;
     mpCode = '';
+    mpGameStarted = false;
     remotePlayer = null;
     document.getElementById('mpHudPill').classList.add('hidden');
     document.getElementById('remoteNametag').classList.add('hidden');
+    document.getElementById('btnMpStart').style.display = 'none';
+  }
+
+  function renderLobbyPlayers(){
+    const st = mpChannel.presenceState();
+    const entries = Object.values(st).map(arr => arr[0]);
+    entries.sort((a,b) => (b.isHost?1:0) - (a.isHost?1:0));
+    const box = document.getElementById('lobbyPlayers');
+    let html = entries.map(p => `<div class="lobby-player-row">🎮 ${escapeHtml(p.name||'Gracz')}${p.isHost ? '<span class="host-tag">HOST</span>' : ''}</div>`).join('');
+    if(entries.length < 2){
+      html += '<div class="lobby-player-row waiting">⏳ Czekam na drugiego gracza...</div>';
+    }
+    box.innerHTML = html;
+    return entries.length;
   }
 
   function setupMpChannel(code, hosting){
@@ -744,6 +799,7 @@
     mpCode = code;
     isHost = hosting;
     mpConnected = false;
+    mpGameStarted = false;
     remotePlayer = null;
 
     mpChannel = sb.channel('mp-' + code, { config: { presence: { key: myId }, broadcast: { self: false } } });
@@ -792,26 +848,37 @@
       }
     });
 
+    mpChannel.on('broadcast', { event: 'game_start' }, ({ payload }) => {
+      if(!payload || payload.from === myId) return;
+      if(!mpGameStarted){
+        mpConnected = true;
+        startMultiplayerGame();
+      }
+    });
+
     mpChannel.on('presence', { event: 'sync' }, () => {
-      const st = mpChannel.presenceState();
-      const count = Object.keys(st).length;
+      const count = renderLobbyPlayers();
       const statusEl = document.getElementById('mpLobbyStatus');
+      const startBtn = document.getElementById('btnMpStart');
       if(count >= 2){
         mpConnected = true;
-        if(statusEl) statusEl.textContent = '✅ Gracz 2 dołączył! Startujemy...';
-        setTimeout(() => {
-          if(mpConnected) startMultiplayerGame();
-        }, 700);
-      } else if(statusEl){
-        statusEl.textContent = isHost
-          ? 'Czekam na drugiego gracza...'
-          : 'Łączenie z lobby ' + code + '...';
+        if(isHost){
+          statusEl.textContent = '✅ Wszyscy gotowi - możesz zaczynać!';
+          startBtn.style.display = 'inline-block';
+        } else {
+          statusEl.textContent = 'Czekam aż host rozpocznie grę...';
+          startBtn.style.display = 'none';
+        }
+      } else {
+        mpConnected = false;
+        statusEl.textContent = isHost ? 'Czekam na drugiego gracza...' : ('Łączenie z lobby ' + code + '...');
+        startBtn.style.display = 'none';
       }
     });
 
     mpChannel.subscribe(async (status) => {
       if(status === 'SUBSCRIBED'){
-        await mpChannel.track({ joinedAt: Date.now() });
+        await mpChannel.track({ name: mpNickname, isHost });
       } else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
         const statusEl = document.getElementById('mpLobbyStatus');
         if(statusEl) statusEl.textContent = '⚠ Nie udało się połączyć. Spróbuj ponownie.';
@@ -819,23 +886,33 @@
     });
   }
 
+  function getMpNickname(){
+    const val = document.getElementById('mpNickInput').value.trim();
+    return (val || state.displayName || 'Gracz').slice(0, 14);
+  }
+
   function createMpLobby(){
+    mpNickname = getMpNickname();
     const code = generateLobbyCode();
     document.getElementById('mpLobbyCodeBox').classList.remove('hidden');
     document.getElementById('mpLobbyCode').textContent = code;
     document.getElementById('mpLobbyStatus').textContent = 'Czekam na drugiego gracza...';
+    document.getElementById('lobbyPlayers').innerHTML = '';
     showScreen('mpLobby');
     setupMpChannel(code, true);
   }
 
   function joinMpLobby(code){
+    mpNickname = getMpNickname();
     document.getElementById('mpLobbyCodeBox').classList.add('hidden');
     document.getElementById('mpLobbyStatus').textContent = 'Łączenie z lobby ' + code + '...';
+    document.getElementById('lobbyPlayers').innerHTML = '';
     showScreen('mpLobby');
     setupMpChannel(code, false);
   }
 
   function startMultiplayerGame(){
+    mpGameStarted = true;
     showScreen('game');
     startLevel(0); // multiplayer zawsze startuje na 1. poziomie, obaj gracze razem
     document.getElementById('mpHudPill').classList.remove('hidden');
@@ -857,7 +934,7 @@
       event: 'state',
       payload: {
         from: myId,
-        name: state.displayName || 'Gracz 2',
+        name: mpNickname || state.displayName || 'Gracz 2',
         skin: state.equippedSkin,
         x: player.x, y: player.y,
         facing: player.facing,
@@ -1189,10 +1266,17 @@
   document.getElementById('btnMultiplayer').onclick = () => {
     document.getElementById('mpError').textContent = '';
     document.getElementById('mpCodeInput').value = '';
+    document.getElementById('mpNickInput').value = state.displayName || '';
     showScreen('mpChoice');
   };
   document.getElementById('btnMpChoiceBack').onclick = () => showScreen('menu');
-  document.getElementById('btnMpCreate').onclick = () => createMpLobby();
+  document.getElementById('btnMpCreate').onclick = () => {
+    if(!getMpNickname()){
+      document.getElementById('mpError').textContent = 'Wpisz swój nick.';
+      return;
+    }
+    createMpLobby();
+  };
   document.getElementById('btnMpJoin').onclick = () => {
     const code = document.getElementById('mpCodeInput').value.trim().toUpperCase();
     if(code.length !== 5){
@@ -1203,6 +1287,11 @@
   };
   document.getElementById('mpCodeInput').oninput = (e) => {
     e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  };
+  document.getElementById('btnMpStart').onclick = () => {
+    if(!isHost || !mpConnected) return;
+    broadcastEvent('game_start', {});
+    startMultiplayerGame();
   };
   document.getElementById('btnMpCancel').onclick = () => {
     leaveMultiplayer();
@@ -1785,7 +1874,6 @@
     const enemies = [
       {x:100, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:40, maxX:220, alive:true},
       {x:920, y:GROUND_Y-34, w:34, h:34, vx:0.68, minX:880, maxX:1020, alive:true},
-      {x:1500, y:GROUND_Y-274, w:34, h:34, vx:0.52, minX:1480, maxX:1540, alive:true},
       {x:2050, y:GROUND_Y-34, w:34, h:34, vx:0.72, minX:2040, maxX:2160, alive:true},
       {x:2280, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:2200, maxX:2400, alive:true},
     ];
