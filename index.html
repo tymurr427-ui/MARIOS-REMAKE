@@ -1368,6 +1368,11 @@
     { id:'vampire', name:'Wampir', price:95, colors:{hat:'#1a0e14', shirt:'#3a0a14', overalls:'#0e0a12', skin:'#d8c8d8'} },
     { id:'beach',   name:'Plażowy', price:65, colors:{hat:'#ff8a3d', shirt:'#ffd23f', overalls:'#2e86c9', skin:'#e0a86e'} },
     { id:'diamond', name:'Diamentowy', price:120, colors:{hat:'#bfeaff', shirt:'#8fdcf5', overalls:'#2ea8c9', skin:'#f6b17a'} },
+    { id:'samurai', name:'Samuraj', price:105, colors:{hat:'#8a1a2a', shirt:'#1a1a1a', overalls:'#3a1a1a', skin:'#e0a86e'} },
+    { id:'toxic',   name:'Toksyczny', price:80, colors:{hat:'#9aff3d', shirt:'#5aab1a', overalls:'#1a3a0a', skin:'#8fd944'} },
+    { id:'pharaoh', name:'Faraon', price:110, colors:{hat:'#ffd23f', shirt:'#1e5aa8', overalls:'#0a2a5a', skin:'#c9946a'} },
+    { id:'candy',   name:'Cukierkowy', price:70, colors:{hat:'#ff6fa5', shirt:'#ffb3d1', overalls:'#7a3ac9', skin:'#f6b17a'} },
+    { id:'steampunk', name:'Steampunk', price:115, colors:{hat:'#a86a2e', shirt:'#5a3a1a', overalls:'#2e1a0a', skin:'#e0a86e'} },
   ];
 
   // ---------- SCREENS ----------
@@ -2425,7 +2430,6 @@
     ];
     const enemies = [
       {x:530, y:GROUND_Y-140, w:32, h:32, vx:0.52, minX:400, maxX:750, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
-      {x:950, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:920, maxX:1080, alive:true},
       {x:1450, y:GROUND_Y-34, w:34, h:34, vx:0.56, minX:1300, maxX:1600, alive:true},
       {x:1950, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:1900, maxX:2100, alive:true},
     ];
@@ -2614,7 +2618,96 @@
     return { name:'Mroczny Finał', platforms, pipes, coins, enemies, movers, hazards, flag:{x:2950,y:GROUND_Y-220,w:14,h:220}, width:3050, bg:'volcano' };
   }
 
-  const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11];
+  function level12(){
+    const platforms = [
+      mkGround(0, 300),
+      mkGround(420, 200),
+      mkGround(760, 200),
+      mkGround(1100, 200),
+      mkGround(1440, 200),
+      mkGround(1780, 500),
+      {x:340, y:GROUND_Y-100, w:90, h:22},
+      {x:600, y:GROUND_Y-130, w:90, h:22},
+      {x:680, y:GROUND_Y-100, w:90, h:22},
+      {x:940, y:GROUND_Y-140, w:90, h:22},
+      {x:1020, y:GROUND_Y-190, w:90, h:22},
+      {x:1280, y:GROUND_Y-100, w:90, h:22},
+      {x:1360, y:GROUND_Y-170, w:90, h:22},
+      {x:1620, y:GROUND_Y-140, w:90, h:22},
+    ];
+    const pipes = [
+      {x:200, y:GROUND_Y-60, w:46, h:60},
+      {x:860, y:GROUND_Y-46, w:46, h:46},
+      {x:1550, y:GROUND_Y-60, w:46, h:60},
+    ];
+    const coins = [];
+    function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
+    row(350, GROUND_Y-140, 3, 26);
+    row(610, GROUND_Y-170, 3, 26);
+    row(690, GROUND_Y-140, 3, 26);
+    row(950, GROUND_Y-180, 3, 26);
+    row(1030, GROUND_Y-230, 3, 26);
+    row(1290, GROUND_Y-140, 3, 26);
+    row(1370, GROUND_Y-210, 3, 26);
+    row(1630, GROUND_Y-180, 3, 26);
+    const hazards = [
+      {x:500, y:GROUND_Y-18, w:36, h:18},
+      {x:1200, y:GROUND_Y-18, w:36, h:18},
+    ];
+    const enemies = [
+      {x:80, y:GROUND_Y-34, w:34, h:34, vx:0.56, minX:60, maxX:170, alive:true},
+      {x:610, y:GROUND_Y-210, w:32, h:32, vx:0.45, minX:600, maxX:690, baseY:GROUND_Y-210, amp:25, type:'flyer', alive:true},
+      {x:1050, y:GROUND_Y-224, w:34, h:34, jumpHeight:65, baseY:GROUND_Y-224, type:'jumper', alive:true},
+      {x:1900, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:1850, maxX:2050, alive:true},
+    ];
+    return { name:'Zamarznięty Labirynt', platforms, pipes, coins, enemies, hazards, flag:{x:2200,y:GROUND_Y-220,w:14,h:220}, width:2300, bg:'ice' };
+  }
+
+  function level13(){
+    const platforms = [
+      mkGround(0, 240),
+      mkGround(1050, 220),
+      mkGround(2200, 600),
+    ];
+    const pipes = [];
+    const movers = [
+      {baseX:320, baseY:GROUND_Y-40, x:320, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:510, baseY:GROUND_Y-40, x:510, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:700, baseY:GROUND_Y-40, x:700, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:890, baseY:GROUND_Y-40, x:890, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:1350, baseY:GROUND_Y-40, x:1350, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+      {baseX:1540, baseY:GROUND_Y-40, x:1540, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+      {baseX:1730, baseY:GROUND_Y-40, x:1730, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+      {baseX:1920, baseY:GROUND_Y-40, x:1920, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+    ];
+    const coins = [];
+    function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
+    row(120, GROUND_Y-100, 3, 26);
+    row(320, GROUND_Y-90, 3, 26);
+    row(510, GROUND_Y-90, 3, 26);
+    row(700, GROUND_Y-90, 3, 26);
+    row(890, GROUND_Y-90, 3, 26);
+    row(1100, GROUND_Y-100, 4, 26);
+    row(1350, GROUND_Y-90, 3, 26);
+    row(1540, GROUND_Y-90, 3, 26);
+    row(1730, GROUND_Y-90, 3, 26);
+    row(1920, GROUND_Y-90, 3, 26);
+    row(2350, GROUND_Y-100, 5, 26);
+    const hazards = [
+      {x:150, y:GROUND_Y-18, w:36, h:18},
+      {x:2500, y:GROUND_Y-18, w:36, h:18},
+    ];
+    const enemies = [
+      {x:1150, y:GROUND_Y-140, w:32, h:32, vx:0.5, minX:1100, maxX:1260, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
+      {x:1200, y:GROUND_Y-34, w:34, h:34, jumpHeight:70, baseY:GROUND_Y-34, type:'jumper', alive:true},
+      {x:2280, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2240, maxX:2420, alive:true},
+      {x:2600, y:GROUND_Y-34, w:34, h:34, jumpHeight:75, baseY:GROUND_Y-34, type:'jumper', alive:true},
+      {x:2700, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2650, maxX:2760, alive:true},
+    ];
+    return { name:'Piaszczysta Otchłań', platforms, pipes, coins, enemies, movers, hazards, flag:{x:2750,y:GROUND_Y-220,w:14,h:220}, width:2850, bg:'desert' };
+  }
+
+  const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11, level12, level13];
 
   function buildLevelFromCustomData(data){
     const platforms = [];
