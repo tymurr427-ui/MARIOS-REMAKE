@@ -513,6 +513,48 @@
   }
   .create-level-corner:hover { filter:brightness(1.1); }
   .create-level-corner:active { transform:translateY(2px); box-shadow:0 1px 0 #7a3a05; }
+  .my-levels-corner {
+    top:94px;
+    background:linear-gradient(#3498db,#1f618d);
+    border-color:#123a5c;
+    box-shadow:0 3px 0 #123a5c;
+  }
+  .my-levels-corner:active { box-shadow:0 1px 0 #123a5c; }
+  .my-levels-panel {
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    width:100%;
+    max-width:600px;
+    max-height:50vh;
+    overflow-y:auto;
+    padding:4px;
+  }
+  .my-level-row {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:rgba(255,255,255,.08);
+    border:2px solid rgba(255,255,255,.2);
+    border-radius:10px;
+    padding:10px 16px;
+    color:#fff;
+  }
+  .my-level-info { flex:1; text-align:left; }
+  .my-level-name { font-weight:bold; font-size:15px; }
+  .my-level-code { font-size:12px; color:#ffd23f; letter-spacing:2px; }
+  .my-level-actions { display:flex; gap:8px; }
+  .my-level-btn {
+    border:none;
+    border-radius:8px;
+    padding:8px 14px;
+    font-weight:bold;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .my-level-btn.play { background:#2ecc71; color:#053; }
+  .my-level-btn.delete { background:#e74c3c; color:#fff; }
+  .my-levels-empty { color:#cfe3ff; font-size:14px; padding:20px; }
   .auth-corner-row {
     display:flex;
     align-items:center;
@@ -675,6 +717,7 @@
 <div id="wrap">
   <div id="globalAuthBadge" class="global-auth-badge"></div>
   <button id="createLevelCorner" class="create-level-corner">🛠️ CREATE LEVEL</button>
+  <button id="myLevelsCorner" class="create-level-corner my-levels-corner">🗂️ MY LEVELS</button>
   <div id="leaderboardBox" class="leaderboard-panel"></div>
 
   <!-- MENU -->
@@ -727,6 +770,13 @@
     </div>
     <button class="menu-btn" id="btnMpStart" style="display:none;">▶ START</button>
     <button class="menu-btn small" id="btnMpCancel">✖ ANULUJ</button>
+  </div>
+
+  <!-- MOJE POZIOMY -->
+  <div id="myLevelsScreen" class="screen hidden">
+    <div class="title" style="font-size:36px;">MOJE POZIOMY</div>
+    <div class="my-levels-panel" id="myLevelsPanel"></div>
+    <button class="menu-btn small" id="btnMyLevelsBack">⬅ POWRÓT</button>
   </div>
 
   <!-- EDYTOR POZIOMÓW -->
@@ -1328,6 +1378,7 @@
   const settingsScreen = document.getElementById('settingsScreen');
   const statsScreen = document.getElementById('statsScreen');
   const editorScreen = document.getElementById('editorScreen');
+  const myLevelsScreen = document.getElementById('myLevelsScreen');
 
   let gamePlaying = false;
   const mpChoiceScreen = document.getElementById('mpChoiceScreen');
@@ -1342,6 +1393,7 @@
     settingsScreen.classList.add('hidden');
     statsScreen.classList.add('hidden');
     editorScreen.classList.add('hidden');
+    myLevelsScreen.classList.add('hidden');
     mpChoiceScreen.classList.add('hidden');
     mpLobbyScreen.classList.add('hidden');
     if(name==='menu') menuScreen.classList.remove('hidden');
@@ -1351,12 +1403,14 @@
     if(name==='settings') settingsScreen.classList.remove('hidden');
     if(name==='stats') statsScreen.classList.remove('hidden');
     if(name==='editor'){ editorScreen.classList.remove('hidden'); redrawEditor(); }
+    if(name==='myLevels'){ myLevelsScreen.classList.remove('hidden'); renderMyLevels(); }
     if(name==='mpChoice') mpChoiceScreen.classList.remove('hidden');
     if(name==='mpLobby') mpLobbyScreen.classList.remove('hidden');
     document.getElementById('menuCoins').textContent = state.wallet;
     document.getElementById('shopCoins').textContent = state.wallet;
     document.getElementById('globalAuthBadge').style.display = (name==='game') ? 'none' : 'block';
     document.getElementById('createLevelCorner').style.display = (name==='game') ? 'none' : 'block';
+    document.getElementById('myLevelsCorner').style.display = (name==='game') ? 'none' : 'block';
     const lb = document.getElementById('leaderboardBox');
     if(lb) lb.style.display = (name==='game') ? 'none' : 'block';
     gamePlaying = (name === 'game');
@@ -1473,7 +1527,16 @@
     leaveMultiplayer();
     showScreen('menu');
   };
-  document.getElementById('pauseBtn').onclick = () => { cancelAnimationFrame(rafId); leaveMultiplayer(); showScreen('menu'); };
+  document.getElementById('pauseBtn').onclick = () => {
+    cancelAnimationFrame(rafId);
+    leaveMultiplayer();
+    if(editorTesting){
+      editorTesting = false;
+      showScreen('editor');
+    } else {
+      showScreen('menu');
+    }
+  };
   document.getElementById('fsBtn').onclick = () => {
     const el = document.getElementById('wrap');
     if(!document.fullscreenElement){ el.requestFullscreen && el.requestFullscreen(); }
@@ -1789,6 +1852,7 @@
   const EDITOR_GROUND_Y = EDITOR_LEVEL_H - 60;
 
   let editorTool = 'ground';
+  let editorTesting = false;
   let editorElements = []; // {kind, x, y, w, enemyType, axis}
   let editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
   let editorFlag = { x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220 };
@@ -1926,6 +1990,63 @@
   };
   document.getElementById('editorBgSelect').onchange = redrawEditor;
 
+  document.getElementById('myLevelsCorner').onclick = () => showScreen('myLevels');
+  document.getElementById('btnMyLevelsBack').onclick = () => showScreen('menu');
+
+  async function renderMyLevels(){
+    const panel = document.getElementById('myLevelsPanel');
+    if(!sb){
+      panel.innerHTML = '<div class="my-levels-empty">Wymaga skonfigurowanego konta (Supabase).</div>';
+      return;
+    }
+    if(!currentUser){
+      panel.innerHTML = '<div class="my-levels-empty">Zaloguj się przez Google, żeby zobaczyć swoje poziomy.</div>';
+      return;
+    }
+    panel.innerHTML = '<div class="my-levels-empty">Wczytywanie...</div>';
+    const { data, error } = await sb.from('custom_levels')
+      .select('code, level_data, created_at')
+      .eq('creator_id', currentUser.id)
+      .order('created_at', { ascending:false });
+    if(error){
+      panel.innerHTML = '<div class="my-levels-empty">⚠ Błąd wczytywania: ' + escapeHtml(error.message) + '</div>';
+      return;
+    }
+    if(!data || data.length === 0){
+      panel.innerHTML = '<div class="my-levels-empty">Nie masz jeszcze żadnych poziomów. Kliknij 🛠️ CREATE LEVEL, żeby stworzyć pierwszy!</div>';
+      return;
+    }
+    panel.innerHTML = data.map(row => `
+      <div class="my-level-row">
+        <div class="my-level-info">
+          <div class="my-level-name">${escapeHtml(row.level_data.name || 'Poziom bez nazwy')}</div>
+          <div class="my-level-code">KOD: ${row.code}</div>
+        </div>
+        <div class="my-level-actions">
+          <button class="my-level-btn play" data-code="${row.code}">▶ GRAJ</button>
+          <button class="my-level-btn delete" data-code="${row.code}">🗑 USUŃ</button>
+        </div>
+      </div>
+    `).join('');
+
+    panel.querySelectorAll('.my-level-btn.play').forEach(btn => {
+      btn.onclick = async () => {
+        const res = await loadCustomLevelByCode(btn.dataset.code);
+        if(res.error){ alert(res.error); return; }
+        showScreen('game');
+        startLevel('custom', res.data);
+      };
+    });
+    panel.querySelectorAll('.my-level-btn.delete').forEach(btn => {
+      btn.onclick = async () => {
+        if(!confirm('Na pewno usunąć ten poziom? Tej operacji nie da się cofnąć.')) return;
+        const { error } = await sb.from('custom_levels').delete().eq('code', btn.dataset.code).eq('creator_id', currentUser.id);
+        if(error){ alert('Błąd usuwania: ' + error.message); return; }
+        renderMyLevels();
+      };
+    });
+  }
+
   function collectEditorData(){
     const grounds = editorElements.filter(e=>e.kind==='ground').map(e=>({x:e.x,w:e.w}));
     const platforms = editorElements.filter(e=>e.kind==='platform').map(e=>({x:e.x,y:e.y,w:e.w,h:e.h}));
@@ -1949,6 +2070,7 @@
       document.getElementById('editorSaveResult').textContent = '⚠ Dodaj chociaż jeden kawałek gruntu!';
       return;
     }
+    editorTesting = true;
     showScreen('game');
     startLevel('custom', data);
   };
@@ -1956,6 +2078,7 @@
   document.getElementById('btnEditorSave').onclick = async () => {
     const resultEl = document.getElementById('editorSaveResult');
     if(!sb){ resultEl.textContent = '⚠ Zapis wymaga konta (Supabase).'; return; }
+    if(!currentUser){ resultEl.textContent = '⚠ Zaloguj się przez Google, żeby zapisywać poziomy.'; return; }
     const data = collectEditorData();
     if(data.grounds.length === 0){
       resultEl.textContent = '⚠ Dodaj chociaż jeden kawałek gruntu, zanim zapiszesz!';
@@ -1964,13 +2087,13 @@
     resultEl.textContent = 'Zapisywanie...';
     const code = generateLobbyCode();
     const { error } = await sb.from('custom_levels').insert({
-      code, creator_name: state.displayName || 'Gracz', level_data: data
+      code, creator_name: state.displayName || 'Gracz', creator_id: currentUser.id, level_data: data
     });
     if(error){
       resultEl.textContent = '⚠ Błąd zapisu: ' + error.message;
       return;
     }
-    resultEl.innerHTML = `✅ Zapisano! Kod poziomu: <b style="font-size:20px;letter-spacing:4px;">${code}</b> — podaj go znajomemu, żeby zagrał na tym samym poziomie (też w multiplayer).`;
+    resultEl.innerHTML = `✅ Zapisano! Kod poziomu: <b style="font-size:20px;letter-spacing:4px;">${code}</b> — podaj go znajomemu, żeby zagrał na tym samym poziomie (też w multiplayer). Znajdziesz go też w "MOJE POZIOMY".`;
   };
 
   async function loadCustomLevelByCode(code){
@@ -2852,7 +2975,15 @@
     setTimeout(() => {
       if(customLevelActive){
         const msg = won ? ('POZIOM WŁASNY UKOŃCZONY!\n+' + runCoins + ' monet') : ('GAME OVER\n+' + runCoins + ' monet zebranych');
-        showBanner(msg, () => { if(mpChannel) leaveMultiplayer(); showScreen('menu'); });
+        showBanner(msg, () => {
+          if(mpChannel) leaveMultiplayer();
+          if(editorTesting){
+            editorTesting = false;
+            showScreen('editor');
+          } else {
+            showScreen('menu');
+          }
+        });
         return;
       }
       if(mpChannel){
