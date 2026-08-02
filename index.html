@@ -2778,9 +2778,11 @@
     camera.x = 0;
   }
 
+  const hudShieldPillEl = document.getElementById('hudShieldPill');
+  const hudShieldTextEl = document.getElementById('hudShieldText');
   function updateShieldHud(){
-    const pill = document.getElementById('hudShieldPill');
-    const txt = document.getElementById('hudShieldText');
+    const pill = hudShieldPillEl;
+    const txt = hudShieldTextEl;
     if(!pill) return;
     if(player.shieldActive){
       pill.classList.remove('hidden');
@@ -2973,6 +2975,7 @@
 
     updateMovers();
     const movers = level.movers || [];
+    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...movers]);
 
     // jesli w poprzedniej klatce gracz stal na ruchomej platformie, przenosimy go
     // razem z nia (w X i Y) ZANIM policzymy jego wlasny ruch/kolizje - inaczej przy
@@ -2985,7 +2988,7 @@
 
     // ruch poziomy + kolizje
     player.x += player.vx;
-    for(const p of [...level.platforms, ...level.pipes, ...movers]){
+    for(const p of solids){
       if(rectsOverlap(player,p)){
         if(player.vx > 0){ player.x = p.x - player.w; player.vx = 0; }
         else if(player.vx < 0){ player.x = p.x + p.w; player.vx = 0; }
@@ -2997,7 +3000,7 @@
     player.y += player.vy;
     player.onGround = false;
     let standingOnMover = null;
-    for(const p of [...level.platforms, ...level.pipes, ...movers]){
+    for(const p of solids){
       if(rectsOverlap(player,p)){
         if(player.vy > 0){
           player.y = p.y - player.h;
@@ -3604,6 +3607,18 @@
     }
   }
 
+  let cachedCoinGradient = null;
+  function getCoinGradient(){
+    if(!cachedCoinGradient){
+      const grad = ctx.createRadialGradient(-3,-3,1,0,0,10);
+      grad.addColorStop(0,'#fff6c9');
+      grad.addColorStop(0.5,'#ffd23f');
+      grad.addColorStop(1,'#c8860a');
+      cachedCoinGradient = grad;
+    }
+    return cachedCoinGradient;
+  }
+
   function drawCoins(){
     for(const c of level.coins){
       if(c.taken) continue;
@@ -3617,17 +3632,13 @@
       if(gfxQuality >= 3){
         ctx.save();
         ctx.shadowColor = 'rgba(255,210,63,.9)';
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 10;
       }
 
       if(gfxQuality === 0){
         ctx.fillStyle = '#ffd23f';
       } else {
-        const grad = ctx.createRadialGradient(-3,-3,1,0,0,10);
-        grad.addColorStop(0,'#fff6c9');
-        grad.addColorStop(0.5,'#ffd23f');
-        grad.addColorStop(1,'#c8860a');
-        ctx.fillStyle = grad;
+        ctx.fillStyle = getCoinGradient();
       }
       ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill();
       if(gfxQuality >= 1){
