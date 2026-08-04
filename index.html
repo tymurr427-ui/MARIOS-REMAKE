@@ -294,6 +294,39 @@
     border-radius:16px;
     z-index:5;
   }
+  .boss-hud-pill {
+    position:absolute;
+    top:14px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:6;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    min-width:280px;
+  }
+  .boss-hud-text {
+    color:#fff;
+    font-weight:900;
+    font-size:14px;
+    text-shadow:2px 2px 0 #000;
+    letter-spacing:1px;
+  }
+  .boss-hud-track {
+    width:280px;
+    height:16px;
+    background:rgba(0,0,0,.5);
+    border:2px solid rgba(255,255,255,.4);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .boss-hud-bar {
+    height:100%;
+    width:100%;
+    background:linear-gradient(#ff5a5a,#c0392b);
+    transition:width .2s ease;
+  }
   .quality-buttons {
     display:flex;
     gap:6px;
@@ -906,6 +939,10 @@
     <button id="muteBtn" style="left:auto;">🔊</button>
     <button id="pauseBtn">MENU</button>
     <div id="mpHudPill" class="mp-hud-pill hidden"></div>
+    <div id="bossHudPill" class="boss-hud-pill hidden">
+      <div id="bossHudText" class="boss-hud-text">BOSS</div>
+      <div class="boss-hud-track"><div id="bossHudBar" class="boss-hud-bar"></div></div>
+    </div>
     <div id="remoteNametag" class="remote-nametag hidden"></div>
     <canvas id="game"></canvas>
   </div>
@@ -1023,6 +1060,19 @@
       if(!payload || payload.from === myId) return;
       if(level && level.enemies && level.enemies[payload.idx]){
         level.enemies[payload.idx].alive = false;
+        if(level.enemies[payload.idx].type === 'boss'){
+          document.getElementById('bossHudPill').classList.add('hidden');
+        }
+      }
+    });
+
+    mpChannel.on('broadcast', { event: 'boss_hit' }, ({ payload }) => {
+      if(!payload || payload.from === myId) return;
+      if(level && level.enemies && level.enemies[payload.idx]){
+        const boss = level.enemies[payload.idx];
+        boss.hp = payload.hp;
+        boss.hitTimer = 40;
+        updateBossHud(boss);
       }
     });
 
@@ -2707,7 +2757,71 @@
     return { name:'Piaszczysta Otchłań', platforms, pipes, coins, enemies, movers, hazards, flag:{x:2750,y:GROUND_Y-220,w:14,h:220}, width:2850, bg:'desert' };
   }
 
-  const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11, level12, level13];
+  function level14(){
+    const platforms = [
+      mkGround(0, 300),
+      mkGround(420, 200),
+      mkGround(760, 200),
+      mkGround(1100, 200),
+      mkGround(1440, 200),
+      mkGround(1780, 500),
+      {x:340, y:GROUND_Y-100, w:90, h:22},
+      {x:680, y:GROUND_Y-100, w:90, h:22},
+      {x:1280, y:GROUND_Y-100, w:90, h:22},
+      {x:1620, y:GROUND_Y-140, w:90, h:22},
+    ];
+    const pipes = [
+      {x:200, y:GROUND_Y-60, w:46, h:60},
+    ];
+    const crushers = [
+      {x:490, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.0, t:0},
+      {x:1170, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.1, t:3},
+    ];
+    const shooters = [
+      {x:760, y:GROUND_Y-90, dir:1, interval:95},
+      {x:2260, y:GROUND_Y-90, dir:-1, interval:80},
+    ];
+    const coins = [];
+    function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
+    row(350, GROUND_Y-140, 3, 26);
+    row(690, GROUND_Y-140, 3, 26);
+    row(950, GROUND_Y-100, 4, 26);
+    row(1290, GROUND_Y-140, 3, 26);
+    row(1630, GROUND_Y-180, 3, 26);
+    row(1900, GROUND_Y-100, 5, 26);
+    const hazards = [
+      {x:1000, y:GROUND_Y-18, w:36, h:18},
+    ];
+    const enemies = [
+      {x:800, y:GROUND_Y-34, w:34, h:34, vx:0.5, minX:770, maxX:900, alive:true},
+      {x:1500, y:GROUND_Y-34, w:34, h:34, jumpHeight:65, baseY:GROUND_Y-34, type:'jumper', alive:true},
+      {x:2000, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:1950, maxX:2150, alive:true},
+    ];
+    return { name:'Korytarz Zagłady', platforms, pipes, coins, enemies, hazards, crushers, shooters, flag:{x:2200,y:GROUND_Y-220,w:14,h:220}, width:2300, bg:'volcano' };
+  }
+
+  function level15(){
+    const platforms = [
+      mkGround(0, 2300),
+    ];
+    const pipes = [];
+    const coins = [];
+    function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
+    row(150, GROUND_Y-100, 4, 26);
+    row(500, GROUND_Y-100, 4, 26);
+    row(2000, GROUND_Y-100, 6, 26);
+    const enemies = [
+      {x:300, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:250, maxX:600, alive:true},
+      {
+        x:1350, y:GROUND_Y-90, w:90, h:90, alive:true, type:'boss',
+        name:'Król Kolców', hp:6, maxHp:6, hitTimer:0,
+        vx:0.9, minX:1150, maxX:1750, baseY:GROUND_Y-90, animT:0
+      },
+    ];
+    return { name:'Starcie z Bossem', platforms, pipes, coins, enemies, flag:{x:2200,y:GROUND_Y-220,w:14,h:220}, width:2300, bg:'volcano' };
+  }
+
+  const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11, level12, level13, level14, level15];
 
   function buildLevelFromCustomData(data){
     const platforms = [];
@@ -2759,6 +2873,9 @@
     document.getElementById('hudLives').textContent = lives;
     document.getElementById('hudLevel').textContent = customData ? ('Własny: ' + level.name) : ((index+1) + ' - ' + level.name);
     updateShieldHud();
+    const boss = level.enemies.find(e => e.type === 'boss' && e.alive);
+    if(boss) updateBossHud(boss);
+    else document.getElementById('bossHudPill').classList.add('hidden');
     if(mpChannel){
       remoteDead = false;
       mpRestarting = false;
@@ -2840,10 +2957,47 @@
       } else if(e.type === 'jumper'){
         const hop = Math.abs(Math.sin(e.animT*0.25));
         e.y = e.baseY - hop*(e.jumpHeight||70);
+      } else if(e.type === 'boss'){
+        e.x += e.vx;
+        if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
+        if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
+        e.y = e.baseY + Math.sin(e.animT*0.8) * 12;
+        if(e.hitTimer > 0) e.hitTimer--;
       } else {
         e.x += e.vx;
         if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
         if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
+      }
+
+      if(e.type === 'boss'){
+        if(player.invuln <= 0 && e.hitTimer <= 0 && rectsOverlap(player, e)){
+          const stomp = player.vy > 0 && (player.y + player.h - e.y) < 26;
+          if(stomp || player.shieldActive){
+            e.hp -= player.shieldActive ? 2 : 1;
+            e.hitTimer = 40;
+            player.vy = -10;
+            player.invuln = 30;
+            runCoins += 2;
+            document.getElementById('hudCoins').textContent = runCoins;
+            AudioEngine.sfxStomp();
+            spawnCoinPop();
+            updateBossHud(e);
+            if(e.hp <= 0){
+              e.alive = false;
+              runCoins += 20;
+              document.getElementById('hudCoins').textContent = runCoins;
+              for(let i=0;i<10;i++) spawnCoinPop();
+              AudioEngine.sfxWin();
+              document.getElementById('bossHudPill').classList.add('hidden');
+              broadcastEvent('enemy_dead', { idx });
+            } else {
+              broadcastEvent('boss_hit', { idx, hp: e.hp });
+            }
+          } else if(!player.shieldActive){
+            takeDamage();
+          }
+        }
+        return;
       }
 
       if(player.shieldActive){
@@ -2875,11 +3029,55 @@
     });
   }
 
+  function updateBossHud(boss){
+    const pill = document.getElementById('bossHudPill');
+    if(!pill) return;
+    pill.classList.remove('hidden');
+    const pct = Math.max(0, boss.hp / boss.maxHp * 100);
+    document.getElementById('bossHudBar').style.width = pct + '%';
+    document.getElementById('bossHudText').textContent = boss.name + ' — ' + Math.max(0,boss.hp) + '/' + boss.maxHp;
+  }
+
   function updateHazards(){
     if(!level.hazards) return;
     if(player.invuln > 0) return;
     for(const h of level.hazards){
       if(rectsOverlap(player, h)) takeDamage();
+    }
+  }
+
+  function updateCrushers(){
+    if(!level.crushers) return;
+    for(const c of level.crushers){
+      c.t = (c.t||0) + 0.025*(c.speed||1);
+      const s = (Math.sin(c.t)+1)/2; // 0..1
+      c.y = c.topY + (c.bottomY - c.topY) * s;
+      if(player.invuln <= 0 && !player.spectating && rectsOverlap(player, c)) takeDamage();
+    }
+  }
+
+  function updateShooters(){
+    if(!level.shooters) return;
+    if(!level.projectiles) level.projectiles = [];
+    for(const s of level.shooters){
+      s.timer = (s.timer===undefined ? s.interval : s.timer) - 1;
+      if(s.timer <= 0){
+        s.timer = s.interval;
+        level.projectiles.push({x:s.x, y:s.y, vx:(s.dir||1)*2.6, w:16, h:16, life:220});
+      }
+    }
+    for(let i=level.projectiles.length-1;i>=0;i--){
+      const p = level.projectiles[i];
+      p.x += p.vx;
+      p.life--;
+      if(p.life <= 0 || p.x < -50 || p.x > level.width+50){
+        level.projectiles.splice(i,1);
+        continue;
+      }
+      if(player.invuln <= 0 && !player.spectating && rectsOverlap(player, p)){
+        level.projectiles.splice(i,1);
+        takeDamage();
+      }
     }
   }
 
@@ -2916,6 +3114,23 @@
 
     if(player.spectating){
       updateMovers();
+      if(level.crushers) level.crushers.forEach(c => {
+        c.t = (c.t||0) + 0.025*(c.speed||1);
+        const s = (Math.sin(c.t)+1)/2;
+        c.y = c.topY + (c.bottomY - c.topY) * s;
+      });
+      if(level.shooters){
+        if(!level.projectiles) level.projectiles = [];
+        level.shooters.forEach(s => {
+          s.timer = (s.timer===undefined ? s.interval : s.timer) - 1;
+          if(s.timer <= 0){ s.timer = s.interval; level.projectiles.push({x:s.x,y:s.y,vx:(s.dir||1)*2.6,w:16,h:16,life:220}); }
+        });
+        for(let i=level.projectiles.length-1;i>=0;i--){
+          const p = level.projectiles[i];
+          p.x += p.vx; p.life--;
+          if(p.life<=0 || p.x<-50 || p.x>level.width+50) level.projectiles.splice(i,1);
+        }
+      }
       level.coins.forEach(c => { if(!c.taken) c.t += 0.15; });
       level.enemies.forEach(e => {
         if(!e.alive) return;
@@ -3034,6 +3249,8 @@
 
     updateEnemies();
     updateHazards();
+    updateCrushers();
+    updateShooters();
     if(levelDone) return;
 
     level.coins.forEach((c, idx) => {
@@ -3051,9 +3268,13 @@
       }
     });
 
-    if(rectsOverlap(player, level.flag)){
+    const activeBoss = level.enemies.find(e => e.type === 'boss' && e.alive);
+    if(!activeBoss && rectsOverlap(player, level.flag)){
       levelDone = true;
       finishRun(true);
+    } else if(activeBoss && rectsOverlap(player, level.flag)){
+      // przypomnienie ze trzeba najpierw pokonac bossa
+      player.x -= player.vx;
     }
 
     camera.x = Math.max(0, Math.min(player.x - W/2, level.width - W));
@@ -3669,6 +3890,122 @@
     ctx.fill();
   }
 
+  function drawBoss(e, x){
+    const cx = x + e.w/2, cy = e.y + e.h/2;
+    const flash = e.hitTimer > 0 && Math.floor(e.hitTimer/4)%2===0;
+    const bob = Math.sin((e.animT||0)*0.8) * 4;
+
+    // cien
+    if(gfxQuality >= 1){
+      ctx.fillStyle = 'rgba(0,0,0,.3)';
+      ctx.beginPath(); ctx.ellipse(cx, e.y+e.h+10, e.w*0.55, 8, 0, 0, Math.PI*2); ctx.fill();
+    }
+
+    // nogi
+    ctx.fillStyle = '#3a0a1a';
+    ctx.beginPath(); ctx.ellipse(cx-e.w*0.28, e.y+e.h-6+bob*0.3, e.w*0.16, 10, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx+e.w*0.28, e.y+e.h-6-bob*0.3, e.w*0.16, 10, 0, 0, Math.PI*2); ctx.fill();
+
+    // cialo
+    if(flash){
+      ctx.fillStyle = '#ffffff';
+    } else if(gfxQuality === 0){
+      ctx.fillStyle = '#8a1a3a';
+    } else {
+      const grad = ctx.createRadialGradient(cx-e.w*0.25, cy-e.h*0.3, 4, cx, cy, e.w*0.75);
+      grad.addColorStop(0, '#e05a8a');
+      grad.addColorStop(0.5, '#a8225a');
+      grad.addColorStop(1, '#5a0e2e');
+      ctx.fillStyle = grad;
+    }
+    ctx.beginPath(); ctx.ellipse(cx, cy+bob*0.4, e.w*0.55, e.h*0.5, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#3a0a1a'; ctx.lineWidth = 3; ctx.stroke();
+
+    // kolce na grzbiecie
+    ctx.fillStyle = '#3a0a1a';
+    for(let i=-2;i<=2;i++){
+      ctx.beginPath();
+      ctx.moveTo(cx+i*14-6, cy-e.h*0.35+bob*0.4);
+      ctx.lineTo(cx+i*14, cy-e.h*0.7+bob*0.4);
+      ctx.lineTo(cx+i*14+6, cy-e.h*0.35+bob*0.4);
+      ctx.fill();
+    }
+
+    // korona
+    ctx.fillStyle = '#ffd23f';
+    ctx.beginPath();
+    ctx.moveTo(cx-22, cy-e.h*0.45+bob*0.4);
+    ctx.lineTo(cx-14, cy-e.h*0.68+bob*0.4);
+    ctx.lineTo(cx-4, cy-e.h*0.45+bob*0.4);
+    ctx.lineTo(cx+4, cy-e.h*0.68+bob*0.4);
+    ctx.lineTo(cx+14, cy-e.h*0.45+bob*0.4);
+    ctx.lineTo(cx+22, cy-e.h*0.68+bob*0.4);
+    ctx.lineTo(cx+22, cy-e.h*0.4+bob*0.4);
+    ctx.lineTo(cx-22, cy-e.h*0.4+bob*0.4);
+    ctx.fill();
+
+    // oczy wsciekle
+    const eyeShift = (e.vx>=0?1:-1)*3;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.ellipse(cx-16+eyeShift, cy+bob*0.4, 8, 9, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx+16+eyeShift, cy+bob*0.4, 8, 9, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ff2020';
+    ctx.beginPath(); ctx.arc(cx-16+eyeShift*1.6, cy+2+bob*0.4, 4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+16+eyeShift*1.6, cy+2+bob*0.4, 4, 0, Math.PI*2); ctx.fill();
+
+    // zebiska
+    ctx.fillStyle = '#fff';
+    for(let i=-1;i<=1;i+=2){
+      ctx.beginPath();
+      ctx.moveTo(cx+i*8-4, cy+e.h*0.28+bob*0.4);
+      ctx.lineTo(cx+i*8, cy+e.h*0.42+bob*0.4);
+      ctx.lineTo(cx+i*8+4, cy+e.h*0.28+bob*0.4);
+      ctx.fill();
+    }
+  }
+
+  function drawCrushers(){
+    if(!level.crushers) return;
+    for(const c of level.crushers){
+      const x = c.x - camera.x;
+      if(x+c.w < 0 || x > W) continue;
+      // lancuch/tłok od gory
+      ctx.fillStyle = '#5a5a5a';
+      ctx.fillRect(x+c.w/2-4, c.topY-40, 8, c.y-(c.topY-40));
+      // blok z kolcami
+      const grad = gfxQuality===0 ? null : ctx.createLinearGradient(x, c.y, x, c.y+c.h);
+      if(grad){ grad.addColorStop(0,'#c0c5cb'); grad.addColorStop(1,'#7a828a'); ctx.fillStyle = grad; }
+      else ctx.fillStyle = '#9aa0a6';
+      ctx.fillRect(x, c.y, c.w, c.h);
+      ctx.fillStyle = '#4a4e54';
+      for(let i=0;i<c.w;i+=14){
+        ctx.beginPath();
+        ctx.moveTo(x+i, c.y+c.h);
+        ctx.lineTo(x+i+7, c.y+c.h+12);
+        ctx.lineTo(x+i+14, c.y+c.h);
+        ctx.fill();
+      }
+    }
+  }
+
+  function drawProjectiles(){
+    if(!level.projectiles) return;
+    for(const p of level.projectiles){
+      const x = p.x - camera.x;
+      if(x < -30 || x > W+30) continue;
+      if(gfxQuality >= 2){
+        ctx.save();
+        ctx.shadowColor = 'rgba(255,120,40,.9)';
+        ctx.shadowBlur = 10;
+      }
+      const grad = gfxQuality===0 ? null : ctx.createRadialGradient(x-2,p.y-2,1,x,p.y,9);
+      if(grad){ grad.addColorStop(0,'#fff2b0'); grad.addColorStop(0.5,'#ff8a3d'); grad.addColorStop(1,'#c0390a'); ctx.fillStyle = grad; }
+      else ctx.fillStyle = '#ff8a3d';
+      ctx.beginPath(); ctx.arc(x, p.y, 8, 0, Math.PI*2); ctx.fill();
+      if(gfxQuality >= 2) ctx.restore();
+    }
+  }
+
   function drawHazards(){
     if(!level.hazards) return;
     for(const h of level.hazards){
@@ -3734,6 +4071,7 @@
       if(!e.alive) continue;
       const x = e.x - camera.x;
       if(x+e.w < 0 || x > W) continue;
+      if(e.type === 'boss'){ drawBoss(e, x); continue; }
       const walkBob = Math.sin(e.animT||0) * 2.2;
       const squash = 1 + Math.sin((e.animT||0)*2) * 0.03;
       const cx = x + e.w/2, cy = e.y + e.h/2 + walkBob*0.4;
@@ -3887,7 +4225,9 @@
     drawPlatforms();
     drawMovers();
     drawHazards();
+    drawCrushers();
     drawCoins();
+    drawProjectiles();
     drawEnemies();
     drawFlag();
     if(mpChannel) drawRemotePlayer();
