@@ -107,6 +107,53 @@
   }
 
   /* SHOP */
+  .shop-tabs {
+    display:flex;
+    gap:8px;
+    margin-bottom:4px;
+  }
+  .shop-tab {
+    background:rgba(255,255,255,.1);
+    border:2px solid rgba(255,255,255,.25);
+    color:#fff;
+    font-weight:bold;
+    font-size:13px;
+    padding:8px 18px;
+    border-radius:10px 10px 0 0;
+    cursor:pointer;
+  }
+  .shop-tab.active {
+    background:linear-gradient(#ffd23f,#c8860a);
+    border-color:#8a5a00;
+    color:#3a2600;
+  }
+  .trails-grid {
+    grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
+  }
+  .trail-card {
+    background:rgba(255,255,255,.08);
+    border:3px solid rgba(255,255,255,.25);
+    border-radius:10px;
+    padding:12px 10px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+  }
+  .trail-card.selected { border-color:#ffd23f; box-shadow:0 0 12px #ffd23f; }
+  .trail-card.locked { opacity:.55; }
+  .trail-preview-strip {
+    width:80px;
+    height:28px;
+    border-radius:6px;
+    overflow:hidden;
+    display:flex;
+    border:2px solid rgba(0,0,0,.3);
+  }
+  .trail-preview-strip div { flex:1; height:100%; }
+  .trail-name { font-size:13px; font-weight:bold; color:#fff; }
+  .trail-price { font-size:12px; color:#ffd23f; }
   .shop-layout {
     display:flex;
     gap:24px;
@@ -899,16 +946,25 @@
 
   <!-- SHOP -->
   <div id="shopScreen" class="screen hidden">
-    <div class="title" style="font-size:36px;">SKLEP ZE SKÓRKAMI</div>
+    <div class="title" style="font-size:36px;">SKLEP</div>
     <div class="coin-tally"><div class="coin-icon"></div><span id="shopCoins">0</span></div>
-    <div class="shop-layout">
-      <div class="shop-grid" id="shopGrid"></div>
-      <div class="shop-preview">
-        <canvas id="previewCanvas" width="180" height="240"></canvas>
-        <div class="preview-name" id="previewName">Klasyczny</div>
-        <button class="menu-btn small" id="btnRotate">🔄 OBRÓĆ</button>
-        <button class="menu-btn" id="btnBuyEquip">✅ ZAŁÓŻ</button>
+    <div class="shop-tabs">
+      <button class="shop-tab active" id="tabSkins">👕 SKINY</button>
+      <button class="shop-tab" id="tabTrails">✨ TRAILS</button>
+    </div>
+    <div id="skinsSection">
+      <div class="shop-layout">
+        <div class="shop-grid" id="shopGrid"></div>
+        <div class="shop-preview">
+          <canvas id="previewCanvas" width="180" height="240"></canvas>
+          <div class="preview-name" id="previewName">Klasyczny</div>
+          <button class="menu-btn small" id="btnRotate">🔄 OBRÓĆ</button>
+          <button class="menu-btn" id="btnBuyEquip">✅ ZAŁÓŻ</button>
+        </div>
       </div>
+    </div>
+    <div id="trailsSection" class="hidden">
+      <div class="shop-grid trails-grid" id="trailsGrid"></div>
     </div>
     <div class="lives-shop">
       <div class="lives-shop-info">
@@ -1264,6 +1320,8 @@
     totalCoinsEarned: 0,
     deathCount: 0,
     totalSpent: 0,
+    ownedTrails: ['none'],
+    equippedTrail: 'none',
   };
 
   function nameFromUser(user){
@@ -1289,6 +1347,8 @@
       state.graphicsQuality = data.graphics_quality ?? 'medium';
       state.extraLives = data.extra_lives ?? 0;
       state.shields = data.shields ?? 0;
+      state.ownedTrails = data.owned_trails ?? ['none'];
+      state.equippedTrail = data.equipped_trail ?? 'none';
       state.totalCoinsEarned = data.total_coins_earned ?? 0;
       state.deathCount = data.death_count ?? 0;
       state.totalSpent = data.total_spent ?? 0;
@@ -1333,6 +1393,8 @@
         graphics_quality: state.graphicsQuality,
         extra_lives: state.extraLives,
         shields: state.shields,
+        owned_trails: state.ownedTrails,
+        equipped_trail: state.equippedTrail,
         total_coins_earned: state.totalCoinsEarned,
         death_count: state.deathCount,
         total_spent: state.totalSpent,
@@ -1423,6 +1485,20 @@
     { id:'pharaoh', name:'Faraon', price:110, colors:{hat:'#ffd23f', shirt:'#1e5aa8', overalls:'#0a2a5a', skin:'#c9946a'} },
     { id:'candy',   name:'Cukierkowy', price:70, colors:{hat:'#ff6fa5', shirt:'#ffb3d1', overalls:'#7a3ac9', skin:'#f6b17a'} },
     { id:'steampunk', name:'Steampunk', price:115, colors:{hat:'#a86a2e', shirt:'#5a3a1a', overalls:'#2e1a0a', skin:'#e0a86e'} },
+  ];
+
+  const TRAILS = [
+    { id:'none',      name:'Brak',       price:0,  colors:['transparent'] },
+    { id:'ukraine',   name:'Ukraina',    price:40, colors:['#0057b7','#ffd700'] },
+    { id:'poland',    name:'Polska',     price:40, colors:['#ffffff','#dc143c'] },
+    { id:'lithuania', name:'Litwa',      price:40, colors:['#fdb913','#006a44','#c1272d'] },
+    { id:'latvia',    name:'Łotwa',      price:40, colors:['#9e3039','#ffffff','#9e3039'] },
+    { id:'germany',   name:'Niemcy',     price:45, colors:['#000000','#dd0000','#ffce00'] },
+    { id:'italy',     name:'Włochy',     price:45, colors:['#009246','#ffffff','#ce2b37'] },
+    { id:'sweden',    name:'Szwecja',    price:45, colors:['#006aa7','#fecc02'] },
+    { id:'japan',     name:'Japonia',    price:50, colors:['#ffffff','#bc002d'] },
+    { id:'usa',       name:'USA',        price:50, colors:['#3c3b6e','#ffffff','#b22234'] },
+    { id:'rainbow',   name:'Tęczowy',    price:90, colors:['#ff3b3b','#ffb03b','#ffe93b','#3bff6a','#3bb0ff','#a03bff'] },
   ];
 
   // ---------- SCREENS ----------
@@ -1793,7 +1869,59 @@
       buyShieldBtn.disabled = state.wallet < 150;
       buyShieldBtn.textContent = '🪙 KUP TARCZĘ (150)';
     }
+    renderTrails();
   }
+
+  function renderTrails(){
+    const grid = document.getElementById('trailsGrid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    TRAILS.forEach(tr => {
+      const owned = state.ownedTrails.includes(tr.id);
+      const equipped = state.equippedTrail === tr.id;
+      const afford = isTester() || state.wallet >= tr.price;
+      const card = document.createElement('div');
+      card.className = 'trail-card' + (equipped ? ' selected':'') + (!owned && !afford ? ' locked':'');
+      const stripes = tr.colors.map(c => `<div style="background:${c};"></div>`).join('');
+      card.innerHTML = `
+        <div class="trail-preview-strip">${stripes}</div>
+        <div class="trail-name">${tr.name}</div>
+        ${owned ? `<div class="buy-tag">${equipped ? 'ZAŁOŻONE' : 'POSIADASZ'}</div>` : `<div class="trail-price">${isTester() ? '🆓 DARMOWE' : '🪙 ' + tr.price}</div>`}
+      `;
+      card.onclick = () => {
+        if(owned){
+          state.equippedTrail = tr.id;
+          renderTrails();
+          saveProfile();
+        } else if(afford){
+          if(!isTester()){
+            state.wallet -= tr.price;
+            state.totalSpent += tr.price;
+          }
+          state.ownedTrails.push(tr.id);
+          state.equippedTrail = tr.id;
+          renderTrails();
+          saveProfile();
+          AudioEngine.sfxCoin();
+        }
+      };
+      grid.appendChild(card);
+    });
+    document.getElementById('shopCoins').textContent = state.wallet;
+  }
+
+  document.getElementById('tabSkins').onclick = () => {
+    document.getElementById('tabSkins').classList.add('active');
+    document.getElementById('tabTrails').classList.remove('active');
+    document.getElementById('skinsSection').classList.remove('hidden');
+    document.getElementById('trailsSection').classList.add('hidden');
+  };
+  document.getElementById('tabTrails').onclick = () => {
+    document.getElementById('tabTrails').classList.add('active');
+    document.getElementById('tabSkins').classList.remove('active');
+    document.getElementById('trailsSection').classList.remove('hidden');
+    document.getElementById('skinsSection').classList.add('hidden');
+  };
 
   function renderLevels(){
     const grid = document.getElementById('levelGrid');
@@ -2213,6 +2341,7 @@
   }
 
   let level, player, camera, runCoins, lives, levelDone, timeAlive, currentLevelIndex;
+  let trailParticles = [];
   let customLevelActive = false;
 
   // ---------- LEVEL DEFINITIONS ----------
@@ -2861,6 +2990,7 @@
       shieldActive:false, shieldTimer:0
     };
     camera = {x:0};
+    trailParticles = [];
     runCoins = 0;
     lives = 3 + (state.extraLives || 0);
     if(state.extraLives > 0){
@@ -3279,6 +3409,25 @@
 
     camera.x = Math.max(0, Math.min(player.x - W/2, level.width - W));
     player.animT += Math.abs(player.vx) * 0.22;
+
+    if(state.equippedTrail && state.equippedTrail !== 'none' && Math.abs(player.vx) > 1 && timeAlive % 3 === 0){
+      const trail = TRAILS.find(t => t.id === state.equippedTrail);
+      if(trail){
+        const color = trail.colors[Math.floor(Math.random()*trail.colors.length)];
+        trailParticles.push({
+          x: player.x + player.w/2 - player.facing*10,
+          y: player.y + player.h*0.6,
+          color, life:22, maxLife:22,
+          vy: -0.3 - Math.random()*0.3,
+        });
+      }
+    }
+    for(let i=trailParticles.length-1;i>=0;i--){
+      const t = trailParticles[i];
+      t.life--;
+      t.y += t.vy;
+      if(t.life <= 0) trailParticles.splice(i,1);
+    }
   }
 
   function finishRun(won){
@@ -4220,6 +4369,21 @@
     }
   }
 
+  function drawTrailParticles(){
+    for(const t of trailParticles){
+      const x = t.x - camera.x;
+      if(x < -20 || x > W+20) continue;
+      const alpha = t.life / t.maxLife;
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.8;
+      ctx.fillStyle = t.color;
+      ctx.beginPath();
+      ctx.arc(x, t.y, 5 * alpha + 2, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
   function draw(){
     drawBackground();
     drawPlatforms();
@@ -4230,6 +4394,7 @@
     drawProjectiles();
     drawEnemies();
     drawFlag();
+    drawTrailParticles();
     if(mpChannel) drawRemotePlayer();
     if(!player.spectating) drawPlayer();
   }
