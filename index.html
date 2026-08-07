@@ -822,6 +822,7 @@
     <button class="menu-btn purple" id="btnLevels">🗺 POZIOMY</button>
     <button class="menu-btn blue" id="btnShop">🛒 SKLEP</button>
     <button class="menu-btn" id="btnMultiplayer" style="background:linear-gradient(#ff9f4a,#d9660e); border-color:#7a3a05; box-shadow:0 6px 0 #7a3a05,0 8px 10px rgba(0,0,0,.4);">👥 MULTIPLAYER</button>
+    <button class="menu-btn" id="btnSpeedrun" style="background:linear-gradient(#ffd23f,#c98f00); border-color:#7a5600; box-shadow:0 6px 0 #7a5600,0 8px 10px rgba(0,0,0,.4);">🏁 SPEEDRUNY</button>
     <button class="menu-btn green" id="btnSettings">⚙ USTAWIENIA</button>
     <div id="authBox" class="auth-box"></div>
   </div>
@@ -872,6 +873,14 @@
     <button class="menu-btn small" id="btnMyLevelsBack">⬅ POWRÓT</button>
   </div>
 
+  <!-- SPEEDRUN: TOP 10 NA POZIOM -->
+  <div id="speedrunScreen" class="screen hidden">
+    <div class="title" style="font-size:36px;">🏁 SPEEDRUNY</div>
+    <select id="speedrunLevelSelect" class="editor-bg-select" style="margin-bottom:10px;"></select>
+    <div class="my-levels-panel" id="speedrunPanel"></div>
+    <button class="menu-btn small" id="btnSpeedrunBack">⬅ POWRÓT</button>
+  </div>
+
   <!-- EDYTOR POZIOMÓW -->
   <div id="editorScreen" class="screen hidden">
     <div class="editor-wrap">
@@ -909,7 +918,7 @@
         <input type="range" id="editorScrollRange" min="0" max="0" value="0" style="flex:1;">
         <button class="menu-btn small" id="btnEditorScrollRight">▶</button>
       </div>
-      <div class="editor-scroll-hint">Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu.</div>
+      <div class="editor-scroll-hint">Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć.</div>
       <div class="editor-actions">
         <button class="menu-btn small" id="btnEditorClear">🗑 WYCZYŚĆ</button>
         <button class="menu-btn small" id="btnEditorTest">▶ TESTUJ</button>
@@ -1011,6 +1020,7 @@
       <div class="hud-pill"><div class="hud-coin-icon"></div><span id="hudCoins">0</span></div>
       <div class="hud-pill"><span class="hud-heart-icon">❤</span><span id="hudLives">3</span></div>
       <div class="hud-pill">Poziom <span id="hudLevel">1</span></div>
+      <div class="hud-pill" id="hudTimerPill">⏱ <span id="hudTimer">00:00.0</span></div>
       <div class="hud-pill shield-pill hidden" id="hudShieldPill">🛡 <span id="hudShieldText">0</span></div>
     </div>
     <button id="fsBtn">⛶ PEŁNY EKRAN</button>
@@ -1049,6 +1059,20 @@
   //   create policy "select own" on public.profiles for select using (auth.uid() = id);
   //   create policy "update own" on public.profiles for update using (auth.uid() = id);
   //   create policy "insert own" on public.profiles for insert with check (auth.uid() = id);
+  //
+  //   -- Tabela najlepszych czasow (speedrun) per uzytkownik+poziom:
+  //   create table public.level_times (
+  //     user_id uuid references auth.users(id) on delete cascade,
+  //     level_index integer not null,
+  //     display_name text,
+  //     time_ms integer not null,
+  //     updated_at timestamptz default now(),
+  //     primary key (user_id, level_index)
+  //   );
+  //   alter table public.level_times enable row level security;
+  //   create policy "public read times" on public.level_times for select using (true);
+  //   create policy "insert own time" on public.level_times for insert with check (auth.uid() = user_id);
+  //   create policy "update own time" on public.level_times for update using (auth.uid() = user_id);
   //
   const SUPABASE_URL = 'https://fbijztkbisfdtodfwudo.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_16EaCUKwWvnbl4OGXmIH2Q_EVlgIsGD';
@@ -1532,6 +1556,7 @@
   const statsScreen = document.getElementById('statsScreen');
   const editorScreen = document.getElementById('editorScreen');
   const myLevelsScreen = document.getElementById('myLevelsScreen');
+  const speedrunScreen = document.getElementById('speedrunScreen');
 
   let gamePlaying = false;
   const mpChoiceScreen = document.getElementById('mpChoiceScreen');
@@ -1547,6 +1572,7 @@
     statsScreen.classList.add('hidden');
     editorScreen.classList.add('hidden');
     myLevelsScreen.classList.add('hidden');
+    speedrunScreen.classList.add('hidden');
     mpChoiceScreen.classList.add('hidden');
     mpLobbyScreen.classList.add('hidden');
     if(name==='menu') menuScreen.classList.remove('hidden');
@@ -1557,6 +1583,7 @@
     if(name==='stats') statsScreen.classList.remove('hidden');
     if(name==='editor'){ editorScreen.classList.remove('hidden'); redrawEditor(); }
     if(name==='myLevels'){ myLevelsScreen.classList.remove('hidden'); renderMyLevels(); }
+    if(name==='speedrun'){ speedrunScreen.classList.remove('hidden'); renderSpeedrunBoard(); }
     if(name==='mpChoice') mpChoiceScreen.classList.remove('hidden');
     if(name==='mpLobby') mpLobbyScreen.classList.remove('hidden');
     document.getElementById('menuCoins').textContent = state.wallet;
@@ -2250,13 +2277,63 @@
     redrawEditor();
   }
 
-  editorCanvas.addEventListener('click', (e) => {
+  function editorPointFromEvent(e){
     const rect = editorCanvas.getBoundingClientRect();
     const cx = (e.clientX-rect.left) * (editorCanvas.width/rect.width);
     const cy = (e.clientY-rect.top) * (editorCanvas.height/rect.height);
-    const levelX = editorSnap(cx/editorScale + editorScrollX, 20);
-    const levelY = editorSnap(cy/editorScale, 20);
-    editorPlaceAt(levelX, levelY);
+    return { levelX: cx/editorScale + editorScrollX, levelY: cy/editorScale };
+  }
+
+  function editorFindDraggable(levelX, levelY){
+    let best = null, bestDist = 90;
+    const dSpawn = Math.hypot(editorSpawn.x-levelX, editorSpawn.y-levelY);
+    if(dSpawn < bestDist){ bestDist = dSpawn; best = {kind:'spawn'}; }
+    if(editorFlag){
+      const dFlag = Math.hypot(editorFlag.x-levelX, editorFlag.y-levelY);
+      if(dFlag < bestDist){ bestDist = dFlag; best = {kind:'flag'}; }
+    }
+    for(let i=editorElements.length-1;i>=0;i--){
+      const el = editorElements[i];
+      const ey = el.y!==undefined ? el.y : levelY;
+      const d = Math.hypot(el.x-levelX, ey-levelY);
+      if(d < bestDist){ bestDist = d; best = {kind:'element', el}; }
+    }
+    return best;
+  }
+
+  let editorDrag = null;
+  let editorDragMoved = false;
+  let editorSuppressClick = false;
+
+  editorCanvas.addEventListener('mousedown', (e) => {
+    const {levelX, levelY} = editorPointFromEvent(e);
+    editorDragMoved = false;
+    editorDrag = editorFindDraggable(levelX, levelY);
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if(!editorDrag) return;
+    editorDragMoved = true;
+    const {levelX, levelY} = editorPointFromEvent(e);
+    const sx = editorSnap(levelX, 20), sy = editorSnap(levelY, 20);
+    if(editorDrag.kind === 'spawn'){ editorSpawn.x = Math.max(0, sx); editorSpawn.y = sy; }
+    else if(editorDrag.kind === 'flag'){ editorFlag.x = Math.max(0, sx); editorFlag.y = sy; }
+    else if(editorDrag.kind === 'element'){
+      editorDrag.el.x = Math.max(0, sx);
+      if(editorDrag.el.y !== undefined) editorDrag.el.y = sy;
+    }
+    redrawEditor();
+  });
+
+  window.addEventListener('mouseup', () => {
+    if(editorDrag && editorDragMoved) editorSuppressClick = true;
+    editorDrag = null;
+  });
+
+  editorCanvas.addEventListener('click', (e) => {
+    if(editorSuppressClick){ editorSuppressClick = false; return; }
+    const {levelX, levelY} = editorPointFromEvent(e);
+    editorPlaceAt(editorSnap(levelX, 20), editorSnap(levelY, 20));
   });
 
   document.querySelectorAll('.editor-tool').forEach(btn => {
@@ -2283,6 +2360,70 @@
 
   document.getElementById('myLevelsCorner').onclick = () => showScreen('myLevels');
   document.getElementById('btnMyLevelsBack').onclick = () => showScreen('menu');
+
+  document.getElementById('btnSpeedrun').onclick = () => showScreen('speedrun');
+  document.getElementById('btnSpeedrunBack').onclick = () => showScreen('menu');
+  document.getElementById('speedrunLevelSelect').onchange = renderSpeedrunBoard;
+
+  function ensureSpeedrunSelectOptions(){
+    const sel = document.getElementById('speedrunLevelSelect');
+    if(sel.options.length === LEVELS.length) return;
+    sel.innerHTML = LEVELS.map((_,i) => `<option value="${i}">Poziom ${i+1}</option>`).join('');
+  }
+
+  async function renderSpeedrunBoard(){
+    ensureSpeedrunSelectOptions();
+    const sel = document.getElementById('speedrunLevelSelect');
+    const levelIndex = Number(sel.value || 0);
+    const panel = document.getElementById('speedrunPanel');
+    if(!sb){
+      panel.innerHTML = '<div class="my-levels-empty">Wymaga skonfigurowanego konta (Supabase).</div>';
+      return;
+    }
+    panel.innerHTML = '<div class="my-levels-empty">Wczytywanie...</div>';
+    const { data, error } = await sb.from('level_times')
+      .select('display_name,time_ms')
+      .eq('level_index', levelIndex)
+      .order('time_ms', { ascending:true })
+      .limit(10);
+    if(error){
+      panel.innerHTML = '<div class="my-levels-empty">⚠ Błąd wczytywania: ' + escapeHtml(error.message) + '</div>';
+      return;
+    }
+    if(!data || data.length === 0){
+      panel.innerHTML = '<div class="my-levels-empty">Nikt jeszcze nie ukończył tego poziomu na czas. Bądź pierwszy!</div>';
+      return;
+    }
+    panel.innerHTML = data.map((row,i) => {
+      const name = escapeHtml(row.display_name || 'Gracz');
+      const isMe = currentUser && row.display_name === state.displayName;
+      const medal = i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1)+'.';
+      return `<div class="my-level-row"${isMe ? ' style="color:#ffd23f;font-weight:bold;"' : ''}>
+        <div class="my-level-info">
+          <div class="my-level-name">${medal} ${name}</div>
+        </div>
+        <div class="my-level-actions"><span class="my-level-code">⏱ ${formatRunTime(row.time_ms)}</span></div>
+      </div>`;
+    }).join('');
+  }
+
+  async function saveSpeedrunTime(levelIndex, timeMs){
+    if(!sb || !currentUser) return;
+    try {
+      const { data: existing } = await sb.from('level_times')
+        .select('time_ms')
+        .eq('user_id', currentUser.id)
+        .eq('level_index', levelIndex)
+        .maybeSingle();
+      if(existing && existing.time_ms <= timeMs) return; // stary czas juz jest lepszy lub taki sam
+      await sb.from('level_times').upsert({
+        user_id: currentUser.id,
+        level_index: levelIndex,
+        display_name: state.displayName,
+        time_ms: Math.round(timeMs),
+      }, { onConflict: 'user_id,level_index' });
+    } catch(e){ /* ciche niepowodzenie - nie przerywaj rozgrywki */ }
+  }
 
   async function renderMyLevels(){
     const panel = document.getElementById('myLevelsPanel');
@@ -2453,6 +2594,14 @@
   }
 
   let level, player, camera, runCoins, lives, levelDone, timeAlive, currentLevelIndex;
+  let levelStartTime = 0, runElapsedMs = 0;
+  function formatRunTime(ms){
+    const totalMs = Math.max(0, ms|0);
+    const m = Math.floor(totalMs / 60000);
+    const s = Math.floor((totalMs % 60000) / 1000);
+    const d = Math.floor((totalMs % 1000) / 100);
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + '.' + d;
+  }
   let trailParticles = [];
   let customLevelActive = false;
 
@@ -3122,6 +3271,9 @@
     }
     levelDone = false;
     timeAlive = 0;
+    levelStartTime = performance.now();
+    runElapsedMs = 0;
+    document.getElementById('hudTimer').textContent = formatRunTime(0);
     document.getElementById('hudCoins').textContent = runCoins;
     document.getElementById('hudLives').textContent = lives;
     document.getElementById('hudLevel').textContent = customData ? ('Własny: ' + level.name) : ((index+1) + ' - ' + level.name);
@@ -3556,14 +3708,18 @@
   function finishRun(won){
     state.wallet += runCoins;
     state.totalCoinsEarned += runCoins;
+    const timeStr = formatRunTime(runElapsedMs);
     if(won) AudioEngine.sfxWin(); else AudioEngine.sfxLose();
     if(!customLevelActive && won && currentLevelIndex === state.unlockedLevel && currentLevelIndex < LEVELS.length-1){
       state.unlockedLevel = currentLevelIndex + 1;
     }
+    if(!customLevelActive && won){
+      saveSpeedrunTime(currentLevelIndex, runElapsedMs);
+    }
     saveProfile();
     setTimeout(() => {
       if(customLevelActive){
-        const msg = won ? ('POZIOM WŁASNY UKOŃCZONY!\n+' + runCoins + ' monet') : ('GAME OVER\n+' + runCoins + ' monet zebranych');
+        const msg = won ? ('POZIOM WŁASNY UKOŃCZONY!\n+' + runCoins + ' monet\n⏱ Czas: ' + timeStr) : ('GAME OVER\n+' + runCoins + ' monet zebranych');
         showBanner(msg, () => {
           if(mpChannel) leaveMultiplayer();
           if(editorTesting){
@@ -3580,10 +3736,10 @@
           if(currentLevelIndex < LEVELS.length-1){
             const nextIdx = currentLevelIndex + 1;
             broadcastEvent('level_advance', { idx: nextIdx });
-            showBanner('POZIOM UKOŃCZONY!\n+' + runCoins + ' monet', () => startLevel(nextIdx));
+            showBanner('POZIOM UKOŃCZONY!\n+' + runCoins + ' monet\n⏱ Czas: ' + timeStr, () => startLevel(nextIdx));
           } else {
             broadcastEvent('level_advance', { idx: null });
-            showBanner('UKOŃCZYLIŚCIE WSZYSTKIE POZIOMY!\n+' + runCoins + ' monet', () => { leaveMultiplayer(); showScreen('menu'); });
+            showBanner('UKOŃCZYLIŚCIE WSZYSTKIE POZIOMY!\n+' + runCoins + ' monet\n⏱ Czas: ' + timeStr, () => { leaveMultiplayer(); showScreen('menu'); });
           }
         } else {
           const restartIdx = currentLevelIndex;
@@ -3594,9 +3750,9 @@
       }
       if(won){
         if(currentLevelIndex < LEVELS.length-1){
-          showBanner('POZIOM UKOŃCZONY!\n+' + runCoins + ' monet', () => startLevel(currentLevelIndex+1));
+          showBanner('POZIOM UKOŃCZONY!\n+' + runCoins + ' monet\n⏱ Czas: ' + timeStr, () => startLevel(currentLevelIndex+1));
         } else {
-          showBanner('UKOŃCZYŁEŚ WSZYSTKIE POZIOMY!\n+' + runCoins + ' monet', () => showScreen('menu'));
+          showBanner('UKOŃCZYŁEŚ WSZYSTKIE POZIOMY!\n+' + runCoins + ' monet\n⏱ Czas: ' + timeStr, () => showScreen('menu'));
         }
       } else {
         showBanner('GAME OVER\n+' + runCoins + ' monet zebranych', () => showScreen('menu'));
@@ -4590,6 +4746,11 @@
   }
 
   function draw(){
+    if(!levelDone){
+      runElapsedMs = performance.now() - levelStartTime;
+      const tEl = document.getElementById('hudTimer');
+      if(tEl) tEl.textContent = formatRunTime(runElapsedMs);
+    }
     drawBackground();
     drawPlatforms();
     drawMovers();
