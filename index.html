@@ -3415,15 +3415,15 @@
     camera.x = Math.max(0, Math.min(player.x - W/2, level.width - W));
     player.animT += Math.abs(player.vx) * 0.22;
 
-    if(state.equippedTrail && state.equippedTrail !== 'none' && Math.abs(player.vx) > 1 && timeAlive % 3 === 0){
+    if(state.equippedTrail && state.equippedTrail !== 'none' && (Math.abs(player.vx) > 0.3 || !player.onGround) && timeAlive % 2 === 0){
       const trail = TRAILS.find(t => t.id === state.equippedTrail);
       if(trail){
         const color = trail.colors[Math.floor(Math.random()*trail.colors.length)];
         trailParticles.push({
-          x: player.x + player.w/2 - player.facing*10,
-          y: player.y + player.h*0.6,
-          color, life:22, maxLife:22,
-          vy: -0.3 - Math.random()*0.3,
+          x: player.x + player.w/2 - player.facing*12 + (Math.random()*8-4),
+          y: player.y + player.h*0.65 + (Math.random()*6-3),
+          color, life:34, maxLife:34,
+          vy: -0.5 - Math.random()*0.4,
         });
       }
     }
@@ -4377,13 +4377,21 @@
   function drawTrailParticles(){
     for(const t of trailParticles){
       const x = t.x - camera.x;
-      if(x < -20 || x > W+20) continue;
+      if(x < -30 || x > W+30) continue;
       const alpha = t.life / t.maxLife;
+      const r = 10 * alpha + 4;
       ctx.save();
-      ctx.globalAlpha = alpha * 0.8;
+      ctx.globalAlpha = Math.min(1, alpha * 1.1);
+      ctx.shadowColor = t.color;
+      ctx.shadowBlur = 14;
       ctx.fillStyle = t.color;
       ctx.beginPath();
-      ctx.arc(x, t.y, 5 * alpha + 2, 0, Math.PI*2);
+      ctx.arc(x, t.y, r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = Math.min(1, alpha * 1.4);
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(x, t.y, r * 0.35, 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
     }
