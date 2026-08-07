@@ -154,6 +154,7 @@
     border-radius:6px;
     overflow:hidden;
     display:flex;
+    position:relative;
     border:2px solid rgba(0,0,0,.3);
   }
   .trail-preview-strip div { flex:1; height:100%; }
@@ -1877,6 +1878,45 @@
     renderTrails();
   }
 
+  function flagPreviewHTML(tr){
+    const c = tr.colors;
+    switch(tr.id){
+      case 'none':
+        return `<div style="width:100%;height:100%;background:rgba(255,255,255,.06);"></div>`;
+      case 'ukraine': // poziomo: niebieski / żółty
+      case 'poland': // poziomo: biały / czerwony
+        return `<div style="width:100%;height:100%;background:linear-gradient(to bottom, ${c[0]} 50%, ${c[1]} 50%);"></div>`;
+      case 'lithuania': // poziomo: żółty/zielony/czerwony, równe pasy
+        return `<div style="width:100%;height:100%;background:linear-gradient(to bottom, ${c[0]} 0 33.3%, ${c[1]} 33.3% 66.6%, ${c[2]} 66.6% 100%);"></div>`;
+      case 'latvia': // poziomo: bordowy/biały/bordowy, cienki biały pas na środku
+        return `<div style="width:100%;height:100%;background:linear-gradient(to bottom, ${c[0]} 0 40%, ${c[1]} 40% 60%, ${c[2]} 60% 100%);"></div>`;
+      case 'germany': // poziomo: czarny/czerwony/złoty, równe pasy
+        return `<div style="width:100%;height:100%;background:linear-gradient(to bottom, ${c[0]} 0 33.3%, ${c[1]} 33.3% 66.6%, ${c[2]} 66.6% 100%);"></div>`;
+      case 'italy': // pionowo: zielony/biały/czerwony
+        return `<div style="width:100%;height:100%;background:linear-gradient(to right, ${c[0]} 0 33.3%, ${c[1]} 33.3% 66.6%, ${c[2]} 66.6% 100%);"></div>`;
+      case 'sweden': // niebieskie tło + żółty skandynawski krzyż (przesunięty od lewej)
+        return `<div style="width:100%;height:100%;background-color:${c[0]};background-image:
+            linear-gradient(to right, transparent 0 30%, ${c[1]} 30% 42%, transparent 42% 100%),
+            linear-gradient(to bottom, transparent 0 36%, ${c[1]} 36% 64%, transparent 64% 100%);"></div>`;
+      case 'japan': // białe tło + czerwone koło na środku (hinomaru)
+        return `<div style="width:100%;height:100%;background-color:${c[0]};background-image:
+            radial-gradient(circle at 50% 50%, ${c[1]} 0 27%, transparent 27% 100%);"></div>`;
+      case 'usa': // czerwono-białe pasy poziome + granatowy kanton z gwiazdkami w lewym górnym rogu
+        return `
+          <div style="width:100%;height:100%;background-color:${c[2]};background-image:
+              repeating-linear-gradient(to bottom, ${c[1]} 0 12.5%, ${c[2]} 12.5% 25%);"></div>
+          <div style="position:absolute;left:0;top:0;width:46%;height:57%;background-color:${c[0]};background-image:
+              radial-gradient(circle, ${c[1]} 0 8%, transparent 9%);
+              background-size:9px 7px;background-position:2px 2px;"></div>`;
+      case 'rainbow': // poziomo, równe pasy tęczy
+        return `<div style="width:100%;height:100%;background:linear-gradient(to bottom, ${c.map((col,i)=>`${col} ${i*100/c.length}% ${(i+1)*100/c.length}%`).join(',')});"></div>`;
+      default: {
+        const stripes = c.map(col => `<div style="background:${col};"></div>`).join('');
+        return stripes;
+      }
+    }
+  }
+
   function renderTrails(){
     const grid = document.getElementById('trailsGrid');
     if(!grid) return;
@@ -1887,7 +1927,7 @@
       const afford = isTester() || state.wallet >= tr.price;
       const card = document.createElement('div');
       card.className = 'trail-card' + (equipped ? ' selected':'') + (!owned && !afford ? ' locked':'');
-      const stripes = tr.colors.map(c => `<div style="background:${c};"></div>`).join('');
+      const stripes = flagPreviewHTML(tr);
       card.innerHTML = `
         <div class="trail-preview-strip">${stripes}</div>
         <div class="trail-name">${tr.name}</div>
