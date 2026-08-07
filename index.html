@@ -3276,7 +3276,7 @@
   // Klasyczne NES Mario: chód ~1.5 px/klatke w jednostkach gry, bieg szybszy,
   // przyspieszenie/tarcie zamiast natychmiastowej predkosci, skok zmiennej wysokosci.
   const WALK_MAX = 2.6;
-  const RUN_MAX = 5.0;
+  const RUN_MAX = 4.5; // 5.0 * 0.9 (bieg o 10% wolniejszy)
   const ACCEL = 0.32;
   const DECEL_GROUND = 0.36;
   const DECEL_AIR = 0.16;
@@ -4484,7 +4484,7 @@
       ctx.globalAlpha = Math.min(1, alpha * 1.15);
       ctx.shadowColor = 'rgba(255,255,255,.6)';
       ctx.shadowBlur = 6;
-      drawMiniFlag(x, t.y, 20 * (0.6 + 0.4*alpha), 14 * (0.6 + 0.4*alpha), t.id, t.colors);
+      drawMiniFlag(x, t.y, 32 * (0.6 + 0.4*alpha), 14 * (0.6 + 0.4*alpha), t.id, t.colors);
       ctx.restore();
     }
   }
