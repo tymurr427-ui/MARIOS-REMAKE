@@ -729,6 +729,13 @@
     border-color:#8a5a00;
     color:#3a2600;
   }
+  .editor-scroll-row {
+    display:flex; align-items:center; gap:8px;
+    max-width:1140px; width:100%; margin-top:6px;
+  }
+  .editor-scroll-hint {
+    font-size:11px; opacity:.65; margin-top:2px; text-align:center;
+  }
   #editorCanvas {
     background:#5c94fc;
     border:3px solid rgba(255,255,255,.3);
@@ -888,12 +895,21 @@
           <button class="editor-tool" data-tool="jumper">🟢 Skoczek</button>
           <button class="editor-tool" data-tool="hazard">▲ Kolce</button>
           <button class="editor-tool" data-tool="mover">🟪 Ruchoma platf.</button>
+          <button class="editor-tool" data-tool="crusher">💥 Miażdżarka</button>
+          <button class="editor-tool" data-tool="turret">🗼 Wieżyczka</button>
+          <button class="editor-tool" data-tool="boss">👹 Boss</button>
           <button class="editor-tool" data-tool="spawn">🏁 Start gracza</button>
           <button class="editor-tool" data-tool="flag">🚩 Flaga (meta)</button>
           <button class="editor-tool" data-tool="erase">🧹 Gumka</button>
         </div>
       </div>
       <canvas id="editorCanvas" width="1100" height="380"></canvas>
+      <div class="editor-scroll-row">
+        <button class="menu-btn small" id="btnEditorScrollLeft">◀</button>
+        <input type="range" id="editorScrollRange" min="0" max="0" value="0" style="flex:1;">
+        <button class="menu-btn small" id="btnEditorScrollRight">▶</button>
+      </div>
+      <div class="editor-scroll-hint">Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu.</div>
       <div class="editor-actions">
         <button class="menu-btn small" id="btnEditorClear">🗑 WYCZYŚĆ</button>
         <button class="menu-btn small" id="btnEditorTest">▶ TESTUJ</button>
@@ -2072,18 +2088,35 @@
   });
 
   // ---------- EDYTOR POZIOMÓW ----------
-  const EDITOR_LEVEL_W = 2000;
+  const EDITOR_LEVEL_W = 6000;
   const EDITOR_LEVEL_H = 720;
   const editorCanvas = document.getElementById('editorCanvas');
   const editorCtx = editorCanvas.getContext('2d');
   const editorScale = editorCanvas.height / EDITOR_LEVEL_H;
   const EDITOR_GROUND_Y = EDITOR_LEVEL_H - 60;
+  const EDITOR_VIEW_W = editorCanvas.width / editorScale;
 
   let editorTool = 'ground';
   let editorTesting = false;
   let editorElements = []; // {kind, x, y, w, enemyType, axis}
   let editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
   let editorFlag = { x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220 };
+  let editorScrollX = 0;
+
+  const editorScrollRange = document.getElementById('editorScrollRange');
+  editorScrollRange.max = Math.max(0, EDITOR_LEVEL_W - EDITOR_VIEW_W);
+  function editorSetScroll(x){
+    editorScrollX = Math.max(0, Math.min(EDITOR_LEVEL_W - EDITOR_VIEW_W, x));
+    editorScrollRange.value = editorScrollX;
+    redrawEditor();
+  }
+  editorScrollRange.oninput = () => editorSetScroll(Number(editorScrollRange.value));
+  document.getElementById('btnEditorScrollLeft').onclick = () => editorSetScroll(editorScrollX - 300);
+  document.getElementById('btnEditorScrollRight').onclick = () => editorSetScroll(editorScrollX + 300);
+  editorCanvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    editorSetScroll(editorScrollX + (e.deltaY || e.deltaX));
+  }, { passive:false });
 
   function editorSnap(v, grid){ return Math.round(v/grid)*grid; }
 
@@ -2113,7 +2146,8 @@
     editorCtx.setLineDash([]);
 
     for(const el of editorElements){
-      const ex = el.x*editorScale, ey = el.y*editorScale;
+      const ex = (el.x-editorScrollX)*editorScale, ey = el.y*editorScale;
+      if(ex < -100 || ex > editorCanvas.width+100) continue;
       editorCtx.save();
       if(el.kind==='ground'){
         editorCtx.fillStyle = '#8a5a2b';
@@ -2142,20 +2176,38 @@
       } else if(el.kind==='mover'){
         editorCtx.fillStyle = '#c9a5f5';
         editorCtx.fillRect(ex-20, ey, 40, 8);
+      } else if(el.kind==='crusher'){
+        editorCtx.strokeStyle = 'rgba(255,255,255,.5)';
+        editorCtx.beginPath(); editorCtx.moveTo(ex,0); editorCtx.lineTo(ex,ey); editorCtx.stroke();
+        editorCtx.fillStyle = '#8a8f99';
+        editorCtx.fillRect(ex-14, ey-14, 28, 28);
+        editorCtx.fillStyle = '#e74c3c';
+        editorCtx.fillRect(ex-14, ey+10, 28, 6);
+      } else if(el.kind==='turret'){
+        editorCtx.fillStyle = '#556070';
+        editorCtx.fillRect(ex-11, ey-11, 22, 22);
+        editorCtx.fillStyle = '#ffcc4d';
+        editorCtx.fillRect(el.dir>=0 ? ex : ex-16, ey-3, 16, 6);
+      } else if(el.kind==='boss'){
+        editorCtx.fillStyle = '#c0392b';
+        editorCtx.beginPath(); editorCtx.arc(ex, ey, 16, 0, Math.PI*2); editorCtx.fill();
+        editorCtx.font = 'bold 14px sans-serif'; editorCtx.textAlign='center';
+        editorCtx.fillText('👹', ex, ey+5);
+        editorCtx.textAlign='left';
       }
       editorCtx.restore();
     }
 
     // start gracza
     editorCtx.fillStyle = '#e74c3c';
-    editorCtx.beginPath(); editorCtx.arc(editorSpawn.x*editorScale, editorSpawn.y*editorScale, 8, 0, Math.PI*2); editorCtx.fill();
+    editorCtx.beginPath(); editorCtx.arc((editorSpawn.x-editorScrollX)*editorScale, editorSpawn.y*editorScale, 8, 0, Math.PI*2); editorCtx.fill();
     editorCtx.fillStyle = '#fff'; editorCtx.font = 'bold 9px sans-serif';
-    editorCtx.fillText('START', editorSpawn.x*editorScale-14, editorSpawn.y*editorScale-12);
+    editorCtx.fillText('START', (editorSpawn.x-editorScrollX)*editorScale-14, editorSpawn.y*editorScale-12);
 
     // flaga
     if(editorFlag){
       editorCtx.fillStyle = '#e74c3c';
-      const fx = editorFlag.x*editorScale, fy = editorFlag.y*editorScale;
+      const fx = (editorFlag.x-editorScrollX)*editorScale, fy = editorFlag.y*editorScale;
       editorCtx.fillRect(fx, fy, 2, 220*editorScale);
       editorCtx.beginPath();
       editorCtx.moveTo(fx+2, fy+4); editorCtx.lineTo(fx+16, fy+10); editorCtx.lineTo(fx+2, fy+16);
@@ -2185,6 +2237,16 @@
     else if(editorTool === 'jumper'){ editorElements.push({kind:'enemy', enemyType:'jumper', x:levelX, y:EDITOR_GROUND_Y-34}); }
     else if(editorTool === 'hazard'){ editorElements.push({kind:'hazard', x:levelX, w:40}); }
     else if(editorTool === 'mover'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'x'}); }
+    else if(editorTool === 'crusher'){ editorElements.push({kind:'crusher', x:levelX, w:50, h:50, topY:80, bottomY:EDITOR_GROUND_Y-55, speed:1.0, t:0}); }
+    else if(editorTool === 'turret'){
+      const dir = levelX < EDITOR_LEVEL_W/2 ? 1 : -1;
+      editorElements.push({kind:'turret', x:levelX, y:EDITOR_GROUND_Y-90, dir, interval:90});
+    }
+    else if(editorTool === 'boss'){
+      const existing = editorElements.findIndex(e=>e.kind==='boss');
+      if(existing >= 0) editorElements.splice(existing,1);
+      editorElements.push({kind:'boss', x:levelX, y:EDITOR_GROUND_Y-90});
+    }
     redrawEditor();
   }
 
@@ -2192,7 +2254,7 @@
     const rect = editorCanvas.getBoundingClientRect();
     const cx = (e.clientX-rect.left) * (editorCanvas.width/rect.width);
     const cy = (e.clientY-rect.top) * (editorCanvas.height/rect.height);
-    const levelX = editorSnap(cx/editorScale, 20);
+    const levelX = editorSnap(cx/editorScale + editorScrollX, 20);
     const levelY = editorSnap(cy/editorScale, 20);
     editorPlaceAt(levelX, levelY);
   });
@@ -2214,6 +2276,7 @@
     editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
     editorFlag = { x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220 };
     document.getElementById('editorSaveResult').textContent = '';
+    editorSetScroll(0);
     redrawEditor();
   };
   document.getElementById('editorBgSelect').onchange = redrawEditor;
@@ -2283,11 +2346,15 @@
     const enemies = editorElements.filter(e=>e.kind==='enemy').map(e=>({x:e.x,y:e.y,enemyType:e.enemyType}));
     const hazards = editorElements.filter(e=>e.kind==='hazard').map(e=>({x:e.x,w:e.w}));
     const movers = editorElements.filter(e=>e.kind==='mover').map(e=>({x:e.x,y:e.y,axis:e.axis}));
+    const crushers = editorElements.filter(e=>e.kind==='crusher').map(e=>({x:e.x,w:e.w,h:e.h,topY:e.topY,bottomY:e.bottomY,speed:e.speed,t:e.t}));
+    const shooters = editorElements.filter(e=>e.kind==='turret').map(e=>({x:e.x,y:e.y,dir:e.dir,interval:e.interval}));
+    const bossEl = editorElements.find(e=>e.kind==='boss');
     return {
       name: document.getElementById('editorLevelName').value.trim() || 'Poziom bez nazwy',
       bg: document.getElementById('editorBgSelect').value,
       width: EDITOR_LEVEL_W,
-      grounds, platforms, pipes, coins, enemies, hazards, movers,
+      grounds, platforms, pipes, coins, enemies, hazards, movers, crushers, shooters,
+      boss: bossEl ? {x:bossEl.x, y:bossEl.y} : null,
       flag: editorFlag, spawn: editorSpawn,
     };
   }
@@ -3008,15 +3075,26 @@
       baseX:m.x, baseY:m.y, x:m.x, y:m.y, w:90, h:20,
       axis:m.axis||'x', range:60, speed:1.0, isMover:true
     }));
+    const crushers = (data.crushers||[]).map(c => ({
+      x:c.x, w:c.w||50, h:c.h||50, topY:c.topY||80, bottomY:c.bottomY||GROUND_Y-55, speed:c.speed||1.0, t:c.t||0
+    }));
+    const shooters = (data.shooters||[]).map(s => ({ x:s.x, y:s.y, dir:s.dir||1, interval:s.interval||90 }));
     const enemies = (data.enemies||[]).map(e => {
       if(e.enemyType==='flyer') return {x:e.x, y:e.y, w:32, h:32, alive:true, type:'flyer', vx:0.5, minX:Math.max(0,e.x-100), maxX:e.x+100, baseY:e.y, amp:35};
       if(e.enemyType==='jumper') return {x:e.x, y:e.y, w:34, h:34, alive:true, type:'jumper', jumpHeight:70, baseY:e.y};
       return {x:e.x, y:e.y, w:34, h:34, alive:true, vx:0.55, minX:Math.max(0,e.x-90), maxX:e.x+90};
     });
+    if(data.boss){
+      enemies.push({
+        x:data.boss.x, y:data.boss.y, w:90, h:90, alive:true, type:'boss',
+        name:'Własny Boss', hp:6, maxHp:6, hitTimer:0,
+        vx:0.9, minX:Math.max(0,data.boss.x-200), maxX:data.boss.x+200, baseY:data.boss.y, animT:0
+      });
+    }
     const flag = data.flag ? {x:data.flag.x, y:data.flag.y, w:14, h:220} : {x:(data.width||2000)-150, y:GROUND_Y-220, w:14, h:220};
     return {
       name: data.name || 'Poziom własny',
-      platforms, pipes, coins, enemies, hazards, movers, flag,
+      platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, flag,
       width: data.width || 2000,
       bg: data.bg || 'day'
     };
