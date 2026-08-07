@@ -4260,6 +4260,28 @@
     }
   }
 
+  function drawTurrets(){
+    if(!level.shooters) return;
+    for(const s of level.shooters){
+      const x = s.x - camera.x;
+      if(x < -40 || x > W+40) continue;
+      const dir = s.dir || 1;
+      ctx.save();
+      const grad = gfxQuality===0 ? null : ctx.createLinearGradient(x-16, s.y-16, x-16, s.y+16);
+      if(grad){ grad.addColorStop(0,'#7d8694'); grad.addColorStop(1,'#454c56'); ctx.fillStyle = grad; }
+      else ctx.fillStyle = '#5a626e';
+      ctx.fillRect(x-16, s.y-16, 32, 32);
+      ctx.fillStyle = '#2e333a';
+      ctx.fillRect(x-16, s.y-16, 32, 6);
+      ctx.fillRect(x-16, s.y+10, 32, 6);
+      ctx.fillStyle = '#c0392b';
+      ctx.fillRect(dir>=0 ? x+8 : x-28, s.y-5, 20, 10);
+      ctx.fillStyle = '#ffcc4d';
+      ctx.beginPath(); ctx.arc(x, s.y, 5, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
   function drawProjectiles(){
     if(!level.projectiles) return;
     for(const p of level.projectiles){
@@ -4574,6 +4596,7 @@
     drawHazards();
     drawCrushers();
     drawCoins();
+    drawTurrets();
     drawProjectiles();
     drawEnemies();
     drawFlag();
