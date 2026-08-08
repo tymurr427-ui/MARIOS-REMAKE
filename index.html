@@ -2033,7 +2033,7 @@
       const locked = i > state.unlockedLevel;
       const card = document.createElement('div');
       card.className = 'level-card' + (locked ? ' locked':'');
-      card.innerHTML = `<span class="num">${i+1}</span><span class="lbl">${locked ? '🔒 zablokowany' : lvl.name}</span>`;
+      card.innerHTML = `<span class="num">${i+1}</span><span class="lbl">${locked ? '🔒 zablokowany' : lvl().name}</span>`;
       if(!locked){
         card.onclick = () => { showScreen('game'); startLevel(i); };
       }
@@ -3318,7 +3318,160 @@
     return { name:'Starcie z Bossem', platforms, pipes, coins, enemies, flag:{x:2200,y:GROUND_Y-220,w:14,h:220}, width:2300, bg:'volcano' };
   }
 
-  const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11, level12, level13, level14, level15];
+  function level16(){
+    const platforms = [
+      mkGround(0, 240),
+      mkGround(1050, 220),
+      mkGround(2200, 600),
+      mkGround(3730, 900),
+      {x:3820, y:GROUND_Y-100, w:90, h:22},
+      {x:4050, y:GROUND_Y-140, w:90, h:22},
+    ];
+    const pipes = [
+      {x:1100, y:GROUND_Y-46, w:46, h:46},
+    ];
+    const movers = [
+      {baseX:320, baseY:GROUND_Y-40, x:320, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:510, baseY:GROUND_Y-40, x:510, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:700, baseY:GROUND_Y-40, x:700, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:890, baseY:GROUND_Y-40, x:890, y:GROUND_Y-40, w:90, h:20, axis:'x', range:50, speed:1.0, isMover:true},
+      {baseX:1350, baseY:GROUND_Y-40, x:1350, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+      {baseX:1540, baseY:GROUND_Y-40, x:1540, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+      {baseX:1730, baseY:GROUND_Y-40, x:1730, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+      {baseX:1920, baseY:GROUND_Y-40, x:1920, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+      {baseX:2880, baseY:GROUND_Y-150, x:2880, y:GROUND_Y-150, w:90, h:20, axis:'y', range:110, speed:0.8, isMover:true},
+      {baseX:3070, baseY:GROUND_Y-40, x:3070, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+      {baseX:3260, baseY:GROUND_Y-40, x:3260, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+      {baseX:3450, baseY:GROUND_Y-40, x:3450, y:GROUND_Y-40, w:90, h:20, axis:'x', range:55, speed:1.0, isMover:true},
+    ];
+    const crushers = [
+      {x:3900, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.0, t:0},
+    ];
+    const shooters = [
+      {x:3980, y:GROUND_Y-90, dir:1, interval:90},
+      {x:4150, y:GROUND_Y-90, dir:-1, interval:85},
+    ];
+    const coins = [];
+    function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
+    row(120, GROUND_Y-100, 3, 26);
+    row(320, GROUND_Y-90, 3, 26);
+    row(510, GROUND_Y-90, 3, 26);
+    row(700, GROUND_Y-90, 3, 26);
+    row(890, GROUND_Y-90, 3, 26);
+    row(1100, GROUND_Y-100, 4, 26);
+    row(1350, GROUND_Y-90, 3, 26);
+    row(1540, GROUND_Y-90, 3, 26);
+    row(1730, GROUND_Y-90, 3, 26);
+    row(1920, GROUND_Y-90, 3, 26);
+    row(2350, GROUND_Y-100, 5, 26);
+    row(2900, GROUND_Y-200, 3, 26);
+    row(3820, GROUND_Y-140, 3, 26);
+    row(4050, GROUND_Y-180, 3, 26);
+    const hazards = [
+      {x:150, y:GROUND_Y-18, w:36, h:18},
+      {x:2500, y:GROUND_Y-18, w:36, h:18},
+      {x:4300, y:GROUND_Y-18, w:36, h:18},
+    ];
+    const enemies = [
+      {x:1150, y:GROUND_Y-140, w:32, h:32, vx:0.5, minX:1100, maxX:1260, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
+      {x:1200, y:GROUND_Y-34, w:34, h:34, jumpHeight:70, baseY:GROUND_Y-34, type:'jumper', alive:true},
+      {x:2280, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2240, maxX:2420, alive:true},
+      {x:2600, y:GROUND_Y-34, w:34, h:34, jumpHeight:75, baseY:GROUND_Y-34, type:'jumper', alive:true},
+      {x:3800, y:GROUND_Y-34, w:34, h:34, vx:0.55, minX:3760, maxX:3870, alive:true},
+      {x:4000, y:GROUND_Y-160, w:32, h:32, vx:0.5, minX:3950, maxX:4100, baseY:GROUND_Y-160, amp:30, type:'flyer', alive:true},
+      {
+        x:4400, y:GROUND_Y-90, w:90, h:90, alive:true, type:'boss',
+        name:'Strażnik Traktu', hp:6, maxHp:6, hitTimer:0,
+        vx:0.9, minX:4300, maxX:4550, baseY:GROUND_Y-90, animT:0
+      },
+    ];
+    return { name:'Długi Trakt', platforms, pipes, coins, enemies, movers, hazards, crushers, shooters, flag:{x:4600,y:GROUND_Y-220,w:14,h:220}, width:4700, bg:'dusk' };
+  }
+
+  function level17(){
+    const platforms = [
+      mkGround(0, 280),
+      mkGround(400, 200),
+      mkGround(730, 200),
+      mkGround(1060, 200),
+      mkGround(1390, 200),
+      mkGround(1720, 700),
+      {x:320, y:GROUND_Y-110, w:90, h:22},
+      {x:650, y:GROUND_Y-100, w:90, h:22},
+      {x:980, y:GROUND_Y-140, w:90, h:22},
+      {x:1310, y:GROUND_Y-110, w:90, h:22},
+      {x:1900, y:GROUND_Y-150, w:90, h:22},
+    ];
+    const pipes = [
+      {x:180, y:GROUND_Y-60, w:46, h:60},
+    ];
+    const crushers = [
+      {x:470, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.1, t:0},
+      {x:1130, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.0, t:2},
+      {x:2000, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.2, t:1},
+    ];
+    const shooters = [
+      {x:600, y:GROUND_Y-90, dir:1, interval:80},
+      {x:930, y:GROUND_Y-90, dir:-1, interval:85},
+      {x:1590, y:GROUND_Y-90, dir:1, interval:75},
+      {x:2100, y:GROUND_Y-90, dir:-1, interval:70},
+    ];
+    const coins = [];
+    function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
+    row(60, GROUND_Y-100, 3, 26);
+    row(330, GROUND_Y-150, 3, 26);
+    row(660, GROUND_Y-140, 3, 26);
+    row(990, GROUND_Y-180, 3, 26);
+    row(1320, GROUND_Y-150, 3, 26);
+    row(1780, GROUND_Y-100, 4, 26);
+    row(1910, GROUND_Y-190, 3, 26);
+    row(2150, GROUND_Y-100, 4, 26);
+    const hazards = [
+      {x:850, y:GROUND_Y-18, w:36, h:18},
+      {x:1450, y:GROUND_Y-18, w:36, h:18},
+    ];
+    const enemies = [
+      {x:500, y:GROUND_Y-34, w:34, h:34, vx:0.55, minX:420, maxX:590, alive:true},
+      {x:1200, y:GROUND_Y-34, w:34, h:34, jumpHeight:65, baseY:GROUND_Y-34, type:'jumper', alive:true},
+      {x:1850, y:GROUND_Y-160, w:32, h:32, vx:0.5, minX:1780, maxX:1980, baseY:GROUND_Y-160, amp:30, type:'flyer', alive:true},
+      {x:2250, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2200, maxX:2380, alive:true},
+    ];
+    return { name:'Fortec Wieżyczek', platforms, pipes, coins, enemies, hazards, crushers, shooters, flag:{x:2350,y:GROUND_Y-220,w:14,h:220}, width:2450, bg:'volcano' };
+  }
+
+  function level18(){
+    const platforms = [
+      mkGround(0, 2600),
+      {x:800, y:GROUND_Y-120, w:110, h:22},
+      {x:1400, y:GROUND_Y-150, w:110, h:22},
+    ];
+    const pipes = [];
+    const crushers = [
+      {x:1150, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.1, t:0},
+    ];
+    const shooters = [
+      {x:600, y:GROUND_Y-90, dir:1, interval:85},
+      {x:1900, y:GROUND_Y-90, dir:-1, interval:80},
+    ];
+    const coins = [];
+    function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
+    row(150, GROUND_Y-100, 4, 26);
+    row(500, GROUND_Y-100, 4, 26);
+    row(820, GROUND_Y-160, 3, 26);
+    row(1420, GROUND_Y-190, 3, 26);
+    row(2100, GROUND_Y-100, 6, 26);
+    const enemies = [
+      {x:300, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:250, maxX:600, alive:true},
+      {
+        x:1600, y:GROUND_Y-90, w:90, h:90, alive:true, type:'boss',
+        name:'Strażnik Bastionu', hp:8, maxHp:8, hitTimer:0,
+        vx:1.0, minX:1400, maxX:2000, baseY:GROUND_Y-90, animT:0
+      },
+    ];
+    return { name:'Ostatni Bastion', platforms, pipes, coins, enemies, crushers, shooters, flag:{x:2500,y:GROUND_Y-220,w:14,h:220}, width:2600, bg:'night' };
+  }
+
+  const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11, level12, level13, level14, level15, level16, level17, level18];
 
   function buildLevelFromCustomData(data){
     const platforms = [];
