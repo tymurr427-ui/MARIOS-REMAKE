@@ -1649,7 +1649,9 @@
     return `${h}h ${m}m ${s}s`;
   }
 
-  function renderStats(){
+  const MAX_CUSTOM_LEVELS = 15;
+
+  async function renderStats(){
     const panel = document.getElementById('statsPanel');
     panel.innerHTML = `
       <div class="stats-row"><span>🪙 Aktualne monety</span><b>${state.wallet}</b></div>
@@ -1658,7 +1660,18 @@
       <div class="stats-row"><span>⏱ Dokładny czas gry</span><b>${formatPlaytime(state.playtimeSeconds)}</b></div>
       <div class="stats-row"><span>💀 Liczba śmierci</span><b>${state.deathCount}</b></div>
       <div class="stats-row"><span>👕 Posiadane skiny</span><b>${state.ownedSkins.length} / ${SKINS.length}</b></div>
+      <div class="stats-row"><span>🚩 Posiadane trailsy</span><b>${state.ownedTrails.length} / ${TRAILS.length}</b></div>
+      <div class="stats-row"><span>🛠️ Stworzone poziomy</span><b id="statsLevelsCount">...</b></div>
     `;
+    const countEl = document.getElementById('statsLevelsCount');
+    if(!sb || !currentUser){
+      countEl.textContent = '0 / ' + MAX_CUSTOM_LEVELS;
+      return;
+    }
+    const { count, error } = await sb.from('custom_levels')
+      .select('*', { count:'exact', head:true })
+      .eq('creator_id', currentUser.id);
+    countEl.textContent = (error ? '?' : (count||0)) + ' / ' + MAX_CUSTOM_LEVELS;
   }
 
   document.getElementById('btnMultiplayer').onclick = () => {
@@ -2537,6 +2550,15 @@
       resultEl.textContent = '⚠ Dodaj chociaż jeden kawałek gruntu, zanim zapiszesz!';
       return;
     }
+    resultEl.textContent = 'Sprawdzanie limitu...';
+    const { count, error: countError } = await sb.from('custom_levels')
+      .select('*', { count:'exact', head:true })
+      .eq('creator_id', currentUser.id);
+    if(countError){ resultEl.textContent = '⚠ Błąd sprawdzania limitu: ' + countError.message; return; }
+    if((count||0) >= MAX_CUSTOM_LEVELS){
+      resultEl.textContent = `⚠ Masz już maksymalną liczbę poziomów (${MAX_CUSTOM_LEVELS}/${MAX_CUSTOM_LEVELS}). Usuń jakiś w "MOJE POZIOMY", żeby zapisać nowy.`;
+      return;
+    }
     resultEl.textContent = 'Zapisywanie...';
     const code = generateLobbyCode();
     const { error } = await sb.from('custom_levels').insert({
@@ -2619,7 +2641,6 @@
     const d = Math.floor((totalMs % 1000) / 100);
     return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + '.' + d;
   }
-  let trailParticles = [];
   let customLevelActive = false;
 
   // ---------- LEVEL DEFINITIONS ----------
@@ -3279,7 +3300,6 @@
       shieldActive:false, shieldTimer:0
     };
     camera = {x:0};
-    trailParticles = [];
     runCoins = 0;
     lives = 3 + (state.extraLives || 0);
     if(state.extraLives > 0){
@@ -3702,25 +3722,6 @@
 
     camera.x = Math.max(0, Math.min(player.x - W/2, level.width - W));
     player.animT += Math.abs(player.vx) * 0.22;
-
-    if(state.equippedTrail && state.equippedTrail !== 'none' && (Math.abs(player.vx) > 0.3 || !player.onGround) && timeAlive % 7 === 0){
-      const trail = TRAILS.find(t => t.id === state.equippedTrail);
-      if(trail){
-        trailParticles.push({
-          x: player.x + player.w/2 - player.facing*14,
-          y: player.y + player.h*0.35,
-          id: trail.id, colors: trail.colors,
-          life:42, maxLife:42,
-          vy: -0.35 - Math.random()*0.25,
-        });
-      }
-    }
-    for(let i=trailParticles.length-1;i>=0;i--){
-      const t = trailParticles[i];
-      t.life--;
-      t.y += t.vy;
-      if(t.life <= 0) trailParticles.splice(i,1);
-    }
   }
 
   function finishRun(won){
@@ -4750,18 +4751,59 @@
     ctx.restore();
   }
 
-  function drawTrailParticles(){
-    for(const t of trailParticles){
-      const x = t.x - camera.x;
-      if(x < -30 || x > W+30) continue;
-      const alpha = t.life / t.maxLife;
-      ctx.save();
-      ctx.globalAlpha = Math.min(1, alpha * 1.15);
-      ctx.shadowColor = 'rgba(255,255,255,.6)';
-      ctx.shadowBlur = 6;
-      drawMiniFlag(x, t.y, 32 * (0.6 + 0.4*alpha), 14 * (0.6 + 0.4*alpha), t.id, t.colors);
-      ctx.restore();
+  function drawPlayerFlag(){
+    if(!state.equippedTrail || state.equippedTrail === 'none') return;
+    const trail = TRAILS.find(t => t.id === state.equippedTrail);
+    if(!trail) return;
+
+    const px = player.x - camera.x, py = player.y;
+    const facing = player.facing || 1;
+    const dir = -facing; // flaga powiewa w strone przeciwna do kierunku patrzenia
+    const poleX = px + (facing >= 0 ? 4 : player.w - 4);
+    const poleY = py + player.h*0.24;
+    const L = 44, Hh = 22;
+    const N = 10;
+    const moving = Math.abs(player.vx) > 0.3 || !player.onGround;
+    const running = player.onGround && Math.abs(player.vx) > 3.5;
+    const speedFactor = running ? 1.7 : 1;
+    const t = (timeAlive||0) * 0.16 * speedFactor;
+    const ampMax = moving ? 8 : 3.5;
+
+    const topPts = [], botPts = [];
+    for(let i=0;i<=N;i++){
+      const f = i/N;
+      const x = poleX + dir*L*f;
+      const wave = Math.sin(t + f*4.2) * ampMax * f;
+      const shrink = Hh/2*(1 - f*0.1);
+      topPts.push({x, y: poleY + wave - shrink});
+      botPts.push({x, y: poleY + wave + shrink});
     }
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(50,38,22,.9)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(poleX, poleY - Hh*0.75);
+    ctx.lineTo(poleX, poleY + Hh*0.75);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(topPts[0].x, topPts[0].y);
+    for(const p of topPts) ctx.lineTo(p.x, p.y);
+    for(let i=botPts.length-1;i>=0;i--) ctx.lineTo(botPts[i].x, botPts[i].y);
+    ctx.closePath();
+    ctx.save();
+    ctx.clip();
+    ctx.shadowColor = 'rgba(0,0,0,.4)';
+    ctx.shadowBlur = 4;
+    drawMiniFlag(poleX + dir*L/2, poleY, L, 60, trail.id, trail.colors);
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(0,0,0,.35)';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.restore();
   }
 
   function draw(){
@@ -4780,9 +4822,11 @@
     drawProjectiles();
     drawEnemies();
     drawFlag();
-    drawTrailParticles();
     if(mpChannel) drawRemotePlayer();
-    if(!player.spectating) drawPlayer();
+    if(!player.spectating){
+      drawPlayerFlag();
+      drawPlayer();
+    }
   }
 
   function loop(){
