@@ -639,6 +639,7 @@
     cursor:pointer;
   }
   .my-level-btn.play { background:#2ecc71; color:#053; }
+  .my-level-btn.edit { background:#4f9fe0; color:#052a4a; }
   .my-level-btn.delete { background:#e74c3c; color:#fff; }
   .my-levels-empty { color:#cfe3ff; font-size:14px; padding:20px; }
   .auth-corner-row {
@@ -919,6 +920,7 @@
         <button class="menu-btn small" id="btnEditorScrollRight">▶</button>
       </div>
       <div class="editor-scroll-hint">Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć.</div>
+      <div class="editor-scroll-hint" id="editorWeightHint">Waga poziomu: 0 B</div>
       <div class="editor-actions">
         <button class="menu-btn small" id="btnEditorClear">🗑 WYCZYŚĆ</button>
         <button class="menu-btn small" id="btnEditorTest">▶ TESTUJ</button>
@@ -2142,6 +2144,7 @@
   let editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
   let editorFlag = { x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220 };
   let editorScrollX = 0;
+  let editorEditingCode = null; // null = nowy poziom; ustawiony = edytujemy/nadpisujemy istniejacy zapisany poziom
 
   const editorScrollRange = document.getElementById('editorScrollRange');
   editorScrollRange.max = Math.max(0, EDITOR_LEVEL_W - EDITOR_VIEW_W);
@@ -2170,6 +2173,11 @@
   }
 
   function redrawEditor(){
+    const weightEl = document.getElementById('editorWeightHint');
+    if(weightEl){
+      const bytes = new Blob([JSON.stringify(collectEditorData())]).size;
+      weightEl.textContent = 'Waga poziomu: ' + formatBytes(bytes);
+    }
     const c = editorBgPreviewColors(document.getElementById('editorBgSelect').value);
     const grad = editorCtx.createLinearGradient(0,0,0,editorCanvas.height);
     grad.addColorStop(0, c.sky1); grad.addColorStop(1, c.sky2);
@@ -2375,18 +2383,26 @@
   });
 
   document.getElementById('createLevelCorner').onclick = () => {
+    if(editorElements.length > 0 && !confirm('Zacząć nowy, pusty poziom? Niezapisane zmiany w obecnym edytorze przepadną.')) return;
+    editorResetBlank();
     showScreen('editor');
   };
   document.getElementById('btnEditorBack').onclick = () => showScreen('menu');
-  document.getElementById('btnEditorClear').onclick = () => {
+  function editorResetBlank(){
+    editorEditingCode = null;
     editorElements = [];
     editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
     editorFlag = { x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220 };
+    document.getElementById('editorLevelName').value = '';
     document.getElementById('editorSaveResult').textContent = '';
     editorSetScroll(0);
     redrawEditor();
   };
   document.getElementById('editorBgSelect').onchange = redrawEditor;
+  document.getElementById('btnEditorClear').onclick = () => {
+    if(!confirm('Wyczyścić cały poziom w edytorze? Niezapisane zmiany przepadną.')) return;
+    editorResetBlank();
+  };
 
   document.getElementById('myLevelsCorner').onclick = () => showScreen('myLevels');
   document.getElementById('btnMyLevelsBack').onclick = () => showScreen('menu');
@@ -2455,6 +2471,33 @@
     } catch(e){ /* ciche niepowodzenie - nie przerywaj rozgrywki */ }
   }
 
+  function formatBytes(n){
+    if(n < 1024) return n + ' B';
+    return (n/1024).toFixed(1) + ' KB';
+  }
+
+  function loadLevelDataIntoEditor(code, data){
+    editorEditingCode = code;
+    editorElements = [];
+    (data.grounds||[]).forEach(g => editorElements.push({kind:'ground', x:g.x, y:EDITOR_GROUND_Y, w:g.w}));
+    (data.platforms||[]).forEach(p => editorElements.push({kind:'platform', x:p.x, y:p.y, w:p.w, h:p.h}));
+    (data.pipes||[]).forEach(p => editorElements.push({kind:'pipe', x:p.x, w:p.w, h:p.h}));
+    (data.coins||[]).forEach(c => editorElements.push({kind:'coin', x:c.x, y:c.y}));
+    (data.enemies||[]).forEach(e => editorElements.push({kind:'enemy', x:e.x, y:e.y, enemyType:e.enemyType}));
+    (data.hazards||[]).forEach(h => editorElements.push({kind:'hazard', x:h.x, w:h.w}));
+    (data.movers||[]).forEach(m => editorElements.push({kind:'mover', x:m.x, y:m.y, axis:m.axis}));
+    (data.crushers||[]).forEach(c => editorElements.push({kind:'crusher', x:c.x, w:c.w, h:c.h, topY:c.topY, bottomY:c.bottomY, speed:c.speed, t:c.t}));
+    (data.shooters||[]).forEach(s => editorElements.push({kind:'turret', x:s.x, y:s.y, dir:s.dir, interval:s.interval}));
+    if(data.boss) editorElements.push({kind:'boss', x:data.boss.x, y:data.boss.y});
+    editorSpawn = data.spawn ? {x:data.spawn.x, y:data.spawn.y} : {x:40, y:EDITOR_GROUND_Y-54};
+    editorFlag = data.flag ? {x:data.flag.x, y:data.flag.y} : {x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220};
+    document.getElementById('editorLevelName').value = data.name || '';
+    document.getElementById('editorBgSelect').value = data.bg || 'day';
+    document.getElementById('editorSaveResult').textContent = `✏️ Edytujesz istniejący poziom (kod ${code}). Zapisz, żeby nadpisać go zmianami.`;
+    editorSetScroll(0);
+    redrawEditor();
+  }
+
   async function renderMyLevels(){
     const panel = document.getElementById('myLevelsPanel');
     if(!sb){
@@ -2478,18 +2521,22 @@
       panel.innerHTML = '<div class="my-levels-empty">Nie masz jeszcze żadnych poziomów. Kliknij 🛠️ CREATE LEVEL, żeby stworzyć pierwszy!</div>';
       return;
     }
-    panel.innerHTML = data.map(row => `
+    panel.innerHTML = data.map(row => {
+      const sizeBytes = new Blob([JSON.stringify(row.level_data)]).size;
+      return `
       <div class="my-level-row">
         <div class="my-level-info">
           <div class="my-level-name">${escapeHtml(row.level_data.name || 'Poziom bez nazwy')}</div>
-          <div class="my-level-code">KOD: ${row.code}</div>
+          <div class="my-level-code">KOD: ${row.code} • Waga: ${formatBytes(sizeBytes)}</div>
         </div>
         <div class="my-level-actions">
           <button class="my-level-btn play" data-code="${row.code}">▶ GRAJ</button>
+          <button class="my-level-btn edit" data-code="${row.code}">✏️ EDYTUJ</button>
           <button class="my-level-btn delete" data-code="${row.code}">🗑 USUŃ</button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     panel.querySelectorAll('.my-level-btn.play').forEach(btn => {
       btn.onclick = async () => {
@@ -2497,6 +2544,14 @@
         if(res.error){ alert(res.error); return; }
         showScreen('game');
         startLevel('custom', res.data);
+      };
+    });
+    panel.querySelectorAll('.my-level-btn.edit').forEach(btn => {
+      btn.onclick = () => {
+        const row = data.find(r => r.code === btn.dataset.code);
+        if(!row) return;
+        loadLevelDataIntoEditor(row.code, row.level_data);
+        showScreen('editor');
       };
     });
     panel.querySelectorAll('.my-level-btn.delete').forEach(btn => {
@@ -2550,6 +2605,19 @@
       resultEl.textContent = '⚠ Dodaj chociaż jeden kawałek gruntu, zanim zapiszesz!';
       return;
     }
+    if(editorEditingCode){
+      resultEl.textContent = 'Aktualizowanie...';
+      const { error } = await sb.from('custom_levels')
+        .update({ level_data: data })
+        .eq('code', editorEditingCode)
+        .eq('creator_id', currentUser.id);
+      if(error){
+        resultEl.textContent = '⚠ Błąd aktualizacji: ' + error.message;
+        return;
+      }
+      resultEl.innerHTML = `✅ Zaktualizowano poziom! Kod pozostaje taki sam: <b style="font-size:20px;letter-spacing:4px;">${editorEditingCode}</b>`;
+      return;
+    }
     resultEl.textContent = 'Sprawdzanie limitu...';
     const { count, error: countError } = await sb.from('custom_levels')
       .select('*', { count:'exact', head:true })
@@ -2568,6 +2636,7 @@
       resultEl.textContent = '⚠ Błąd zapisu: ' + error.message;
       return;
     }
+    editorEditingCode = code;
     resultEl.innerHTML = `✅ Zapisano! Kod poziomu: <b style="font-size:20px;letter-spacing:4px;">${code}</b> — podaj go znajomemu, żeby zagrał na tym samym poziomie (też w multiplayer). Znajdziesz go też w "MOJE POZIOMY".`;
   };
 
