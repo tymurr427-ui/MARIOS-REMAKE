@@ -2702,6 +2702,7 @@
   }
 
   let level, player, camera, runCoins, lives, levelDone, timeAlive, currentLevelIndex;
+  let levelCheckpointReached = false;
   let levelStartTime = 0, runElapsedMs = 0;
   function formatRunTime(ms){
     const totalMs = Math.max(0, ms|0);
@@ -3385,7 +3386,7 @@
         vx:0.9, minX:4300, maxX:4550, baseY:GROUND_Y-90, animT:0
       },
     ];
-    return { name:'Długi Trakt', platforms, pipes, coins, enemies, movers, hazards, crushers, shooters, flag:{x:4600,y:GROUND_Y-220,w:14,h:220}, width:4700, bg:'dusk' };
+    return { name:'Długi Trakt', platforms, pipes, coins, enemies, movers, hazards, crushers, shooters, flag:{x:4600,y:GROUND_Y-220,w:14,h:220}, checkpoint:{x:2350,y:GROUND_Y-220}, width:4700, bg:'dusk' };
   }
 
   function level17(){
@@ -3504,6 +3505,7 @@
     return {
       name: data.name || 'Poziom własny',
       platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, flag,
+      checkpoint: data.checkpoint ? {x:data.checkpoint.x, y:data.checkpoint.y} : null,
       width: data.width || 2000,
       bg: data.bg || 'day'
     };
@@ -3530,6 +3532,7 @@
     }
     levelDone = false;
     timeAlive = 0;
+    levelCheckpointReached = false;
     levelStartTime = performance.now();
     runElapsedMs = 0;
     document.getElementById('hudTimer').textContent = formatRunTime(0);
@@ -3553,11 +3556,16 @@
   }
 
   function resetPlayerPosition(){
-    player.x = 40; player.y = GROUND_Y-54; player.vx=0; player.vy=0;
+    if(levelCheckpointReached && level.checkpoint){
+      player.x = level.checkpoint.x; player.y = level.checkpoint.y-54;
+    } else {
+      player.x = 40; player.y = GROUND_Y-54;
+    }
+    player.vx=0; player.vy=0;
     player.invuln = 60;
     player.airTime = 0;
     player.ridingMover = null;
-    camera.x = 0;
+    camera.x = Math.max(0, Math.min(player.x - W/2, level.width - W));
   }
 
   const hudShieldPillEl = document.getElementById('hudShieldPill');
@@ -3940,6 +3948,15 @@
     } else if(activeBoss && rectsOverlap(player, level.flag)){
       // przypomnienie ze trzeba najpierw pokonac bossa
       player.x -= player.vx;
+    }
+
+    if(level.checkpoint && !levelCheckpointReached){
+      const cp = { x:level.checkpoint.x, y:level.checkpoint.y-220, w:14, h:220 };
+      if(rectsOverlap(player, cp)){
+        levelCheckpointReached = true;
+        AudioEngine.sfxCoin();
+        spawnCoinPop();
+      }
     }
 
     camera.x = Math.max(0, Math.min(player.x - W/2, level.width - W));
@@ -4560,6 +4577,32 @@
     ctx.fill();
   }
 
+  function drawCheckpoint(){
+    if(!level.checkpoint) return;
+    const x = level.checkpoint.x - camera.x;
+    if(x < -40 || x > W+40) return;
+    const y = level.checkpoint.y;
+    const active = levelCheckpointReached;
+    ctx.save();
+    ctx.fillStyle = active ? '#ccc' : '#8a8f99';
+    ctx.fillRect(x, y-220, 5, 220);
+    ctx.fillStyle = active ? '#2ecc71' : '#556070';
+    ctx.beginPath();
+    ctx.moveTo(x+5, y-214);
+    ctx.lineTo(x+30, y-206);
+    ctx.lineTo(x+5, y-198);
+    ctx.fill();
+    if(active){
+      ctx.shadowColor = '#2ecc71';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.arc(x+2, y-215, 4, 0, Math.PI*2);
+      ctx.fillStyle = '#2ecc71';
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function drawBoss(e, x){
     const cx = x + e.w/2, cy = e.y + e.h/2;
     const flash = e.hitTimer > 0 && Math.floor(e.hitTimer/4)%2===0;
@@ -4989,7 +5032,8 @@
     const running = player.onGround && Math.abs(player.vx) > 3.5;
     const speedFactor = running ? 1.7 : 1;
     const t = (timeAlive||0) * 0.16 * speedFactor;
-    const ampMax = moving ? 8 : 3.5;
+    const ampMax = moving ? 6 : 2.5;
+    const fillH = Hh + ampMax*2 + 6; // wystarczy zeby pokryc szczyty fali, ale bez rozciagania wzoru (kolo/krzyz)
 
     const topPts = [], botPts = [];
     for(let i=0;i<=N;i++){
@@ -5020,7 +5064,7 @@
     ctx.clip();
     ctx.shadowColor = 'rgba(0,0,0,.4)';
     ctx.shadowBlur = 4;
-    drawMiniFlag(poleX + dir*L/2, poleY, L, 60, trail.id, trail.colors);
+    drawMiniFlag(poleX + dir*L/2, poleY, L, fillH, trail.id, trail.colors);
     ctx.restore();
     ctx.strokeStyle = 'rgba(0,0,0,.35)';
     ctx.lineWidth = 1.4;
@@ -5044,6 +5088,7 @@
     drawProjectiles();
     drawEnemies();
     drawFlag();
+    drawCheckpoint();
     if(mpChannel) drawRemotePlayer();
     if(!player.spectating){
       drawPlayerFlag();
