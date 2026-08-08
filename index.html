@@ -1536,17 +1536,24 @@
   ];
 
   const TRAILS = [
-    { id:'none',      name:'Brak',       price:0,  colors:['transparent'] },
-    { id:'ukraine',   name:'Ukraina',    price:40, colors:['#0057b7','#ffd700'] },
-    { id:'poland',    name:'Polska',     price:40, colors:['#ffffff','#dc143c'] },
-    { id:'lithuania', name:'Litwa',      price:40, colors:['#fdb913','#006a44','#c1272d'] },
-    { id:'latvia',    name:'Łotwa',      price:40, colors:['#9e3039','#ffffff','#9e3039'] },
-    { id:'germany',   name:'Niemcy',     price:45, colors:['#000000','#dd0000','#ffce00'] },
-    { id:'italy',     name:'Włochy',     price:45, colors:['#009246','#ffffff','#ce2b37'] },
-    { id:'sweden',    name:'Szwecja',    price:45, colors:['#006aa7','#fecc02'] },
-    { id:'japan',     name:'Japonia',    price:50, colors:['#ffffff','#bc002d'] },
-    { id:'usa',       name:'USA',        price:50, colors:['#3c3b6e','#ffffff','#b22234'] },
-    { id:'rainbow',   name:'Tęczowy',    price:90, colors:['#ff3b3b','#ffb03b','#ffe93b','#3bff6a','#3bb0ff','#a03bff'] },
+    { id:'none',        name:'Brak',        price:0,  colors:['transparent'] },
+    { id:'ukraine',     name:'Ukraina',     price:40, colors:['#0057b7','#ffd700'] },
+    { id:'poland',      name:'Polska',      price:40, colors:['#ffffff','#dc143c'] },
+    { id:'lithuania',   name:'Litwa',       price:40, colors:['#fdb913','#006a44','#c1272d'] },
+    { id:'latvia',      name:'Łotwa',       price:40, colors:['#9e3039','#ffffff','#9e3039'] },
+    { id:'germany',     name:'Niemcy',      price:45, colors:['#000000','#dd0000','#ffce00'] },
+    { id:'italy',       name:'Włochy',      price:45, colors:['#009246','#ffffff','#ce2b37'] },
+    { id:'sweden',      name:'Szwecja',     price:45, colors:['#006aa7','#fecc02'] },
+    { id:'japan',       name:'Japonia',     price:50, colors:['#ffffff','#bc002d'] },
+    { id:'usa',         name:'USA',         price:50, colors:['#3c3b6e','#ffffff','#b22234'] },
+    { id:'france',      name:'Francja',     price:45, colors:['#0055a4','#ffffff','#ef4135'] },
+    { id:'spain',       name:'Hiszpania',   price:45, colors:['#aa151b','#f1bf00'] },
+    { id:'netherlands', name:'Holandia',    price:40, colors:['#ae1c28','#ffffff','#21468b'] },
+    { id:'belgium',     name:'Belgia',      price:40, colors:['#000000','#fae042','#ed2939'] },
+    { id:'austria',     name:'Austria',     price:40, colors:['#ed2939','#ffffff','#ed2939'] },
+    { id:'ireland',     name:'Irlandia',    price:40, colors:['#169b62','#ffffff','#ff883e'] },
+    { id:'finland',     name:'Finlandia',   price:45, colors:['#ffffff','#003580'] },
+    { id:'norway',      name:'Norwegia',    price:45, colors:['#ef2b2d','#ffffff'] },
   ];
 
   // ---------- SCREENS ----------
@@ -1945,14 +1952,22 @@
       case 'poland': // poziomo: biały / czerwony
         return `<div style="width:100%;height:100%;background:linear-gradient(to bottom, ${c[0]} 50%, ${c[1]} 50%);"></div>`;
       case 'lithuania': // poziomo: żółty/zielony/czerwony, równe pasy
+      case 'germany': // poziomo: czarny/czerwony/złoty, równe pasy
+      case 'austria': // poziomo: czerwony/biały/czerwony, równe pasy
+      case 'netherlands': // poziomo: czerwony/biały/niebieski, równe pasy
         return `<div style="width:100%;height:100%;background:linear-gradient(to bottom, ${c[0]} 0 33.3%, ${c[1]} 33.3% 66.6%, ${c[2]} 66.6% 100%);"></div>`;
       case 'latvia': // poziomo: bordowy/biały/bordowy, cienki biały pas na środku
         return `<div style="width:100%;height:100%;background:linear-gradient(to bottom, ${c[0]} 0 40%, ${c[1]} 40% 60%, ${c[2]} 60% 100%);"></div>`;
-      case 'germany': // poziomo: czarny/czerwony/złoty, równe pasy
-        return `<div style="width:100%;height:100%;background:linear-gradient(to bottom, ${c[0]} 0 33.3%, ${c[1]} 33.3% 66.6%, ${c[2]} 66.6% 100%);"></div>`;
+      case 'spain': // poziomo: czerwony/żółty (gruby)/czerwony
+        return `<div style="width:100%;height:100%;background:linear-gradient(to bottom, ${c[0]} 0 25%, ${c[1]} 25% 75%, ${c[0]} 75% 100%);"></div>`;
       case 'italy': // pionowo: zielony/biały/czerwony
+      case 'france': // pionowo: niebieski/biały/czerwony
+      case 'belgium': // pionowo: czarny/żółty/czerwony
+      case 'ireland': // pionowo: zielony/biały/pomarańczowy
         return `<div style="width:100%;height:100%;background:linear-gradient(to right, ${c[0]} 0 33.3%, ${c[1]} 33.3% 66.6%, ${c[2]} 66.6% 100%);"></div>`;
       case 'sweden': // niebieskie tło + żółty skandynawski krzyż (przesunięty od lewej)
+      case 'finland': // białe tło + niebieski krzyż
+      case 'norway': // czerwone tło + biały krzyż
         return `<div style="width:100%;height:100%;background-color:${c[0]};background-image:
             linear-gradient(to right, transparent 0 30%, ${c[1]} 30% 42%, transparent 42% 100%),
             linear-gradient(to bottom, transparent 0 36%, ${c[1]} 36% 64%, transparent 64% 100%);"></div>`;
@@ -1966,8 +1981,6 @@
           <div style="position:absolute;left:0;top:0;width:46%;height:57%;background-color:${c[0]};background-image:
               radial-gradient(circle, ${c[1]} 0 8%, transparent 9%);
               background-size:9px 7px;background-position:2px 2px;"></div>`;
-      case 'rainbow': // poziomo, równe pasy tęczy
-        return `<div style="width:100%;height:100%;background:linear-gradient(to bottom, ${c.map((col,i)=>`${col} ${i*100/c.length}% ${(i+1)*100/c.length}%`).join(',')});"></div>`;
       default: {
         const stripes = c.map(col => `<div style="background:${col};"></div>`).join('');
         return stripes;
@@ -4971,6 +4984,8 @@
         break;
       case 'lithuania':
       case 'germany':
+      case 'austria':
+      case 'netherlands':
         ctx.fillStyle = c[0]; ctx.fillRect(x0, y0, w, h/3);
         ctx.fillStyle = c[1]; ctx.fillRect(x0, y0+h/3, w, h/3);
         ctx.fillStyle = c[2]; ctx.fillRect(x0, y0+2*h/3, w, h/3);
@@ -4980,12 +4995,22 @@
         ctx.fillStyle = c[1]; ctx.fillRect(x0, y0+h*0.4, w, h*0.2);
         ctx.fillStyle = c[2]; ctx.fillRect(x0, y0+h*0.6, w, h*0.4);
         break;
+      case 'spain':
+        ctx.fillStyle = c[0]; ctx.fillRect(x0, y0, w, h*0.25);
+        ctx.fillStyle = c[1]; ctx.fillRect(x0, y0+h*0.25, w, h*0.5);
+        ctx.fillStyle = c[0]; ctx.fillRect(x0, y0+h*0.75, w, h*0.25);
+        break;
       case 'italy':
+      case 'france':
+      case 'belgium':
+      case 'ireland':
         ctx.fillStyle = c[0]; ctx.fillRect(x0, y0, w/3, h);
         ctx.fillStyle = c[1]; ctx.fillRect(x0+w/3, y0, w/3, h);
         ctx.fillStyle = c[2]; ctx.fillRect(x0+2*w/3, y0, w/3, h);
         break;
       case 'sweden':
+      case 'finland':
+      case 'norway':
         ctx.fillStyle = c[0]; ctx.fillRect(x0, y0, w, h);
         ctx.fillStyle = c[1];
         ctx.fillRect(x0 + w*0.3, y0, w*0.14, h);
@@ -4996,16 +5021,24 @@
         ctx.fillStyle = c[1];
         ctx.beginPath(); ctx.arc(0, 0, h*0.32, 0, Math.PI*2); ctx.fill();
         break;
-      case 'usa':
+      case 'usa': {
         ctx.fillStyle = c[2]; ctx.fillRect(x0, y0, w, h);
         ctx.fillStyle = c[1];
         for(let i=0;i<5;i++){ if(i%2===0) ctx.fillRect(x0, y0 + i*h/5, w, h/5); }
+        const cantonW = w*0.46, cantonH = h*0.58;
         ctx.fillStyle = c[0];
-        ctx.fillRect(x0, y0, w*0.46, h*0.58);
-        break;
-      case 'rainbow': {
-        const bh = h / c.length;
-        c.forEach((col,i)=>{ ctx.fillStyle = col; ctx.fillRect(x0, y0+i*bh, w, bh); });
+        ctx.fillRect(x0, y0, cantonW, cantonH);
+        ctx.fillStyle = '#ffffff';
+        const starsX = 4, starsY = 3, starR = Math.max(0.6, cantonH/starsY*0.16);
+        for(let sy=0; sy<starsY; sy++){
+          for(let sx=0; sx<starsX; sx++){
+            const sxp = x0 + cantonW*(sx+0.5)/starsX;
+            const syp = y0 + cantonH*(sy+0.5)/starsY;
+            ctx.beginPath();
+            ctx.arc(sxp, syp, starR, 0, Math.PI*2);
+            ctx.fill();
+          }
+        }
         break;
       }
       default: {
