@@ -1007,7 +1007,7 @@
     <div class="lives-shop">
       <div class="lives-shop-info">
         <span>🛡 Tarcze: <b id="shieldsCount">0</b></span>
-        <span class="small-note">W grze naciśnij Q, by aktywować na 30 sekund - zabija każdego wroga dotykiem i chroni przed obrażeniami</span>
+        <span class="small-note">W grze naciśnij Q, by aktywować na 15 sekund - zabija każdego wroga dotykiem i chroni przed obrażeniami</span>
       </div>
       <button class="menu-btn small" id="btnBuyShield">🪙 KUP TARCZĘ (150)</button>
     </div>
@@ -2242,6 +2242,16 @@
     }
   }
 
+  let editorLimitWarnTimeout = null;
+  function editorFlashLimitWarning(msg){
+    const el = document.getElementById('editorSaveResult');
+    if(!el) return;
+    el.textContent = '⚠ ' + msg;
+    el.style.color = '#ff6b6b';
+    clearTimeout(editorLimitWarnTimeout);
+    editorLimitWarnTimeout = setTimeout(() => { el.textContent = ''; el.style.color = ''; }, 2000);
+  }
+
   function editorPlaceAt(levelX, levelY){
     if(editorTool === 'erase'){
       let bestIdx = -1, bestDist = 9999;
@@ -2258,7 +2268,14 @@
     if(editorTool === 'ground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w:200}); }
     else if(editorTool === 'platform'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:90, h:22}); }
     else if(editorTool === 'pipe'){ editorElements.push({kind:'pipe', x:levelX, w:46, h:60}); }
-    else if(editorTool === 'coin'){ editorElements.push({kind:'coin', x:levelX, y:levelY}); }
+    else if(editorTool === 'coin'){
+      const coinCount = editorElements.filter(e=>e.kind==='coin').length;
+      if(coinCount >= 40){
+        editorFlashLimitWarning('Maksymalnie 40 monet na poziom!');
+        return;
+      }
+      editorElements.push({kind:'coin', x:levelX, y:levelY});
+    }
     else if(editorTool === 'walker'){ editorElements.push({kind:'enemy', enemyType:'walker', x:levelX, y:EDITOR_GROUND_Y-34}); }
     else if(editorTool === 'flyer'){ editorElements.push({kind:'enemy', enemyType:'flyer', x:levelX, y:levelY}); }
     else if(editorTool === 'jumper'){ editorElements.push({kind:'enemy', enemyType:'jumper', x:levelX, y:EDITOR_GROUND_Y-34}); }
@@ -2588,7 +2605,7 @@
     if(state.shields <= 0) return;
     state.shields--;
     player.shieldActive = true;
-    player.shieldTimer = 30;
+    player.shieldTimer = 15;
     saveProfile();
     AudioEngine.sfxWin();
   }
@@ -3274,6 +3291,7 @@
     levelStartTime = performance.now();
     runElapsedMs = 0;
     document.getElementById('hudTimer').textContent = formatRunTime(0);
+    document.getElementById('hudTimerPill').classList.toggle('hidden', !!mpChannel);
     document.getElementById('hudCoins').textContent = runCoins;
     document.getElementById('hudLives').textContent = lives;
     document.getElementById('hudLevel').textContent = customData ? ('Własny: ' + level.name) : ((index+1) + ' - ' + level.name);
@@ -3713,13 +3731,14 @@
     if(!customLevelActive && won && currentLevelIndex === state.unlockedLevel && currentLevelIndex < LEVELS.length-1){
       state.unlockedLevel = currentLevelIndex + 1;
     }
-    if(!customLevelActive && won){
+    if(!customLevelActive && won && !mpChannel){
       saveSpeedrunTime(currentLevelIndex, runElapsedMs);
     }
     saveProfile();
     setTimeout(() => {
       if(customLevelActive){
-        const msg = won ? ('POZIOM WŁASNY UKOŃCZONY!\n+' + runCoins + ' monet\n⏱ Czas: ' + timeStr) : ('GAME OVER\n+' + runCoins + ' monet zebranych');
+        const timeSuffix = mpChannel ? '' : ('\n⏱ Czas: ' + timeStr);
+        const msg = won ? ('POZIOM WŁASNY UKOŃCZONY!\n+' + runCoins + ' monet' + timeSuffix) : ('GAME OVER\n+' + runCoins + ' monet zebranych');
         showBanner(msg, () => {
           if(mpChannel) leaveMultiplayer();
           if(editorTesting){
@@ -3736,10 +3755,10 @@
           if(currentLevelIndex < LEVELS.length-1){
             const nextIdx = currentLevelIndex + 1;
             broadcastEvent('level_advance', { idx: nextIdx });
-            showBanner('POZIOM UKOŃCZONY!\n+' + runCoins + ' monet\n⏱ Czas: ' + timeStr, () => startLevel(nextIdx));
+            showBanner('POZIOM UKOŃCZONY!\n+' + runCoins + ' monet', () => startLevel(nextIdx));
           } else {
             broadcastEvent('level_advance', { idx: null });
-            showBanner('UKOŃCZYLIŚCIE WSZYSTKIE POZIOMY!\n+' + runCoins + ' monet\n⏱ Czas: ' + timeStr, () => { leaveMultiplayer(); showScreen('menu'); });
+            showBanner('UKOŃCZYLIŚCIE WSZYSTKIE POZIOMY!\n+' + runCoins + ' monet', () => { leaveMultiplayer(); showScreen('menu'); });
           }
         } else {
           const restartIdx = currentLevelIndex;
@@ -4746,7 +4765,7 @@
   }
 
   function draw(){
-    if(!levelDone){
+    if(!levelDone && !mpChannel){
       runElapsedMs = performance.now() - levelStartTime;
       const tEl = document.getElementById('hudTimer');
       if(tEl) tEl.textContent = formatRunTime(runElapsedMs);
