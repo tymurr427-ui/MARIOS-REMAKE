@@ -2252,12 +2252,20 @@
         editorCtx.fillStyle = '#c9a5f5';
         editorCtx.fillRect(ex-20, ey, 40, 8);
       } else if(el.kind==='crusher'){
-        editorCtx.strokeStyle = 'rgba(255,255,255,.5)';
+        editorCtx.strokeStyle = 'rgba(80,60,30,.9)';
+        editorCtx.lineWidth = 2;
         editorCtx.beginPath(); editorCtx.moveTo(ex,0); editorCtx.lineTo(ex,ey); editorCtx.stroke();
-        editorCtx.fillStyle = '#8a8f99';
-        editorCtx.fillRect(ex-14, ey-14, 28, 28);
+        editorCtx.fillStyle = '#3a3f47';
+        editorCtx.fillRect(ex-18, ey-18, 36, 36);
+        editorCtx.strokeStyle = '#000';
+        editorCtx.lineWidth = 2;
+        editorCtx.strokeRect(ex-18, ey-18, 36, 36);
         editorCtx.fillStyle = '#e74c3c';
-        editorCtx.fillRect(ex-14, ey+10, 28, 6);
+        editorCtx.fillRect(ex-18, ey+9, 36, 9);
+        editorCtx.font = 'bold 16px sans-serif'; editorCtx.textAlign='center';
+        editorCtx.fillStyle = '#fff';
+        editorCtx.fillText('💥', ex, ey+6);
+        editorCtx.textAlign='left';
       } else if(el.kind==='turret'){
         editorCtx.fillStyle = '#556070';
         editorCtx.fillRect(ex-11, ey-11, 22, 22);
@@ -2304,7 +2312,8 @@
     if(editorTool === 'erase'){
       let bestIdx = -1, bestDist = 9999;
       editorElements.forEach((el,i) => {
-        const d = Math.hypot(el.x-levelX, el.y-levelY);
+        const ey = el.y!==undefined ? el.y : (el.kind==='crusher' ? el.topY : levelY);
+        const d = Math.hypot(el.x-levelX, ey-levelY);
         if(d < bestDist){ bestDist = d; bestIdx = i; }
       });
       if(bestIdx >= 0 && bestDist < 120) editorElements.splice(bestIdx,1);
@@ -2359,7 +2368,7 @@
     }
     for(let i=editorElements.length-1;i>=0;i--){
       const el = editorElements[i];
-      const ey = el.y!==undefined ? el.y : levelY;
+      const ey = el.y!==undefined ? el.y : (el.kind==='crusher' ? el.topY : levelY);
       const d = Math.hypot(el.x-levelX, ey-levelY);
       if(d < bestDist){ bestDist = d; best = {kind:'element', el}; }
     }
@@ -2385,7 +2394,13 @@
     else if(editorDrag.kind === 'flag'){ editorFlag.x = Math.max(0, sx); editorFlag.y = sy; }
     else if(editorDrag.kind === 'element'){
       editorDrag.el.x = Math.max(0, sx);
-      if(editorDrag.el.y !== undefined) editorDrag.el.y = sy;
+      if(editorDrag.el.kind === 'crusher'){
+        const range = editorDrag.el.bottomY - editorDrag.el.topY;
+        editorDrag.el.topY = Math.max(20, sy);
+        editorDrag.el.bottomY = editorDrag.el.topY + range;
+      } else if(editorDrag.el.y !== undefined){
+        editorDrag.el.y = sy;
+      }
     }
     redrawEditor();
   });
