@@ -904,7 +904,8 @@
           <button class="editor-tool" data-tool="flyer">🔵 Latacz</button>
           <button class="editor-tool" data-tool="jumper">🟢 Skoczek</button>
           <button class="editor-tool" data-tool="hazard">▲ Kolce</button>
-          <button class="editor-tool" data-tool="mover">🟪 Ruchoma platf.</button>
+          <button class="editor-tool" data-tool="mover">↔️ Platf. (poziom)</button>
+          <button class="editor-tool" data-tool="mover_y">↕️ Platf. (pion)</button>
           <button class="editor-tool" data-tool="crusher">💥 Miażdżarka</button>
           <button class="editor-tool" data-tool="turret">🗼 Wieżyczka</button>
           <button class="editor-tool" data-tool="boss">👹 Boss</button>
@@ -2249,8 +2250,39 @@
         editorCtx.lineTo(ex+el.w*editorScale, EDITOR_GROUND_Y*editorScale);
         editorCtx.fill();
       } else if(el.kind==='mover'){
+        const range = (el.range||60) * editorScale;
+        editorCtx.strokeStyle = 'rgba(201,165,245,.7)';
+        editorCtx.lineWidth = 2;
+        editorCtx.setLineDash([4,3]);
+        editorCtx.beginPath();
+        if(el.axis === 'y'){
+          editorCtx.moveTo(ex, ey-range);
+          editorCtx.lineTo(ex, ey+range);
+        } else {
+          editorCtx.moveTo(ex-range, ey);
+          editorCtx.lineTo(ex+range, ey);
+        }
+        editorCtx.stroke();
+        editorCtx.setLineDash([]);
+        // duchy skrajnych pozycji
+        editorCtx.fillStyle = 'rgba(201,165,245,.35)';
+        if(el.axis === 'y'){
+          editorCtx.fillRect(ex-20, ey-range-4, 40, 8);
+          editorCtx.fillRect(ex-20, ey+range-4, 40, 8);
+        } else {
+          editorCtx.fillRect(ex-range-20, ey-4, 40, 8);
+          editorCtx.fillRect(ex+range-20, ey-4, 40, 8);
+        }
+        // platforma na pozycji startowej
         editorCtx.fillStyle = '#c9a5f5';
-        editorCtx.fillRect(ex-20, ey, 40, 8);
+        editorCtx.fillRect(ex-20, ey-4, 40, 8);
+        editorCtx.strokeStyle = '#6a3fae';
+        editorCtx.lineWidth = 1;
+        editorCtx.strokeRect(ex-20, ey-4, 40, 8);
+        editorCtx.font = 'bold 11px sans-serif'; editorCtx.textAlign='center';
+        editorCtx.fillStyle = '#fff';
+        editorCtx.fillText(el.axis === 'y' ? '↕' : '↔', ex, ey+3);
+        editorCtx.textAlign='left';
       } else if(el.kind==='crusher'){
         editorCtx.strokeStyle = 'rgba(80,60,30,.9)';
         editorCtx.lineWidth = 2;
@@ -2337,7 +2369,8 @@
     else if(editorTool === 'flyer'){ editorElements.push({kind:'enemy', enemyType:'flyer', x:levelX, y:levelY}); }
     else if(editorTool === 'jumper'){ editorElements.push({kind:'enemy', enemyType:'jumper', x:levelX, y:EDITOR_GROUND_Y-34}); }
     else if(editorTool === 'hazard'){ editorElements.push({kind:'hazard', x:levelX, w:40}); }
-    else if(editorTool === 'mover'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'x'}); }
+    else if(editorTool === 'mover'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'x', range:60}); }
+    else if(editorTool === 'mover_y'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'y', range:110}); }
     else if(editorTool === 'crusher'){ editorElements.push({kind:'crusher', x:levelX, w:50, h:50, topY:80, bottomY:EDITOR_GROUND_Y-55, speed:1.0, t:0}); }
     else if(editorTool === 'turret'){
       const dir = levelX < EDITOR_LEVEL_W/2 ? 1 : -1;
@@ -2425,8 +2458,6 @@
   });
 
   document.getElementById('createLevelCorner').onclick = () => {
-    if(editorElements.length > 0 && !confirm('Zacząć nowy, pusty poziom? Niezapisane zmiany w obecnym edytorze przepadną.')) return;
-    editorResetBlank();
     showScreen('editor');
   };
   document.getElementById('btnEditorBack').onclick = () => showScreen('menu');
@@ -2527,7 +2558,7 @@
     (data.coins||[]).forEach(c => editorElements.push({kind:'coin', x:c.x, y:c.y}));
     (data.enemies||[]).forEach(e => editorElements.push({kind:'enemy', x:e.x, y:e.y, enemyType:e.enemyType}));
     (data.hazards||[]).forEach(h => editorElements.push({kind:'hazard', x:h.x, w:h.w}));
-    (data.movers||[]).forEach(m => editorElements.push({kind:'mover', x:m.x, y:m.y, axis:m.axis}));
+    (data.movers||[]).forEach(m => editorElements.push({kind:'mover', x:m.x, y:m.y, axis:m.axis||'x', range:m.range || (m.axis==='y' ? 110 : 60)}));
     (data.crushers||[]).forEach(c => editorElements.push({kind:'crusher', x:c.x, w:c.w, h:c.h, topY:c.topY, bottomY:c.bottomY, speed:c.speed, t:c.t}));
     (data.shooters||[]).forEach(s => editorElements.push({kind:'turret', x:s.x, y:s.y, dir:s.dir, interval:s.interval}));
     if(data.boss) editorElements.push({kind:'boss', x:data.boss.x, y:data.boss.y});
@@ -2613,7 +2644,7 @@
     const coins = editorElements.filter(e=>e.kind==='coin').map(e=>({x:e.x,y:e.y}));
     const enemies = editorElements.filter(e=>e.kind==='enemy').map(e=>({x:e.x,y:e.y,enemyType:e.enemyType}));
     const hazards = editorElements.filter(e=>e.kind==='hazard').map(e=>({x:e.x,w:e.w}));
-    const movers = editorElements.filter(e=>e.kind==='mover').map(e=>({x:e.x,y:e.y,axis:e.axis}));
+    const movers = editorElements.filter(e=>e.kind==='mover').map(e=>({x:e.x,y:e.y,axis:e.axis,range:e.range}));
     const crushers = editorElements.filter(e=>e.kind==='crusher').map(e=>({x:e.x,w:e.w,h:e.h,topY:e.topY,bottomY:e.bottomY,speed:e.speed,t:e.t}));
     const shooters = editorElements.filter(e=>e.kind==='turret').map(e=>({x:e.x,y:e.y,dir:e.dir,interval:e.interval}));
     const bossEl = editorElements.find(e=>e.kind==='boss');
@@ -3528,7 +3559,7 @@
     const hazards = (data.hazards||[]).map(h => ({x:h.x, y:GROUND_Y-18, w:h.w, h:18}));
     const movers = (data.movers||[]).map(m => ({
       baseX:m.x, baseY:m.y, x:m.x, y:m.y, w:90, h:20,
-      axis:m.axis||'x', range:60, speed:1.0, isMover:true
+      axis:m.axis||'x', range: m.range || (m.axis==='y' ? 110 : 60), speed: m.axis==='y' ? 0.8 : 1.0, isMover:true
     }));
     const crushers = (data.crushers||[]).map(c => ({
       x:c.x, w:c.w||50, h:c.h||50, topY:c.topY||80, bottomY:c.bottomY||GROUND_Y-55, speed:c.speed||1.0, t:c.t||0
