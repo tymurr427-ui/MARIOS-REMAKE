@@ -5189,9 +5189,17 @@
       }
     });
     sb.auth.onAuthStateChange((_event, session) => {
+      const wasSignedIn = !!currentUser;
       currentUser = session ? session.user : null;
       if(currentUser){
-        loadProfile(currentUser).then(() => { updateAuthUI(); showScreen('menu'); });
+        loadProfile(currentUser).then(() => {
+          updateAuthUI();
+          // tylko przy faktycznym, pierwszym zalogowaniu wracamy do menu -
+          // Supabase odswieza sesje (np. po powrocie do karty) i wywoluje
+          // ten event tez wtedy, kiedy user juz byl zalogowany - to nie moze
+          // wyrzucac go z edytora/gry z powrotem do menu
+          if(!wasSignedIn) showScreen('menu');
+        });
       } else {
         updateAuthUI();
       }
