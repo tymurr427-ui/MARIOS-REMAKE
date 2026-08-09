@@ -2241,6 +2241,29 @@
         editorCtx.beginPath(); editorCtx.arc(ex, ey, 5, 0, Math.PI*2); editorCtx.fill();
       } else if(el.kind==='enemy'){
         editorCtx.fillStyle = el.enemyType==='flyer' ? '#4f9fe0' : el.enemyType==='jumper' ? '#4fc463' : '#a655d6';
+        const rangeCol = 'rgba(255,110,110,.55)';
+        editorCtx.strokeStyle = rangeCol;
+        editorCtx.lineWidth = 2;
+        editorCtx.setLineDash([4,3]);
+        if(el.enemyType === 'flyer'){
+          const rx = 100*editorScale, ry = 35*editorScale;
+          editorCtx.beginPath();
+          editorCtx.ellipse(ex, ey, rx, ry, 0, 0, Math.PI*2);
+          editorCtx.stroke();
+        } else if(el.enemyType === 'jumper'){
+          editorCtx.beginPath();
+          editorCtx.moveTo(ex, ey);
+          editorCtx.lineTo(ex, ey - 70*editorScale);
+          editorCtx.stroke();
+        } else {
+          const rx = 90*editorScale;
+          editorCtx.beginPath();
+          editorCtx.moveTo(ex-rx, ey);
+          editorCtx.lineTo(ex+rx, ey);
+          editorCtx.stroke();
+        }
+        editorCtx.setLineDash([]);
+        editorCtx.fillStyle = el.enemyType==='flyer' ? '#4f9fe0' : el.enemyType==='jumper' ? '#4fc463' : '#a655d6';
         editorCtx.beginPath(); editorCtx.arc(ex, ey, 7, 0, Math.PI*2); editorCtx.fill();
       } else if(el.kind==='hazard'){
         editorCtx.fillStyle = '#c0c5cb';
@@ -2284,9 +2307,16 @@
         editorCtx.fillText(el.axis === 'y' ? '↕' : '↔', ex, ey+3);
         editorCtx.textAlign='left';
       } else if(el.kind==='crusher'){
+        const bottomEy = (el.bottomY!==undefined ? el.bottomY : EDITOR_GROUND_Y-55) * editorScale;
         editorCtx.strokeStyle = 'rgba(80,60,30,.9)';
         editorCtx.lineWidth = 2;
         editorCtx.beginPath(); editorCtx.moveTo(ex,0); editorCtx.lineTo(ex,ey); editorCtx.stroke();
+        editorCtx.strokeStyle = 'rgba(231,76,60,.6)';
+        editorCtx.setLineDash([4,3]);
+        editorCtx.beginPath(); editorCtx.moveTo(ex,ey); editorCtx.lineTo(ex,bottomEy); editorCtx.stroke();
+        editorCtx.setLineDash([]);
+        editorCtx.fillStyle = 'rgba(231,76,60,.3)';
+        editorCtx.fillRect(ex-18, bottomEy-18, 36, 36);
         editorCtx.fillStyle = '#3a3f47';
         editorCtx.fillRect(ex-18, ey-18, 36, 36);
         editorCtx.strokeStyle = '#000';
@@ -2299,11 +2329,39 @@
         editorCtx.fillText('💥', ex, ey+6);
         editorCtx.textAlign='left';
       } else if(el.kind==='turret'){
+        const dirSign = el.dir>=0 ? 1 : -1;
+        const rangeLen = 420*editorScale;
+        editorCtx.strokeStyle = 'rgba(255,204,77,.6)';
+        editorCtx.lineWidth = 2;
+        editorCtx.setLineDash([5,4]);
+        editorCtx.beginPath();
+        editorCtx.moveTo(ex, ey);
+        editorCtx.lineTo(ex + dirSign*rangeLen, ey);
+        editorCtx.stroke();
+        editorCtx.setLineDash([]);
+        editorCtx.beginPath();
+        editorCtx.moveTo(ex+dirSign*rangeLen, ey-6);
+        editorCtx.lineTo(ex+dirSign*rangeLen+dirSign*10, ey);
+        editorCtx.lineTo(ex+dirSign*rangeLen, ey+6);
+        editorCtx.fillStyle = 'rgba(255,204,77,.8)';
+        editorCtx.fill();
         editorCtx.fillStyle = '#556070';
         editorCtx.fillRect(ex-11, ey-11, 22, 22);
         editorCtx.fillStyle = '#ffcc4d';
         editorCtx.fillRect(el.dir>=0 ? ex : ex-16, ey-3, 16, 6);
       } else if(el.kind==='boss'){
+        const rx = 200*editorScale;
+        editorCtx.strokeStyle = 'rgba(192,57,43,.6)';
+        editorCtx.lineWidth = 2;
+        editorCtx.setLineDash([4,3]);
+        editorCtx.beginPath();
+        editorCtx.moveTo(ex-rx, ey);
+        editorCtx.lineTo(ex+rx, ey);
+        editorCtx.stroke();
+        editorCtx.setLineDash([]);
+        editorCtx.fillStyle = 'rgba(192,57,43,.3)';
+        editorCtx.fillRect(ex-rx-16, ey-16, 32, 32);
+        editorCtx.fillRect(ex+rx-16, ey-16, 32, 32);
         editorCtx.fillStyle = '#c0392b';
         editorCtx.beginPath(); editorCtx.arc(ex, ey, 16, 0, Math.PI*2); editorCtx.fill();
         editorCtx.font = 'bold 14px sans-serif'; editorCtx.textAlign='center';
@@ -2365,9 +2423,9 @@
       }
       editorElements.push({kind:'coin', x:levelX, y:levelY});
     }
-    else if(editorTool === 'walker'){ editorElements.push({kind:'enemy', enemyType:'walker', x:levelX, y:EDITOR_GROUND_Y-34}); }
+    else if(editorTool === 'walker'){ editorElements.push({kind:'enemy', enemyType:'walker', x:levelX, y:levelY}); }
     else if(editorTool === 'flyer'){ editorElements.push({kind:'enemy', enemyType:'flyer', x:levelX, y:levelY}); }
-    else if(editorTool === 'jumper'){ editorElements.push({kind:'enemy', enemyType:'jumper', x:levelX, y:EDITOR_GROUND_Y-34}); }
+    else if(editorTool === 'jumper'){ editorElements.push({kind:'enemy', enemyType:'jumper', x:levelX, y:levelY}); }
     else if(editorTool === 'hazard'){ editorElements.push({kind:'hazard', x:levelX, w:40}); }
     else if(editorTool === 'mover'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'x', range:60}); }
     else if(editorTool === 'mover_y'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'y', range:110}); }
