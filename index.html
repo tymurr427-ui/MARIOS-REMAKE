@@ -1062,6 +1062,10 @@
   //   create policy "update own" on public.profiles for update using (auth.uid() = id);
   //   create policy "insert own" on public.profiles for insert with check (auth.uid() = id);
   //
+  //   -- Nowe kolumny licznikow zabitych wrogow/bossow (jesli profiles juz istnieje):
+  //   alter table public.profiles add column if not exists enemies_killed integer default 0;
+  //   alter table public.profiles add column if not exists bosses_killed integer default 0;
+  //
   //   -- Tabela najlepszych czasow (speedrun) per uzytkownik+poziom:
   //   create table public.level_times (
   //     user_id uuid references auth.users(id) on delete cascade,
@@ -1370,6 +1374,8 @@
     totalSpent: 0,
     ownedTrails: ['none'],
     equippedTrail: 'none',
+    enemiesKilled: 0,
+    bossesKilled: 0,
   };
 
   function nameFromUser(user){
@@ -1400,6 +1406,8 @@
       state.totalCoinsEarned = data.total_coins_earned ?? 0;
       state.deathCount = data.death_count ?? 0;
       state.totalSpent = data.total_spent ?? 0;
+      state.enemiesKilled = data.enemies_killed ?? 0;
+      state.bossesKilled = data.bosses_killed ?? 0;
       if(data.display_name) state.displayName = data.display_name;
       else await sb.from('profiles').update({ display_name: state.displayName }).eq('id', user.id);
     }
@@ -1446,6 +1454,8 @@
         total_coins_earned: state.totalCoinsEarned,
         death_count: state.deathCount,
         total_spent: state.totalSpent,
+        enemies_killed: state.enemiesKilled,
+        bosses_killed: state.bossesKilled,
         updated_at: new Date().toISOString(),
       });
       refreshLeaderboard();
@@ -1668,6 +1678,8 @@
       <div class="stats-row"><span>🛒 Wydane monety</span><b>${state.totalSpent}</b></div>
       <div class="stats-row"><span>⏱ Dokładny czas gry</span><b>${formatPlaytime(state.playtimeSeconds)}</b></div>
       <div class="stats-row"><span>💀 Liczba śmierci</span><b>${state.deathCount}</b></div>
+      <div class="stats-row"><span>👾 Zabici przeciwnicy</span><b>${state.enemiesKilled}</b></div>
+      <div class="stats-row"><span>👹 Pokonani bossowie</span><b>${state.bossesKilled}</b></div>
       <div class="stats-row"><span>👕 Posiadane skiny</span><b>${state.ownedSkins.length} / ${SKINS.length}</b></div>
       <div class="stats-row"><span>🚩 Posiadane trailsy</span><b>${state.ownedTrails.length} / ${TRAILS.length}</b></div>
       <div class="stats-row"><span>🛠️ Stworzone poziomy</span><b id="statsLevelsCount">...</b></div>
@@ -2207,7 +2219,9 @@
     editorCtx.setLineDash([]);
 
     for(const el of editorElements){
-      const ex = (el.x-editorScrollX)*editorScale, ey = el.y*editorScale;
+      const ex = (el.x-editorScrollX)*editorScale;
+      const refY = el.kind==='crusher' ? el.topY : el.y;
+      const ey = refY*editorScale;
       if(ex < -100 || ex > editorCanvas.width+100) continue;
       editorCtx.save();
       if(el.kind==='ground'){
@@ -2492,7 +2506,7 @@
   function loadLevelDataIntoEditor(code, data){
     editorEditingCode = code;
     editorElements = [];
-    (data.grounds||[]).forEach(g => editorElements.push({kind:'ground', x:g.x, y:EDITOR_GROUND_Y, w:g.w}));
+    (data.grounds||[]).forEach(g => editorElements.push({kind:'ground', x:g.x, y: g.y!==undefined ? g.y : EDITOR_GROUND_Y, w:g.w}));
     (data.platforms||[]).forEach(p => editorElements.push({kind:'platform', x:p.x, y:p.y, w:p.w, h:p.h}));
     (data.pipes||[]).forEach(p => editorElements.push({kind:'pipe', x:p.x, w:p.w, h:p.h}));
     (data.coins||[]).forEach(c => editorElements.push({kind:'coin', x:c.x, y:c.y}));
@@ -2578,7 +2592,7 @@
   }
 
   function collectEditorData(){
-    const grounds = editorElements.filter(e=>e.kind==='ground').map(e=>({x:e.x,w:e.w}));
+    const grounds = editorElements.filter(e=>e.kind==='ground').map(e=>({x:e.x,y:e.y,w:e.w}));
     const platforms = editorElements.filter(e=>e.kind==='platform').map(e=>({x:e.x,y:e.y,w:e.w,h:e.h}));
     const pipes = editorElements.filter(e=>e.kind==='pipe').map(e=>({x:e.x,w:e.w,h:e.h}));
     const coins = editorElements.filter(e=>e.kind==='coin').map(e=>({x:e.x,y:e.y}));
@@ -3489,7 +3503,10 @@
 
   function buildLevelFromCustomData(data){
     const platforms = [];
-    (data.grounds||[]).forEach(g => platforms.push({x:g.x, y:GROUND_Y, w:g.w, h:200, isGround:true}));
+    (data.grounds||[]).forEach(g => {
+      const gy = g.y!==undefined ? g.y : GROUND_Y;
+      platforms.push({x:g.x, y:gy, w:g.w, h:(GROUND_Y+200)-gy, isGround:true});
+    });
     (data.platforms||[]).forEach(p => platforms.push({x:p.x, y:p.y, w:p.w, h:p.h}));
     const pipes = (data.pipes||[]).map(p => ({x:p.x, y:GROUND_Y-p.h, w:p.w, h:p.h}));
     const coins = (data.coins||[]).map(c => ({x:c.x, y:c.y, taken:false, t:Math.random()*10}));
@@ -3670,6 +3687,7 @@
             updateBossHud(e);
             if(e.hp <= 0){
               e.alive = false;
+              state.bossesKilled++;
               runCoins += 20;
               document.getElementById('hudCoins').textContent = runCoins;
               for(let i=0;i<10;i++) spawnCoinPop();
@@ -3689,6 +3707,7 @@
       if(player.shieldActive){
         if(rectsOverlap(player, e)){
           e.alive = false;
+          state.enemiesKilled++;
           runCoins += 1;
           document.getElementById('hudCoins').textContent = runCoins;
           AudioEngine.sfxStomp();
@@ -3700,6 +3719,7 @@
           const stomp = player.vy > 0 && (player.y + player.h - e.y) < 20;
           if(stomp){
             e.alive = false;
+            state.enemiesKilled++;
             player.vy = -9.5;
             player.invuln = 20;
             runCoins += 1;
