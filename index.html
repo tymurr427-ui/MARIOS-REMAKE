@@ -3463,9 +3463,7 @@
     row(1290, GROUND_Y-140, 3, 26);
     row(1630, GROUND_Y-180, 3, 26);
     row(1900, GROUND_Y-100, 5, 26);
-    const hazards = [
-      {x:1000, y:GROUND_Y-18, w:36, h:18},
-    ];
+    const hazards = [];
     const enemies = [
       {x:800, y:GROUND_Y-34, w:34, h:34, vx:0.5, minX:770, maxX:900, alive:true},
       {x:1500, y:GROUND_Y-34, w:34, h:34, jumpHeight:65, baseY:GROUND_Y-34, type:'jumper', alive:true},
@@ -3545,7 +3543,6 @@
     row(3820, GROUND_Y-140, 3, 26);
     row(4050, GROUND_Y-180, 3, 26);
     const hazards = [
-      {x:150, y:GROUND_Y-18, w:36, h:18},
       {x:2500, y:GROUND_Y-18, w:36, h:18},
       {x:4300, y:GROUND_Y-18, w:36, h:18},
     ];
@@ -3562,7 +3559,7 @@
         vx:0.9, minX:4300, maxX:4550, baseY:GROUND_Y-90, animT:0
       },
     ];
-    return { name:'Długi Trakt', platforms, pipes, coins, enemies, movers, hazards, crushers, shooters, flag:{x:4600,y:GROUND_Y-220,w:14,h:220}, checkpoint:{x:2350,y:GROUND_Y-220}, width:4700, bg:'dusk' };
+    return { name:'Długi Trakt', platforms, pipes, coins, enemies, movers, hazards, crushers, shooters, flag:{x:4600,y:GROUND_Y-220,w:14,h:220}, checkpoint:{x:2350,y:GROUND_Y}, width:4700, bg:'dusk' };
   }
 
   function level17(){
@@ -4689,7 +4686,7 @@
         if(gfxQuality >= 1){
           ctx.strokeStyle = '#7a3d15';
           ctx.lineWidth = 2;
-          for(let bx=0; bx<p.w; bx+=22) ctx.strokeRect(x+bx, p.y, 22, p.h);
+          for(let bx=0; bx<p.w; bx+=22) ctx.strokeRect(x+bx, p.y, Math.min(22, p.w-bx), p.h);
         }
         if(gfxQuality >= 2){
           ctx.fillStyle = 'rgba(255,255,255,.2)';
