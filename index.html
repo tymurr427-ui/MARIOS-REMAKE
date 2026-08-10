@@ -4478,8 +4478,8 @@
     const running = player.onGround && Math.abs(player.vx) > 3.5;
     const shine = gfxQuality >= 2;
     const sparkle = gfxQuality >= 3;
-    // kolowrotek w powietrzu - pelny obrot narastajacy z czasem lotu
-    const spinAngle = airborne ? player.airTime * 0.2 : 0;
+    // brak obrotu w powietrzu - postac ma wlasna, zaprojektowana poze skoku
+    // (podkurczone nogi + uniesione rece w drawCharacterSprite), bez kolowrotka
 
     // HIGH/ULTRA: wyrazna, zawsze widoczna aura wokol postaci (latwo widoczna roznica vs LOW)
     if(gfxQuality >= 2){
@@ -4507,17 +4507,7 @@
       }
       ctx.restore();
     }
-    // ULTRA: smuga wirowania podczas kolowrotka
-    if(sparkle && airborne){
-      ctx.save();
-      ctx.globalAlpha = 0.2;
-      ctx.strokeStyle = '#ffe27a';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(px+player.w/2, py+player.h/2, player.w*0.75, spinAngle-1.4, spinAngle);
-      ctx.stroke();
-      ctx.restore();
-    }
+    // (usunieto smuge wirowania - byla powiazana z kolowrotkiem, ktorego juz nie ma)
 
     // TARCZA: pulsujacy niebieski babelek ochronny (widoczny niezaleznie od jakosci grafiki)
     if(player.shieldActive){
@@ -4540,9 +4530,7 @@
       ctx.shadowBlur = airborne && gfxQuality>=3 ? 22 : 10;
       ctx.shadowOffsetY = 3;
     }
-    // pivot w przyblizonym srodku sylwetki, zeby kolowrotek obracal sie "w miejscu"
     ctx.translate(px + player.w/2, py + 28*scale);
-    if(spinAngle) ctx.rotate(spinAngle);
     ctx.scale(player.facing*scale, scale);
     ctx.translate(-20, -28);
     drawCharacterSprite(ctx, c, bob, airborne, flat, shine, sparkle);
