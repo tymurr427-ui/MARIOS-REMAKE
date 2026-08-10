@@ -3413,7 +3413,6 @@
     row(1920, GROUND_Y-90, 3, 26);
     row(2350, GROUND_Y-100, 5, 26);
     const hazards = [
-      {x:150, y:GROUND_Y-18, w:36, h:18},
       {x:2500, y:GROUND_Y-18, w:36, h:18},
     ];
     const enemies = [
@@ -3640,7 +3639,45 @@
     return { name:'Ostatni Bastion', platforms, pipes, coins, enemies, crushers, shooters, flag:{x:2500,y:GROUND_Y-220,w:14,h:220}, width:2600, bg:'night' };
   }
 
-  const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11, level12, level13, level14, level15, level16, level17, level18];
+  function level19(){
+    const platforms = [
+      mkGround(0, 260),
+      {x:340, y:GROUND_Y-40, w:90, h:20, isCrumbler:true, state:'idle', timer:0},
+      {x:520, y:GROUND_Y-40, w:90, h:20, isCrumbler:true, state:'idle', timer:0},
+      {x:700, y:GROUND_Y-40, w:90, h:20, isCrumbler:true, state:'idle', timer:0},
+      mkGround(900, 220),
+      {x:1250, y:GROUND_Y-30, w:70, h:20, isTrampoline:true, bounceAnim:0},
+      {x:1200, y:GROUND_Y-260, w:130, h:22},
+      {x:1450, y:GROUND_Y-260, w:110, h:22},
+      {x:1650, y:GROUND_Y-200, w:110, h:22},
+      {x:1800, y:GROUND_Y-140, w:90, h:22},
+      {x:1950, y:GROUND_Y-40, w:90, h:20, isCrumbler:true, state:'idle', timer:0},
+      {x:2100, y:GROUND_Y-40, w:90, h:20, isCrumbler:true, state:'idle', timer:0},
+      mkGround(2280, 420),
+      {x:2420, y:GROUND_Y-30, w:70, h:20, isTrampoline:true, bounceAnim:0},
+    ];
+    const pipes = [];
+    const coins = [];
+    function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
+    row(340, GROUND_Y-80, 3, 26);
+    row(520, GROUND_Y-80, 3, 26);
+    row(700, GROUND_Y-80, 3, 26);
+    row(1230, GROUND_Y-300, 3, 26);
+    row(1460, GROUND_Y-300, 3, 26);
+    row(1660, GROUND_Y-240, 3, 26);
+    row(1950, GROUND_Y-80, 3, 26);
+    row(2100, GROUND_Y-80, 3, 26);
+    row(2430, GROUND_Y-220, 4, 26);
+    row(2600, GROUND_Y-100, 4, 26);
+    const enemies = [
+      {x:1500, y:GROUND_Y-300, w:32, h:32, vx:0.5, minX:1220, maxX:1750, baseY:GROUND_Y-300, amp:30, type:'flyer', alive:true},
+      {x:2350, y:GROUND_Y-34, w:34, h:34, jumpHeight:70, baseY:GROUND_Y-34, type:'jumper', alive:true},
+      {x:2600, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2550, maxX:2680, alive:true},
+    ];
+    return { name:'Chwiejny Szlak', platforms, pipes, coins, enemies, flag:{x:2650,y:GROUND_Y-220,w:14,h:220}, width:2750, bg:'dusk' };
+  }
+
+  const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11, level12, level13, level14, level15, level16, level17, level18, level19];
 
   function buildLevelFromCustomData(data){
     const platforms = [];
@@ -3955,6 +3992,21 @@
   const DECEL_GROUND = 0.36;
   const DECEL_AIR = 0.16;
   const JUMP_VELOCITY = -13.9;
+  const TRAMPOLINE_VELOCITY = -21.5; // mocne odbicie - nowa przeszkoda
+
+  function updateCrumblers(){
+    if(!level.platforms) return;
+    for(const p of level.platforms){
+      if(!p.isCrumbler) continue;
+      if(p.state === 'shaking'){
+        p.timer--;
+        if(p.timer <= 0){ p.state = 'gone'; p.timer = 100; }
+      } else if(p.state === 'gone'){
+        p.timer--;
+        if(p.timer <= 0){ p.state = 'idle'; }
+      }
+    }
+  }
   const JUMP_CUT = 0.45; // puszczenie skoku wczesniej -> nizszy skok
 
   function update(){
@@ -4055,6 +4107,7 @@
     // ruch poziomy + kolizje
     player.x += player.vx;
     for(const p of solids){
+      if(p.isCrumbler && p.state === 'gone') continue;
       if(rectsOverlap(player,p)){
         if(player.vx > 0){ player.x = p.x - player.w; player.vx = 0; }
         else if(player.vx < 0){ player.x = p.x + p.w; player.vx = 0; }
@@ -4075,21 +4128,33 @@
       player.y += vyDir * step;
       vyLeft -= step;
       for(const p of solids){
+        if(p.isCrumbler && p.state === 'gone') continue;
         if(rectsOverlap(player,p)){
           if(vyDir > 0){
             player.y = p.y - player.h;
-            player.onGround = true;
-            if(p.isMover) standingOnMover = p;
+            if(p.isTrampoline){
+              player.vy = TRAMPOLINE_VELOCITY;
+              player.onGround = false;
+              player.jumping = true;
+              AudioEngine.sfxJump();
+              p.bounceAnim = 10;
+            } else {
+              player.onGround = true;
+              player.vy = 0;
+              if(p.isMover) standingOnMover = p;
+              if(p.isCrumbler && p.state === 'idle'){ p.state = 'shaking'; p.timer = 40; }
+            }
           } else {
             player.y = p.y + p.h;
+            player.vy = 0;
           }
-          player.vy = 0;
           landed = true;
           break;
         }
       }
     }
     player.ridingMover = standingOnMover;
+    updateCrumblers();
 
     if(player.invuln > 0) player.invuln--;
     player.airTime = player.onGround ? 0 : player.airTime + 1;
@@ -4650,6 +4715,37 @@
     for(const p of level.platforms){
       const x = p.x - camera.x;
       if(x+p.w < 0 || x > W) continue;
+      if(p.isTrampoline){
+        if(p.bounceAnim > 0) p.bounceAnim--;
+        const squash = p.bounceAnim > 0 ? p.bounceAnim/10 : 0;
+        ctx.save();
+        if(gfxQuality >= 1){
+          ctx.fillStyle = 'rgba(0,0,0,.2)';
+          ctx.beginPath(); ctx.ellipse(x+p.w/2, p.y+p.h+5, p.w/2.2, 4, 0, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.fillStyle = '#7a4a1e';
+        ctx.fillRect(x, p.y+p.h-6, p.w, 6);
+        ctx.fillStyle = '#ff5f6d';
+        ctx.fillRect(x, p.y + squash*6, p.w, p.h-6-squash*6);
+        ctx.strokeStyle = '#c0392b';
+        ctx.lineWidth = 2;
+        for(let sx=6; sx<p.w-3; sx+=12) { ctx.beginPath(); ctx.moveTo(x+sx, p.y+p.h-6); ctx.lineTo(x+sx+6, p.y+squash*6); ctx.stroke(); }
+        ctx.restore();
+        continue;
+      }
+      if(p.isCrumbler){
+        if(p.state === 'gone') continue;
+        const shakeX = p.state === 'shaking' ? (Math.random()*4-2) : 0;
+        ctx.save();
+        ctx.globalAlpha = p.state === 'shaking' ? (0.5 + Math.sin((p.timer||0)*0.9)*0.3) : 1;
+        ctx.fillStyle = p.state === 'shaking' ? '#8a5a3a' : '#a06a3e';
+        ctx.fillRect(x+shakeX, p.y, p.w, p.h);
+        ctx.strokeStyle = '#5a3a1e';
+        ctx.lineWidth = 2;
+        for(let cx=0; cx<p.w; cx+=18) ctx.strokeRect(x+shakeX+cx, p.y, Math.min(18,p.w-cx), p.h);
+        ctx.restore();
+        continue;
+      }
       if(p.isGround){
         ctx.fillStyle = '#8a5a2b';
         ctx.fillRect(x, p.y, p.w, H-p.y+10);
