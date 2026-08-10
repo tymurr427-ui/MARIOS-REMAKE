@@ -2477,7 +2477,7 @@
     else if(editorTool === 'crusher'){ editorElements.push({kind:'crusher', x:levelX, w:50, h:50, topY:80, bottomY:EDITOR_GROUND_Y-55, speed:1.0, t:0}); }
     else if(editorTool === 'turret'){
       const dir = levelX < EDITOR_LEVEL_W/2 ? 1 : -1;
-      editorElements.push({kind:'turret', x:levelX, y:EDITOR_GROUND_Y-90, dir, interval:150});
+      editorElements.push({kind:'turret', x:levelX, y:EDITOR_GROUND_Y-90, dir, interval:245});
     }
     else if(editorTool === 'boss'){
       const existing = editorElements.findIndex(e=>e.kind==='boss');
@@ -3035,7 +3035,6 @@
     const enemies = [
       {x:100, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:40, maxX:220, alive:true},
       {x:920, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:880, maxX:1020, alive:true},
-      {x:1500, y:GROUND_Y-274, w:34, h:34, vx:0.48, minX:1480, maxX:1540, alive:true},
       {x:2100, y:GROUND_Y-34, w:34, h:34, vx:0.68, minX:2040, maxX:2300, alive:true},
     ];
     return { name:'Wieża Chmur', platforms, pipes, coins, enemies, flag:{x:2400,y:GROUND_Y-220,w:14,h:220}, width:2500, bg:'night' };
@@ -3155,7 +3154,6 @@
     const enemies = [
       {x:530, y:GROUND_Y-140, w:32, h:32, vx:0.52, minX:400, maxX:750, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
       {x:1450, y:GROUND_Y-34, w:34, h:34, vx:0.56, minX:1300, maxX:1600, alive:true},
-      {x:1950, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:1900, maxX:2100, alive:true},
     ];
     return { name:'Latający Szlak', platforms, pipes, coins, enemies, movers, hazards, flag:{x:2350,y:GROUND_Y-220,w:14,h:220}, width:2450, bg:'desert' };
   }
@@ -3279,7 +3277,6 @@
     row(1930, GROUND_Y-90, 3, 26);
     row(2100, GROUND_Y-100, 5, 26);
     const hazards = [
-      {x:600, y:GROUND_Y-18, w:40, h:18},
       {x:2300, y:GROUND_Y-18, w:40, h:18},
     ];
     const enemies = [
@@ -3379,8 +3376,6 @@
       {x:1200, y:GROUND_Y-18, w:36, h:18},
     ];
     const enemies = [
-      {x:80, y:GROUND_Y-34, w:34, h:34, vx:0.56, minX:60, maxX:170, alive:true},
-      {x:610, y:GROUND_Y-210, w:32, h:32, vx:0.45, minX:600, maxX:690, baseY:GROUND_Y-210, amp:25, type:'flyer', alive:true},
       {x:1050, y:GROUND_Y-224, w:34, h:34, jumpHeight:65, baseY:GROUND_Y-224, type:'jumper', alive:true},
       {x:1900, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:1850, maxX:2050, alive:true},
     ];
@@ -3452,8 +3447,8 @@
       {x:1170, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.1, t:3},
     ];
     const shooters = [
-      {x:760, y:GROUND_Y-90, dir:1, interval:160},
-      {x:2260, y:GROUND_Y-90, dir:-1, interval:140},
+      {x:760, y:GROUND_Y-90, dir:1, interval:260},
+      {x:2260, y:GROUND_Y-90, dir:-1, interval:230},
     ];
     const coins = [];
     function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
@@ -3523,8 +3518,8 @@
       {x:3900, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.0, t:0},
     ];
     const shooters = [
-      {x:3980, y:GROUND_Y-90, dir:1, interval:150},
-      {x:4150, y:GROUND_Y-90, dir:-1, interval:145},
+      {x:3980, y:GROUND_Y-90, dir:1, interval:245},
+      {x:4150, y:GROUND_Y-90, dir:-1, interval:235},
     ];
     const coins = [];
     function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
@@ -3585,10 +3580,10 @@
       {x:2000, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.2, t:1},
     ];
     const shooters = [
-      {x:600, y:GROUND_Y-90, dir:1, interval:140},
-      {x:930, y:GROUND_Y-90, dir:-1, interval:145},
-      {x:1590, y:GROUND_Y-90, dir:1, interval:135},
-      {x:2100, y:GROUND_Y-90, dir:-1, interval:130},
+      {x:600, y:GROUND_Y-90, dir:1, interval:230},
+      {x:930, y:GROUND_Y-90, dir:-1, interval:235},
+      {x:1590, y:GROUND_Y-90, dir:1, interval:220},
+      {x:2100, y:GROUND_Y-90, dir:-1, interval:215},
     ];
     const coins = [];
     function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
@@ -3624,8 +3619,8 @@
       {x:1150, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.1, t:0},
     ];
     const shooters = [
-      {x:600, y:GROUND_Y-90, dir:1, interval:145},
-      {x:1900, y:GROUND_Y-90, dir:-1, interval:140},
+      {x:600, y:GROUND_Y-90, dir:1, interval:235},
+      {x:1900, y:GROUND_Y-90, dir:-1, interval:230},
     ];
     const coins = [];
     function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
@@ -3664,7 +3659,7 @@
     const crushers = (data.crushers||[]).map(c => ({
       x:c.x, w:c.w||50, h:c.h||50, topY:c.topY||80, bottomY:c.bottomY||GROUND_Y-55, speed:c.speed||1.0, t:c.t||0
     }));
-    const shooters = (data.shooters||[]).map(s => ({ x:s.x, y:s.y, dir:s.dir||1, interval:s.interval||150 }));
+    const shooters = (data.shooters||[]).map(s => ({ x:s.x, y:s.y, dir:s.dir||1, interval:s.interval||245 }));
     const enemies = (data.enemies||[]).map(e => {
       if(e.enemyType==='flyer') return {x:e.x, y:e.y, w:32, h:32, alive:true, type:'flyer', vx:0.5, minX:Math.max(0,e.x-100), maxX:e.x+100, baseY:e.y, amp:35};
       if(e.enemyType==='jumper') return {x:e.x, y:e.y, w:34, h:34, alive:true, type:'jumper', jumpHeight:70, baseY:e.y};
@@ -3917,7 +3912,7 @@
       s.timer = (s.timer===undefined ? s.interval : s.timer) - 1;
       if(s.timer <= 0){
         s.timer = s.interval;
-        level.projectiles.push({x:s.x, y:s.y, vx:(s.dir||1)*2.0, w:16, h:16, life:220});
+        level.projectiles.push({x:s.x, y:s.y, vx:(s.dir||1)*1.5, w:16, h:16, life:220});
       }
     }
     for(let i=level.projectiles.length-1;i>=0;i--){
@@ -3977,7 +3972,7 @@
         if(!level.projectiles) level.projectiles = [];
         level.shooters.forEach(s => {
           s.timer = (s.timer===undefined ? s.interval : s.timer) - 1;
-          if(s.timer <= 0){ s.timer = s.interval; level.projectiles.push({x:s.x,y:s.y,vx:(s.dir||1)*2.0,w:16,h:16,life:220}); }
+          if(s.timer <= 0){ s.timer = s.interval; level.projectiles.push({x:s.x,y:s.y,vx:(s.dir||1)*1.5,w:16,h:16,life:220}); }
         });
         for(let i=level.projectiles.length-1;i>=0;i--){
           const p = level.projectiles[i];
