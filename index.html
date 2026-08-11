@@ -906,6 +906,7 @@
           <option value="volcano">🌋 Wulkan</option>
           <option value="ice">❄️ Lód</option>
           <option value="desert">🏜️ Pustynia</option>
+          <option value="aurora">🌌 Zorza</option>
         </select>
         <div class="editor-tools" id="editorTools">
           <button class="editor-tool active" data-tool="ground">🟫 Grunt</button>
@@ -1108,6 +1109,7 @@
   let mpConnected = false;
   let remotePlayers = {};       // mapa: id gracza -> {data, display:{x,y}, lastSeen, dead, name}
   let mpMaxPlayers = 2;          // wybrana liczba graczy (informacyjnie, nie twardy limit)
+  let mpJoinDeadTimeout = null;  // timer ostrzegajacy ze dolaczasz do pustego/martwego lobby
   let mpRestarting = false;     // zabezpieczenie przed podwojnym restartem
   let mpBroadcastTimer = 0;
   let mpNickname = '';
@@ -1120,6 +1122,10 @@
     return out;
   }
 
+  window.addEventListener('pagehide', () => {
+    if(mpChannel){ try { sb.removeChannel(mpChannel); } catch(e){} }
+  });
+
   function leaveMultiplayer(){
     if(mpChannel){
       try { sb.removeChannel(mpChannel); } catch(e){}
@@ -1130,6 +1136,7 @@
     mpCode = '';
     mpGameStarted = false;
     remotePlayers = {};
+    clearTimeout(mpJoinDeadTimeout);
     document.getElementById('mpHudPill').classList.add('hidden');
     document.getElementById('btnMpStart').style.display = 'none';
   }
@@ -1160,6 +1167,18 @@
     remotePlayers = {};
 
     mpChannel = sb.channel('mp-' + code, { config: { presence: { key: myId }, broadcast: { self: false } } });
+
+    clearTimeout(mpJoinDeadTimeout);
+    if(!hosting){
+      mpJoinDeadTimeout = setTimeout(() => {
+        const st = mpChannel ? mpChannel.presenceState() : {};
+        const count = Object.keys(st).length;
+        if(count < 2){
+          const statusEl = document.getElementById('mpLobbyStatus');
+          if(statusEl) statusEl.textContent = '⚠ Nikogo tu nie ma - sprawdź kod albo poproś hosta o nowe lobby.';
+        }
+      }, 10000);
+    }
 
     mpChannel.on('broadcast', { event: 'state' }, ({ payload }) => {
       if(!payload || payload.from === myId) return;
@@ -1235,6 +1254,7 @@
       const hostEntry = entries.find(p => p.isHost);
       if(!isHost && hostEntry && hostEntry.maxPlayers) mpMaxPlayers = hostEntry.maxPlayers;
       const count = renderLobbyPlayers();
+      if(count >= 2) clearTimeout(mpJoinDeadTimeout);
       const statusEl = document.getElementById('mpLobbyStatus');
       const startBtn = document.getElementById('btnMpStart');
       if(count >= 2){
@@ -2240,6 +2260,7 @@
     if(bg==='volcano') return {sky1:'#3a0e0e', sky2:'#b8451c', hill:'#2a0a0a'};
     if(bg==='ice') return {sky1:'#bfe9ff', sky2:'#eaf7ff', hill:'#6fb8d8'};
     if(bg==='desert') return {sky1:'#ffdca0', sky2:'#ffb877', hill:'#c9862f'};
+    if(bg==='aurora') return {sky1:'#0a1a2e', sky2:'#123d3a', hill:'#0a2e28'};
     return {sky1:'#5c94fc', sky2:'#a8d8ff', hill:'#3fae4a'};
   }
 
@@ -3186,7 +3207,6 @@
     row(1900, GROUND_Y-100, 4, 26);
     const hazards = [
       {x:800, y:GROUND_Y-18, w:40, h:18},
-      {x:1850, y:GROUND_Y-18, w:36, h:18},
     ];
     const enemies = [
       {x:900, y:GROUND_Y-34, w:34, h:34, jumpHeight:70, baseY:GROUND_Y-34, type:'jumper', alive:true},
@@ -3282,7 +3302,6 @@
     const enemies = [
       {x:560, y:GROUND_Y-34, w:34, h:34, vx:0.55, minX:520, maxX:680, alive:true},
       {x:1300, y:GROUND_Y-34, w:34, h:34, jumpHeight:70, baseY:GROUND_Y-34, type:'jumper', alive:true},
-      {x:2100, y:GROUND_Y-140, w:32, h:32, vx:0.5, minX:2050, maxX:2400, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
       {x:2450, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2400, maxX:2550, alive:true},
     ];
     return { name:'Podniebna Forteca', platforms, pipes, coins, enemies, movers, hazards, flag:{x:2450,y:GROUND_Y-220,w:14,h:220}, width:2600, bg:'ice' };
@@ -3330,7 +3349,6 @@
     ];
     const enemies = [
       {x:700, y:GROUND_Y-34, w:34, h:34, vx:0.55, minX:670, maxX:820, alive:true},
-      {x:1550, y:GROUND_Y-140, w:32, h:32, vx:0.5, minX:1520, maxX:1680, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
       {x:1650, y:GROUND_Y-34, w:34, h:34, jumpHeight:70, baseY:GROUND_Y-34, type:'jumper', alive:true},
       {x:2500, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2470, maxX:2620, alive:true},
       {x:2700, y:GROUND_Y-34, w:34, h:34, jumpHeight:75, baseY:GROUND_Y-34, type:'jumper', alive:true},
@@ -3646,7 +3664,7 @@
       {x:520, y:GROUND_Y-40, w:90, h:20, isCrumbler:true, state:'idle', timer:0},
       {x:700, y:GROUND_Y-40, w:90, h:20, isCrumbler:true, state:'idle', timer:0},
       mkGround(900, 220),
-      {x:1250, y:GROUND_Y-30, w:70, h:20, isTrampoline:true, bounceAnim:0},
+      {x:1120, y:GROUND_Y-30, w:120, h:20, isTrampoline:true, bounceAnim:0},
       {x:1200, y:GROUND_Y-260, w:130, h:22},
       {x:1450, y:GROUND_Y-260, w:110, h:22},
       {x:1650, y:GROUND_Y-200, w:110, h:22},
@@ -3674,7 +3692,7 @@
       {x:2350, y:GROUND_Y-34, w:34, h:34, jumpHeight:70, baseY:GROUND_Y-34, type:'jumper', alive:true},
       {x:2600, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2550, maxX:2680, alive:true},
     ];
-    return { name:'Chwiejny Szlak', platforms, pipes, coins, enemies, flag:{x:2650,y:GROUND_Y-220,w:14,h:220}, width:2750, bg:'dusk' };
+    return { name:'Chwiejny Szlak', platforms, pipes, coins, enemies, flag:{x:2650,y:GROUND_Y-220,w:14,h:220}, width:2750, bg:'aurora' };
   }
 
   const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11, level12, level13, level14, level15, level16, level17, level18, level19];
@@ -4142,7 +4160,7 @@
               player.onGround = true;
               player.vy = 0;
               if(p.isMover) standingOnMover = p;
-              if(p.isCrumbler && p.state === 'idle'){ p.state = 'shaking'; p.timer = 40; }
+              if(p.isCrumbler && p.state === 'idle'){ p.state = 'shaking'; p.timer = 75; }
             }
           } else {
             player.y = p.y + p.h;
@@ -4614,6 +4632,7 @@
     if(level.bg==='volcano') return {sky1:'#3a0e0e', sky2:'#b8451c', hill:'#2a0a0a', sun:'#ff8a3d'};
     if(level.bg==='ice') return {sky1:'#bfe9ff', sky2:'#eaf7ff', hill:'#6fb8d8', sun:'#ffffff'};
     if(level.bg==='desert') return {sky1:'#ffdca0', sky2:'#ffb877', hill:'#c9862f', sun:'#fff2c9'};
+    if(level.bg==='aurora') return {sky1:'#0a1a2e', sky2:'#123d3a', hill:'#0a2e28', sun:'#9dffcf'};
     return {sky1:'#5c94fc', sky2:'#a8d8ff', hill:'#3fae4a', sun:'#fff7c2'};
   }
 
@@ -4641,7 +4660,7 @@
     ctx.fillRect(0,0,W,H);
 
     // HIGH+: gwiazdki na niebie nocnym
-    if(gfxQuality >= 2 && (level.bg==='night' || level.bg==='volcano')){
+    if(gfxQuality >= 2 && (level.bg==='night' || level.bg==='volcano' || level.bg==='aurora')){
       for(let i=0;i<40;i++){
         const sx = (i*137) % W;
         const sy = (i*71) % (H*0.5);
@@ -4649,6 +4668,26 @@
         ctx.fillStyle = `rgba(255,255,255,${twinkle.toFixed(2)})`;
         ctx.fillRect(sx, sy, 2, 2);
       }
+    }
+
+    // ULTRA: falujaca zorza polarna na niebie (tylko motyw 'aurora')
+    if(gfxQuality >= 2 && level.bg==='aurora'){
+      ctx.save();
+      ctx.globalAlpha = 0.25;
+      for(let band=0; band<2; band++){
+        ctx.beginPath();
+        const baseY = 60 + band*50;
+        ctx.moveTo(0, baseY);
+        for(let bx=0; bx<=W; bx+=40){
+          const wy = baseY + Math.sin((timeAlive||0)*0.02 + bx*0.01 + band*2) * 22;
+          ctx.lineTo(bx, wy);
+        }
+        ctx.lineTo(W, baseY+90); ctx.lineTo(0, baseY+90);
+        ctx.closePath();
+        ctx.fillStyle = band===0 ? '#3dffb0' : '#8a5cff';
+        ctx.fill();
+      }
+      ctx.restore();
     }
 
     // HIGH+: aureola wokol slonca
