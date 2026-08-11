@@ -3673,8 +3673,27 @@
       {x:2100, y:GROUND_Y-40, w:90, h:20, isCrumbler:true, state:'idle', timer:0},
       mkGround(2280, 420),
       {x:2420, y:GROUND_Y-30, w:70, h:20, isTrampoline:true, bounceAnim:0},
+      // NOWA CZESC: kolejne kruszace sie platformy nad przepascia
+      {x:2800, y:GROUND_Y-40, w:90, h:20, isCrumbler:true, state:'idle', timer:0},
+      {x:2980, y:GROUND_Y-40, w:90, h:20, isCrumbler:true, state:'idle', timer:0},
+      mkGround(3160, 200),
+      // trampolina "od razu z gruntu" wynosi na wyzsza sciezke platform
+      {x:3360, y:GROUND_Y-30, w:110, h:20, isTrampoline:true, bounceAnim:0},
+      {x:3380, y:GROUND_Y-240, w:120, h:22},
+      {x:3600, y:GROUND_Y-240, w:110, h:22},
+      {x:3800, y:GROUND_Y-180, w:110, h:22},
+      // finalowa arena: miazdzarka + wiezyczki + boss
+      mkGround(3980, 550),
     ];
     const pipes = [];
+    const crushers = [
+      {x:3260, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.0, t:0},
+      {x:4300, w:50, h:50, topY:80, bottomY:GROUND_Y-55, speed:1.1, t:1},
+    ];
+    const shooters = [
+      {x:3300, y:GROUND_Y-90, dir:1, interval:220},
+      {x:4180, y:GROUND_Y-90, dir:-1, interval:220},
+    ];
     const coins = [];
     function row(x,y,n,gap){ for(let i=0;i<n;i++) coins.push({x:x+i*gap,y,taken:false,t:Math.random()*10}); }
     row(340, GROUND_Y-80, 3, 26);
@@ -3687,12 +3706,27 @@
     row(2100, GROUND_Y-80, 3, 26);
     row(2430, GROUND_Y-220, 4, 26);
     row(2600, GROUND_Y-100, 4, 26);
+    row(2800, GROUND_Y-80, 3, 26);
+    row(2980, GROUND_Y-80, 3, 26);
+    row(3180, GROUND_Y-100, 4, 26);
+    row(3400, GROUND_Y-280, 4, 26);
+    row(3610, GROUND_Y-280, 3, 26);
+    row(3820, GROUND_Y-220, 3, 26);
+    row(4050, GROUND_Y-100, 5, 26);
     const enemies = [
       {x:1500, y:GROUND_Y-300, w:32, h:32, vx:0.5, minX:1220, maxX:1750, baseY:GROUND_Y-300, amp:30, type:'flyer', alive:true},
       {x:2350, y:GROUND_Y-34, w:34, h:34, jumpHeight:70, baseY:GROUND_Y-34, type:'jumper', alive:true},
       {x:2600, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:2550, maxX:2680, alive:true},
+      {x:3200, y:GROUND_Y-34, w:34, h:34, vx:0.5, minX:3170, maxX:3340, alive:true},
+      {x:3620, y:GROUND_Y-274, w:34, h:34, jumpHeight:55, baseY:GROUND_Y-274, type:'jumper', alive:true},
+      {x:3850, y:GROUND_Y-320, w:32, h:32, vx:0.55, minX:3760, maxX:4100, baseY:GROUND_Y-320, amp:35, type:'flyer', alive:true},
+      {
+        x:4400, y:GROUND_Y-90, w:90, h:90, alive:true, type:'boss',
+        name:'Wartownik Szlaku', hp:7, maxHp:7, hitTimer:0,
+        vx:0.9, minX:4230, maxX:4480, baseY:GROUND_Y-90, animT:0
+      },
     ];
-    return { name:'Chwiejny Szlak', platforms, pipes, coins, enemies, flag:{x:2650,y:GROUND_Y-220,w:14,h:220}, width:2750, bg:'aurora' };
+    return { name:'Chwiejny Szlak', platforms, pipes, coins, enemies, crushers, shooters, flag:{x:4500,y:GROUND_Y-220,w:14,h:220}, width:4600, bg:'aurora' };
   }
 
   const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11, level12, level13, level14, level15, level16, level17, level18, level19];
