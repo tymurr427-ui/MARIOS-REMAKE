@@ -606,6 +606,13 @@
     box-shadow:0 3px 0 #123a5c;
   }
   .my-levels-corner:active { box-shadow:0 1px 0 #123a5c; }
+  .workshop-corner {
+    top:130px;
+    background:linear-gradient(#f39c12,#a5670a);
+    border-color:#5c3a05;
+    box-shadow:0 3px 0 #5c3a05;
+  }
+  .workshop-corner:active { box-shadow:0 1px 0 #5c3a05; }
   .my-levels-panel {
     display:flex;
     flex-direction:column;
@@ -812,6 +819,7 @@
   <div id="globalAuthBadge" class="global-auth-badge"></div>
   <button id="createLevelCorner" class="create-level-corner">🛠️ CREATE LEVEL</button>
   <button id="myLevelsCorner" class="create-level-corner my-levels-corner">🗂️ MY LEVELS</button>
+  <button id="workshopCorner" class="create-level-corner workshop-corner">🏛️ WARSZTAT</button>
   <div id="leaderboardBox" class="leaderboard-panel"></div>
 
   <!-- MENU -->
@@ -884,6 +892,14 @@
     <div class="title" style="font-size:36px;">MOJE POZIOMY</div>
     <div class="my-levels-panel" id="myLevelsPanel"></div>
     <button class="menu-btn small" id="btnMyLevelsBack">⬅ POWRÓT</button>
+  </div>
+
+  <!-- WARSZTAT: POZIOMY WSZYSTKICH GRACZY, WG POPULARNOSCI -->
+  <div id="workshopScreen" class="screen hidden">
+    <div class="title" style="font-size:36px;">🏛️ WARSZTAT</div>
+    <div class="small-note">Najpopularniejsze poziomy stworzone przez graczy.</div>
+    <div class="my-levels-panel" id="workshopPanel"></div>
+    <button class="menu-btn small" id="btnWorkshopBack">⬅ POWRÓT</button>
   </div>
 
   <!-- SPEEDRUN: TOP 10 NA POZIOM -->
@@ -1079,6 +1095,17 @@
   //   -- Nowe kolumny licznikow zabitych wrogow/bossow (jesli profiles juz istnieje):
   //   alter table public.profiles add column if not exists enemies_killed integer default 0;
   //   alter table public.profiles add column if not exists bosses_killed integer default 0;
+  //
+  //   -- WARSZTAT: licznik popularnosci poziomow wlasnych (jesli custom_levels juz istnieje):
+  //   alter table public.custom_levels add column if not exists plays integer default 0;
+  //   -- publiczny odczyt (potrzebny do przegladania warsztatu) - pomin blad "already exists" jesli juz masz taka polityke:
+  //   create policy "public read levels" on public.custom_levels for select using (true);
+  //   -- bezpieczne zwiekszanie licznika bez otwierania pelnego dostepu do UPDATE calej tabeli:
+  //   create or replace function public.increment_level_plays(p_code text)
+  //   returns void language sql security definer as $$
+  //     update public.custom_levels set plays = plays + 1 where code = p_code;
+  //   $$;
+  //   grant execute on function public.increment_level_plays(text) to anon, authenticated;
   //
   //   -- Tabela najlepszych czasow (speedrun) per uzytkownik+poziom:
   //   create table public.level_times (
@@ -1358,7 +1385,7 @@
   function broadcastOwnState(){
     if(!mpChannel || !mpConnected) return;
     const now = performance.now();
-    if(now - mpBroadcastTimer < 50) return; // ~20x/sek
+    if(now - mpBroadcastTimer < 33) return; // ~30x/sek (bylo 20x/sek - za rzadko, dawalo wrazenie laga)
     mpBroadcastTimer = now;
     mpChannel.send({
       type: 'broadcast',
@@ -1367,6 +1394,7 @@
         from: myId,
         name: mpNickname || state.displayName || 'Gracz 2',
         skin: state.equippedSkin,
+        trail: state.equippedTrail,
         x: player.x, y: player.y,
         facing: player.facing,
         onGround: player.onGround,
@@ -1380,16 +1408,21 @@
     for(const id in remotePlayers){
       const rp = remotePlayers[id];
       if(!rp.data || now - rp.lastSeen > 4000){ rp.display = null; continue; }
+      // przewidywanie pozycji (dead reckoning): miedzy pakietami kontynuujemy ruch
+      // wedlug ostatniej znanej predkosci, zamiast zamrazac postac az przyjdzie kolejny pakiet
+      const elapsedSec = Math.min(0.25, (now - rp.lastSeen) / 1000);
+      const predictedX = rp.data.x + (rp.data.vx||0) * elapsedSec * 60;
+      const predictedY = rp.data.y;
       if(!rp.display){
-        rp.display = { x: rp.data.x, y: rp.data.y };
+        rp.display = { x: predictedX, y: predictedY };
       } else {
-        const dist = Math.hypot(rp.data.x - rp.display.x, rp.data.y - rp.display.y);
+        const dist = Math.hypot(predictedX - rp.display.x, predictedY - rp.display.y);
         if(dist > 400){
-          rp.display.x = rp.data.x;
-          rp.display.y = rp.data.y;
+          rp.display.x = predictedX;
+          rp.display.y = predictedY;
         } else {
-          rp.display.x += (rp.data.x - rp.display.x) * 0.3;
-          rp.display.y += (rp.data.y - rp.display.y) * 0.3;
+          rp.display.x += (predictedX - rp.display.x) * 0.35;
+          rp.display.y += (predictedY - rp.display.y) * 0.35;
         }
       }
       const sk = SKINS.find(s => s.id === rp.data.skin) || SKINS[0];
@@ -1398,6 +1431,7 @@
       if(rx < -60 || rx > W+60) continue;
       const scale = 38/40;
       const airborne = !rp.data.onGround;
+      drawFlagAt(rx, ry, 38, 54, rp.data.facing, rp.data.vx||0, rp.data.onGround, rp.data.trail);
       ctx.save();
       ctx.globalAlpha = rp.dead ? 0.4 : 0.92;
       ctx.translate(rx + 19, ry + 28*scale);
@@ -1641,6 +1675,7 @@
   const statsScreen = document.getElementById('statsScreen');
   const editorScreen = document.getElementById('editorScreen');
   const myLevelsScreen = document.getElementById('myLevelsScreen');
+  const workshopScreen = document.getElementById('workshopScreen');
   const speedrunScreen = document.getElementById('speedrunScreen');
 
   let gamePlaying = false;
@@ -1657,6 +1692,7 @@
     statsScreen.classList.add('hidden');
     editorScreen.classList.add('hidden');
     myLevelsScreen.classList.add('hidden');
+    workshopScreen.classList.add('hidden');
     speedrunScreen.classList.add('hidden');
     mpChoiceScreen.classList.add('hidden');
     mpLobbyScreen.classList.add('hidden');
@@ -1668,6 +1704,7 @@
     if(name==='stats') statsScreen.classList.remove('hidden');
     if(name==='editor'){ editorScreen.classList.remove('hidden'); redrawEditor(); }
     if(name==='myLevels'){ myLevelsScreen.classList.remove('hidden'); renderMyLevels(); }
+    if(name==='workshop'){ workshopScreen.classList.remove('hidden'); renderWorkshop(); }
     if(name==='speedrun'){ speedrunScreen.classList.remove('hidden'); renderSpeedrunBoard(); }
     if(name==='mpChoice') mpChoiceScreen.classList.remove('hidden');
     if(name==='mpLobby') mpLobbyScreen.classList.remove('hidden');
@@ -1676,6 +1713,7 @@
     document.getElementById('globalAuthBadge').style.display = (name==='game') ? 'none' : 'block';
     document.getElementById('createLevelCorner').style.display = (name==='game') ? 'none' : 'block';
     document.getElementById('myLevelsCorner').style.display = (name==='game') ? 'none' : 'block';
+    document.getElementById('workshopCorner').style.display = (name==='game') ? 'none' : 'block';
     const lb = document.getElementById('leaderboardBox');
     if(lb) lb.style.display = (name==='game') ? 'none' : 'block';
     gamePlaying = (name === 'game');
@@ -2604,6 +2642,55 @@
   document.getElementById('myLevelsCorner').onclick = () => showScreen('myLevels');
   document.getElementById('btnMyLevelsBack').onclick = () => showScreen('menu');
 
+  document.getElementById('workshopCorner').onclick = () => showScreen('workshop');
+  document.getElementById('btnWorkshopBack').onclick = () => showScreen('menu');
+
+  async function renderWorkshop(){
+    const panel = document.getElementById('workshopPanel');
+    if(!sb){
+      panel.innerHTML = '<div class="my-levels-empty">Warsztat wymaga skonfigurowanego konta (Supabase).</div>';
+      return;
+    }
+    panel.innerHTML = '<div class="my-levels-empty">Wczytywanie...</div>';
+    const { data, error } = await sb.from('custom_levels')
+      .select('code,creator_name,level_data,plays')
+      .order('plays', { ascending:false })
+      .limit(30);
+    if(error){
+      panel.innerHTML = '<div class="my-levels-empty">⚠ Błąd wczytywania: ' + escapeHtml(error.message) + '</div>';
+      return;
+    }
+    if(!data || data.length === 0){
+      panel.innerHTML = '<div class="my-levels-empty">Nikt jeszcze nie opublikował poziomu. Stwórz pierwszy w CREATE LEVEL!</div>';
+      return;
+    }
+    panel.innerHTML = data.map((row,i) => {
+      const medal = i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1)+'.';
+      const name = escapeHtml((row.level_data && row.level_data.name) || 'Poziom bez nazwy');
+      const author = escapeHtml(row.creator_name || 'Nieznany gracz');
+      return `
+      <div class="my-level-row">
+        <div class="my-level-info">
+          <div class="my-level-name">${medal} ${name}</div>
+          <div class="my-level-code">Autor: ${author} • ▶ ${row.plays||0} razy zagrany • KOD: ${row.code}</div>
+        </div>
+        <div class="my-level-actions">
+          <button class="my-level-btn play" data-code="${row.code}">▶ GRAJ</button>
+        </div>
+      </div>
+    `;
+    }).join('');
+
+    panel.querySelectorAll('.my-level-btn.play').forEach(btn => {
+      btn.onclick = async () => {
+        const res = await loadCustomLevelByCode(btn.dataset.code);
+        if(res.error){ alert(res.error); return; }
+        showScreen('game');
+        startLevel('custom', res.data);
+      };
+    });
+  }
+
   document.getElementById('btnSpeedrun').onclick = () => showScreen('speedrun');
   document.getElementById('btnSpeedrunBack').onclick = () => showScreen('menu');
   document.getElementById('speedrunLevelSelect').onchange = renderSpeedrunBoard;
@@ -2841,6 +2928,7 @@
     if(!sb) return { error: 'Multiplayer/poziomy własne wymagają konta (Supabase).' };
     const { data, error } = await sb.from('custom_levels').select('level_data').eq('code', code).single();
     if(error || !data) return { error: 'Nie znaleziono poziomu o tym kodzie.' };
+    sb.rpc('increment_level_plays', { p_code: code }).then(()=>{}, ()=>{}); // licznik popularnosci - "fire and forget"
     return { data: data.level_data };
   }
 
@@ -5381,20 +5469,18 @@
     ctx.restore();
   }
 
-  function drawPlayerFlag(){
-    if(!state.equippedTrail || state.equippedTrail === 'none') return;
-    const trail = TRAILS.find(t => t.id === state.equippedTrail);
+  function drawFlagAt(px, py, w, h, facing, vx, onGround, trailId){
+    if(!trailId || trailId === 'none') return;
+    const trail = TRAILS.find(t => t.id === trailId);
     if(!trail) return;
 
-    const px = player.x - camera.x, py = player.y;
-    const facing = player.facing || 1;
-    const dir = -facing; // flaga powiewa w strone przeciwna do kierunku patrzenia
-    const poleX = px + (facing >= 0 ? 4 : player.w - 4);
-    const poleY = py + player.h*0.24;
+    const dir = -(facing || 1); // flaga powiewa w strone przeciwna do kierunku patrzenia
+    const poleX = px + (facing >= 0 ? 4 : w - 4);
+    const poleY = py + h*0.24;
     const L = 44, Hh = 22;
     const N = 10;
-    const moving = Math.abs(player.vx) > 0.3 || !player.onGround;
-    const running = player.onGround && Math.abs(player.vx) > 3.5;
+    const moving = Math.abs(vx) > 0.3 || !onGround;
+    const running = onGround && Math.abs(vx) > 3.5;
     const speedFactor = running ? 1.7 : 1;
     const t = (timeAlive||0) * 0.16 * speedFactor;
     const ampMax = moving ? 5 : 2;
@@ -5434,6 +5520,10 @@
     ctx.lineWidth = 1.4;
     ctx.stroke();
     ctx.restore();
+  }
+
+  function drawPlayerFlag(){
+    drawFlagAt(player.x - camera.x, player.y, player.w, player.h, player.facing, player.vx, player.onGround, state.equippedTrail);
   }
 
   function draw(){
