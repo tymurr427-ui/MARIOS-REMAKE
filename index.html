@@ -890,6 +890,7 @@
   <!-- MOJE POZIOMY -->
   <div id="myLevelsScreen" class="screen hidden">
     <div class="title" style="font-size:36px;">MOJE POZIOMY</div>
+    <div class="my-levels-panel" id="adminLevelsPanel"></div>
     <div class="my-levels-panel" id="myLevelsPanel"></div>
     <button class="menu-btn small" id="btnMyLevelsBack">⬅ POWRÓT</button>
   </div>
@@ -1107,6 +1108,19 @@
   //   $$;
   //   grant execute on function public.increment_level_plays(text) to anon, authenticated;
   //
+  //   -- ADMIN: tabela poprawek do wbudowanych poziomow (tylko tymurr427@gmail.com moze je zapisywac):
+  //   create table public.level_overrides (
+  //     level_index integer primary key,
+  //     level_data jsonb not null,
+  //     updated_by uuid references auth.users(id),
+  //     updated_at timestamptz default now()
+  //   );
+  //   alter table public.level_overrides enable row level security;
+  //   create policy "public read overrides" on public.level_overrides for select using (true);
+  //   create policy "only admin writes overrides" on public.level_overrides for all
+  //     using (auth.jwt() ->> 'email' = 'tymurr427@gmail.com')
+  //     with check (auth.jwt() ->> 'email' = 'tymurr427@gmail.com');
+  //
   //   -- Tabela najlepszych czasow (speedrun) per uzytkownik+poziom:
   //   create table public.level_times (
   //     user_id uuid references auth.users(id) on delete cascade,
@@ -1126,6 +1140,17 @@
   const supabaseReady = SUPABASE_URL.startsWith('http') && SUPABASE_ANON_KEY.length > 20;
   const sb = supabaseReady ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   let currentUser = null;
+  let builtInOverrides = {}; // level_index -> level_data (poprawki admina do wbudowanych poziomow)
+
+  async function loadBuiltInOverrides(){
+    if(!sb) return;
+    try {
+      const { data, error } = await sb.from('level_overrides').select('level_index,level_data');
+      if(error || !data) return;
+      builtInOverrides = {};
+      data.forEach(r => { builtInOverrides[r.level_index] = r.level_data; });
+    } catch(e){ /* ciche niepowodzenie - gra dziala dalej na oryginalnych poziomach */ }
+  }
   let saveTimer = null;
 
   // ---------- MULTIPLAYER (Supabase Realtime: Broadcast + Presence) ----------
@@ -1703,7 +1728,7 @@
     if(name==='settings') settingsScreen.classList.remove('hidden');
     if(name==='stats') statsScreen.classList.remove('hidden');
     if(name==='editor'){ editorScreen.classList.remove('hidden'); redrawEditor(); }
-    if(name==='myLevels'){ myLevelsScreen.classList.remove('hidden'); renderMyLevels(); }
+    if(name==='myLevels'){ myLevelsScreen.classList.remove('hidden'); renderMyLevels(); renderAdminBuiltInLevels(); }
     if(name==='workshop'){ workshopScreen.classList.remove('hidden'); renderWorkshop(); }
     if(name==='speedrun'){ speedrunScreen.classList.remove('hidden'); renderSpeedrunBoard(); }
     if(name==='mpChoice') mpChoiceScreen.classList.remove('hidden');
@@ -2272,6 +2297,7 @@
   let editorElements = []; // {kind, x, y, w, enemyType, axis}
   let editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
   let editorFlag = { x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220 };
+  let editorCheckpoint = null; // nieedytowalny w UI - tylko zachowywany przy edycji poziomow ktore juz go maja (np. wbudowany poziom 16)
   let editorScrollX = 0;
   let editorEditingCode = null; // null = nowy poziom; ustawiony = edytujemy/nadpisujemy istniejacy zapisany poziom
 
@@ -2628,6 +2654,7 @@
     editorElements = [];
     editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
     editorFlag = { x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220 };
+    editorCheckpoint = null;
     document.getElementById('editorLevelName').value = '';
     document.getElementById('editorSaveResult').textContent = '';
     editorSetScroll(0);
@@ -2760,11 +2787,33 @@
     return (n/1024).toFixed(1) + ' KB';
   }
 
+  function builtInLevelToEditorData(index){
+    const raw = builtInOverrides[index] ? JSON.parse(JSON.stringify(builtInOverrides[index])) : (LEVELS[index])();
+    const grounds = (raw.platforms||[]).filter(p=>p.isGround).map(p=>({x:p.x, y:p.y, w:p.w}));
+    const plats = (raw.platforms||[]).filter(p=>!p.isGround).map(p=>({x:p.x, y:p.y, w:p.w, h:p.h, isTrampoline:p.isTrampoline, isCrumbler:p.isCrumbler}));
+    const pipes = (raw.pipes||[]).map(p=>({x:p.x, w:p.w, h:p.h}));
+    const coins = (raw.coins||[]).map(c=>({x:c.x, y:c.y}));
+    const bossEnemy = (raw.enemies||[]).find(e=>e.type==='boss');
+    const enemies = (raw.enemies||[]).filter(e=>e.type!=='boss').map(e=>({x:e.x, y:e.y, enemyType: e.type || 'walker'}));
+    const hazards = (raw.hazards||[]).map(h=>({x:h.x, w:h.w}));
+    const movers = (raw.movers||[]).map(m=>({x:m.baseX!==undefined?m.baseX:m.x, y:m.baseY!==undefined?m.baseY:m.y, axis:m.axis, range:m.range}));
+    const crushers = (raw.crushers||[]).map(c=>({x:c.x, w:c.w, h:c.h, topY:c.topY, bottomY:c.bottomY, speed:c.speed, t:c.t}));
+    const shooters = (raw.shooters||[]).map(s=>({x:s.x, y:s.y, dir:s.dir, interval:s.interval}));
+    return {
+      name: raw.name, bg: raw.bg || 'day', width: raw.width || 2000,
+      grounds, platforms: plats, pipes, coins, enemies, hazards, movers, crushers, shooters,
+      boss: bossEnemy ? {x:bossEnemy.x, y:bossEnemy.y} : null,
+      flag: raw.flag ? {x:raw.flag.x, y:raw.flag.y} : null,
+      checkpoint: raw.checkpoint ? {x:raw.checkpoint.x, y:raw.checkpoint.y} : null,
+      spawn: {x:40, y:GROUND_Y-54},
+    };
+  }
+
   function loadLevelDataIntoEditor(code, data){
     editorEditingCode = code;
     editorElements = [];
     (data.grounds||[]).forEach(g => editorElements.push({kind:'ground', x:g.x, y: g.y!==undefined ? g.y : EDITOR_GROUND_Y, w:g.w}));
-    (data.platforms||[]).forEach(p => editorElements.push({kind:'platform', x:p.x, y:p.y, w:p.w, h:p.h}));
+    (data.platforms||[]).forEach(p => editorElements.push({kind:'platform', x:p.x, y:p.y, w:p.w, h:p.h, isTrampoline:p.isTrampoline, isCrumbler:p.isCrumbler}));
     (data.pipes||[]).forEach(p => editorElements.push({kind:'pipe', x:p.x, w:p.w, h:p.h}));
     (data.coins||[]).forEach(c => editorElements.push({kind:'coin', x:c.x, y:c.y}));
     (data.enemies||[]).forEach(e => editorElements.push({kind:'enemy', x:e.x, y:e.y, enemyType:e.enemyType}));
@@ -2773,13 +2822,43 @@
     (data.crushers||[]).forEach(c => editorElements.push({kind:'crusher', x:c.x, w:c.w, h:c.h, topY:c.topY, bottomY:c.bottomY, speed:c.speed, t:c.t}));
     (data.shooters||[]).forEach(s => editorElements.push({kind:'turret', x:s.x, y:s.y, dir:s.dir, interval:s.interval}));
     if(data.boss) editorElements.push({kind:'boss', x:data.boss.x, y:data.boss.y});
+    editorCheckpoint = data.checkpoint ? {x:data.checkpoint.x, y:data.checkpoint.y} : null;
     editorSpawn = data.spawn ? {x:data.spawn.x, y:data.spawn.y} : {x:40, y:EDITOR_GROUND_Y-54};
     editorFlag = data.flag ? {x:data.flag.x, y:data.flag.y} : {x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220};
     document.getElementById('editorLevelName').value = data.name || '';
     document.getElementById('editorBgSelect').value = data.bg || 'day';
-    document.getElementById('editorSaveResult').textContent = `✏️ Edytujesz istniejący poziom (kod ${code}). Zapisz, żeby nadpisać go zmianami.`;
+    document.getElementById('editorSaveResult').textContent = String(code).startsWith('BUILTIN:')
+      ? `✏️ Edytujesz WBUDOWANY poziom ${Number(String(code).split(':')[1])+1}. Zapisz, żeby poprawka obowiązywała od razu wszystkich graczy.`
+      : `✏️ Edytujesz istniejący poziom (kod ${code}). Zapisz, żeby nadpisać go zmianami.`;
     editorSetScroll(0);
     redrawEditor();
+  }
+
+  function renderAdminBuiltInLevels(){
+    const panel = document.getElementById('adminLevelsPanel');
+    if(!isTester()){ panel.innerHTML = ''; return; }
+    panel.innerHTML = `<div class="my-levels-empty" style="padding:6px 20px;color:#ffd23f;font-weight:bold;">🛠️ ADMIN: EDYCJA WBUDOWANYCH POZIOMÓW</div>` +
+      LEVELS.map((lvlFn, i) => {
+        const overridden = !!builtInOverrides[i];
+        const name = (builtInOverrides[i] ? builtInOverrides[i].name : lvlFn().name) || ('Poziom ' + (i+1));
+        return `
+        <div class="my-level-row">
+          <div class="my-level-info">
+            <div class="my-level-name">${i+1}. ${escapeHtml(name)}${overridden ? ' <span style="color:#2ecc71;">(poprawiony)</span>' : ''}</div>
+          </div>
+          <div class="my-level-actions">
+            <button class="my-level-btn edit" data-idx="${i}">✏️ EDYTUJ</button>
+          </div>
+        </div>`;
+      }).join('');
+    panel.querySelectorAll('.my-level-btn.edit').forEach(btn => {
+      btn.onclick = () => {
+        const idx = Number(btn.dataset.idx);
+        const data = builtInLevelToEditorData(idx);
+        loadLevelDataIntoEditor('BUILTIN:' + idx, data);
+        showScreen('editor');
+      };
+    });
   }
 
   async function renderMyLevels(){
@@ -2850,7 +2929,7 @@
 
   function collectEditorData(){
     const grounds = editorElements.filter(e=>e.kind==='ground').map(e=>({x:e.x,y:e.y,w:e.w}));
-    const platforms = editorElements.filter(e=>e.kind==='platform').map(e=>({x:e.x,y:e.y,w:e.w,h:e.h}));
+    const platforms = editorElements.filter(e=>e.kind==='platform').map(e=>({x:e.x,y:e.y,w:e.w,h:e.h,isTrampoline:e.isTrampoline,isCrumbler:e.isCrumbler}));
     const pipes = editorElements.filter(e=>e.kind==='pipe').map(e=>({x:e.x,w:e.w,h:e.h}));
     const coins = editorElements.filter(e=>e.kind==='coin').map(e=>({x:e.x,y:e.y}));
     const enemies = editorElements.filter(e=>e.kind==='enemy').map(e=>({x:e.x,y:e.y,enemyType:e.enemyType}));
@@ -2865,7 +2944,7 @@
       width: EDITOR_LEVEL_W,
       grounds, platforms, pipes, coins, enemies, hazards, movers, crushers, shooters,
       boss: bossEl ? {x:bossEl.x, y:bossEl.y} : null,
-      flag: editorFlag, spawn: editorSpawn,
+      flag: editorFlag, spawn: editorSpawn, checkpoint: editorCheckpoint,
     };
   }
 
@@ -2887,6 +2966,21 @@
     const data = collectEditorData();
     if(data.grounds.length === 0){
       resultEl.textContent = '⚠ Dodaj chociaż jeden kawałek gruntu, zanim zapiszesz!';
+      return;
+    }
+    if(editorEditingCode && String(editorEditingCode).startsWith('BUILTIN:')){
+      if(!isTester()){ resultEl.textContent = '⚠ Tylko admin może edytować wbudowane poziomy.'; return; }
+      const levelIndex = Number(String(editorEditingCode).split(':')[1]);
+      resultEl.textContent = 'Zapisywanie poprawki do wbudowanego poziomu...';
+      const { error } = await sb.from('level_overrides').upsert({
+        level_index: levelIndex, level_data: data, updated_by: currentUser.id,
+      }, { onConflict: 'level_index' });
+      if(error){
+        resultEl.textContent = '⚠ Błąd zapisu poprawki: ' + error.message;
+        return;
+      }
+      builtInOverrides[levelIndex] = data;
+      resultEl.innerHTML = `✅ Zapisano poprawkę do wbudowanego poziomu ${levelIndex+1}! Zmiana obowiązuje od razu dla wszystkich graczy.`;
       return;
     }
     if(editorEditingCode){
@@ -3825,7 +3919,11 @@
       const gy = g.y!==undefined ? g.y : GROUND_Y;
       platforms.push({x:g.x, y:gy, w:g.w, h:(GROUND_Y+200)-gy, isGround:true});
     });
-    (data.platforms||[]).forEach(p => platforms.push({x:p.x, y:p.y, w:p.w, h:p.h}));
+    (data.platforms||[]).forEach(p => platforms.push({
+      x:p.x, y:p.y, w:p.w, h:p.h,
+      isTrampoline: !!p.isTrampoline, bounceAnim:0,
+      isCrumbler: !!p.isCrumbler, state: p.isCrumbler ? 'idle' : undefined, timer:0,
+    }));
     const pipes = (data.pipes||[]).map(p => ({x:p.x, y:GROUND_Y-p.h, w:p.w, h:p.h}));
     const coins = (data.coins||[]).map(c => ({x:c.x, y:c.y, taken:false, t:Math.random()*10}));
     const hazards = (data.hazards||[]).map(h => ({x:h.x, y:GROUND_Y-18, w:h.w, h:18}));
@@ -3862,7 +3960,8 @@
   function startLevel(index, customData){
     currentLevelIndex = index;
     customLevelActive = !!customData;
-    level = customData ? buildLevelFromCustomData(customData) : LEVELS[index]();
+    const override = (!customData && builtInOverrides[index]) ? builtInOverrides[index] : null;
+    level = customData ? buildLevelFromCustomData(customData) : (override ? buildLevelFromCustomData(override) : LEVELS[index]());
     // popraw isGround po ewentualnym resize
     level.platforms.forEach(p => { if(p.y === undefined) p.y = GROUND_Y; });
     const spawn = (customData && customData.spawn) ? customData.spawn : { x:40, y:GROUND_Y-54 };
@@ -5569,6 +5668,7 @@
   updateSettingsUI();
 
   if(sb){
+    loadBuiltInOverrides();
     sb.auth.getSession().then(({data}) => {
       if(data.session){
         currentUser = data.session.user;
