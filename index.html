@@ -1606,9 +1606,9 @@
   function avatarHtml(){
     const url = currentUser && currentUser.user_metadata && currentUser.user_metadata.avatar_url;
     const letter = (currentUser && currentUser.email ? currentUser.email[0] : '?').toUpperCase();
-    return url
-      ? `<img src="${url}" alt="">`
-      : letter;
+    return (url && /^https:\/\//i.test(url))
+      ? `<img src="${escapeHtml(url)}" alt="">`
+      : escapeHtml(letter);
   }
 
   function updateAuthUI(){
@@ -1620,7 +1620,7 @@
       return;
     }
     if(currentUser){
-      const name = currentUser.user_metadata?.full_name || currentUser.email;
+      const name = escapeHtml(currentUser.user_metadata?.full_name || currentUser.email);
       if(box){
         box.innerHTML = `
           <div class="auth-logged-pill">
@@ -2187,7 +2187,7 @@
       const locked = i > state.unlockedLevel;
       const card = document.createElement('div');
       card.className = 'level-card' + (locked ? ' locked':'');
-      card.innerHTML = `<span class="num">${i+1}</span><span class="lbl">${locked ? '🔒 zablokowany' : lvl().name}</span>`;
+      card.innerHTML = `<span class="num">${i+1}</span><span class="lbl">${locked ? '🔒 zablokowany' : escapeHtml(lvl().name)}</span>`;
       if(!locked){
         card.onclick = () => { showScreen('game'); startLevel(i); };
       }
@@ -2788,7 +2788,14 @@
   }
 
   function builtInLevelToEditorData(index){
-    const raw = builtInOverrides[index] ? JSON.parse(JSON.stringify(builtInOverrides[index])) : (LEVELS[index])();
+    // jesli juz istnieje zapisana poprawka, jest ona JUZ w formacie edytora
+    // (bo to dokladnie to, co zapisal collectEditorData przy poprzednim zapisie) -
+    // uzywamy jej wprost, bez ponownej konwersji z formatu "surowego" poziomu gry,
+    // bo to psulo m.in. grunt (ktory w formacie edytora jest osobnym polem "grounds",
+    // a nie plaskim platforms z flaga isGround jak w surowym poziomie gry)
+    if(builtInOverrides[index]) return JSON.parse(JSON.stringify(builtInOverrides[index]));
+
+    const raw = (LEVELS[index])();
     const grounds = (raw.platforms||[]).filter(p=>p.isGround).map(p=>({x:p.x, y:p.y, w:p.w}));
     const plats = (raw.platforms||[]).filter(p=>!p.isGround).map(p=>({x:p.x, y:p.y, w:p.w, h:p.h, isTrampoline:p.isTrampoline, isCrumbler:p.isCrumbler}));
     const pipes = (raw.pipes||[]).map(p=>({x:p.x, w:p.w, h:p.h}));
@@ -4225,7 +4232,7 @@
   // ---------- ORYGINALNE TEMPO MARIO ----------
   // Klasyczne NES Mario: chód ~1.5 px/klatke w jednostkach gry, bieg szybszy,
   // przyspieszenie/tarcie zamiast natychmiastowej predkosci, skok zmiennej wysokosci.
-  const WALK_MAX = 2.6;
+  const WALK_MAX = 2.21; // 2.6 * 0.85 (chod o 15% wolniejszy)
   const RUN_MAX = 4.5; // 5.0 * 0.9 (bieg o 10% wolniejszy)
   const ACCEL = 0.32;
   const DECEL_GROUND = 0.36;
