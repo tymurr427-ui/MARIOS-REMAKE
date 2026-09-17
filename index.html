@@ -148,6 +148,21 @@
   }
   .trail-card.selected { border-color:#ffd23f; box-shadow:0 0 12px #ffd23f; }
   .trail-card.locked { opacity:.55; }
+  .customize-group-label {
+    font-weight:bold;
+    font-size:13px;
+    color:#ffd23f;
+    margin:10px 0 4px;
+    text-align:left;
+  }
+  .customize-grid {
+    grid-template-columns:repeat(auto-fit, minmax(100px, 1fr));
+  }
+  .customize-swatch {
+    width:60px; height:60px;
+    border-radius:50%;
+    border:3px solid rgba(0,0,0,.3);
+  }
   .trail-preview-strip {
     width:80px;
     height:28px;
@@ -1015,6 +1030,7 @@
     <div class="shop-tabs">
       <button class="shop-tab active" id="tabSkins">👕 SKINY</button>
       <button class="shop-tab" id="tabTrails">✨ TRAILS</button>
+      <button class="shop-tab" id="tabCustomize">🎨 PERSONALIZACJA</button>
     </div>
     <div id="skinsSection">
       <div class="shop-layout">
@@ -1029,6 +1045,14 @@
     </div>
     <div id="trailsSection" class="hidden">
       <div class="shop-grid trails-grid" id="trailsGrid"></div>
+    </div>
+    <div id="customizeSection" class="hidden">
+      <div class="customize-group-label">🧢 Czapka</div>
+      <div class="shop-grid customize-grid" id="hatsGrid"></div>
+      <div class="customize-group-label">🎨 Kolor skóry</div>
+      <div class="shop-grid customize-grid" id="skinTonesGrid"></div>
+      <div class="customize-group-label">🧔 Zarost</div>
+      <div class="shop-grid customize-grid" id="facialHairGrid"></div>
     </div>
     <div class="lives-shop">
       <div class="lives-shop-info">
@@ -1120,6 +1144,14 @@
   //   create policy "only admin writes overrides" on public.level_overrides for all
   //     using (auth.jwt() ->> 'email' = 'tymurr427@gmail.com')
   //     with check (auth.jwt() ->> 'email' = 'tymurr427@gmail.com');
+  //
+  //   -- PERSONALIZACJA: nowe kolumny w profiles (czapka / kolor skory / zarost):
+  //   alter table public.profiles add column if not exists owned_hats text[] default array['default'];
+  //   alter table public.profiles add column if not exists equipped_hat text default 'default';
+  //   alter table public.profiles add column if not exists owned_skin_tones text[] default array['default'];
+  //   alter table public.profiles add column if not exists equipped_skin_tone text default 'default';
+  //   alter table public.profiles add column if not exists owned_facial_hair text[] default array['mustache'];
+  //   alter table public.profiles add column if not exists equipped_facial_hair text default 'mustache';
   //
   //   -- Tabela najlepszych czasow (speedrun) per uzytkownik+poziom:
   //   create table public.level_times (
@@ -1420,6 +1452,9 @@
         name: mpNickname || state.displayName || 'Gracz 2',
         skin: state.equippedSkin,
         trail: state.equippedTrail,
+        hat: state.equippedHat,
+        skinTone: state.equippedSkinTone,
+        facialHair: state.equippedFacialHair,
         x: player.x, y: player.y,
         facing: player.facing,
         onGround: player.onGround,
@@ -1462,7 +1497,7 @@
       ctx.translate(rx + 19, ry + 28*scale);
       ctx.scale((rp.data.facing||1)*scale, scale);
       ctx.translate(-20, -28);
-      drawCharacterSprite(ctx, sk.colors, 0, airborne, gfxQuality===0, gfxQuality>=2, false);
+      drawCharacterSprite(ctx, getEffectiveColors(sk.colors, rp.data.hat, rp.data.skinTone), 0, airborne, gfxQuality===0, gfxQuality>=2, false, rp.data.facialHair);
       ctx.restore();
 
       // imie nad postacia, rysowane wprost na canvasie (dziala dla dowolnej liczby graczy)
@@ -1501,6 +1536,12 @@
     equippedTrail: 'none',
     enemiesKilled: 0,
     bossesKilled: 0,
+    ownedHats: ['default'],
+    equippedHat: 'default',
+    ownedSkinTones: ['default'],
+    equippedSkinTone: 'default',
+    ownedFacialHair: ['mustache'],
+    equippedFacialHair: 'mustache',
   };
 
   function nameFromUser(user){
@@ -1533,6 +1574,12 @@
       state.totalSpent = data.total_spent ?? 0;
       state.enemiesKilled = data.enemies_killed ?? 0;
       state.bossesKilled = data.bosses_killed ?? 0;
+      state.ownedHats = data.owned_hats ?? ['default'];
+      state.equippedHat = data.equipped_hat ?? 'default';
+      state.ownedSkinTones = data.owned_skin_tones ?? ['default'];
+      state.equippedSkinTone = data.equipped_skin_tone ?? 'default';
+      state.ownedFacialHair = data.owned_facial_hair ?? ['mustache'];
+      state.equippedFacialHair = data.equipped_facial_hair ?? 'mustache';
       if(data.display_name) state.displayName = data.display_name;
       else await sb.from('profiles').update({ display_name: state.displayName }).eq('id', user.id);
     }
@@ -1581,6 +1628,12 @@
         total_spent: state.totalSpent,
         enemies_killed: state.enemiesKilled,
         bosses_killed: state.bossesKilled,
+        owned_hats: state.ownedHats,
+        equipped_hat: state.equippedHat,
+        owned_skin_tones: state.ownedSkinTones,
+        equipped_skin_tone: state.equippedSkinTone,
+        owned_facial_hair: state.ownedFacialHair,
+        equipped_facial_hair: state.equippedFacialHair,
         updated_at: new Date().toISOString(),
       });
       refreshLeaderboard();
@@ -1689,6 +1742,34 @@
     { id:'ireland',     name:'Irlandia',    price:40, colors:['#169b62','#ffffff','#ff883e'] },
     { id:'finland',     name:'Finlandia',   price:45, colors:['#ffffff','#003580'] },
     { id:'norway',      name:'Norwegia',    price:45, colors:['#ef2b2d','#ffffff'] },
+  ];
+
+  const HATS = [
+    { id:'default', name:'Domyślna', price:0,  color:null },
+    { id:'red',     name:'Czerwona', price:20, color:'#d13b2b' },
+    { id:'blue',    name:'Niebieska', price:20, color:'#2e6bd6' },
+    { id:'green',   name:'Zielona',  price:20, color:'#2e9e4a' },
+    { id:'purple',  name:'Fioletowa', price:25, color:'#7a3ac9' },
+    { id:'black',   name:'Czarna',   price:25, color:'#1a1a1a' },
+    { id:'pink',    name:'Różowa',   price:25, color:'#ff6fa5' },
+    { id:'gold',    name:'Złota',    price:40, color:'#ffd23f' },
+  ];
+
+  const SKIN_TONES = [
+    { id:'default', name:'Domyślna', price:0,  color:null },
+    { id:'light',   name:'Jasna',    price:15, color:'#f6c8a0' },
+    { id:'tan',     name:'Śniada',   price:15, color:'#e0a86e' },
+    { id:'dark',    name:'Ciemna',   price:15, color:'#a8703e' },
+    { id:'pale',    name:'Blada',    price:15, color:'#e8d8c8' },
+    { id:'alien',   name:'Zielona (kosmita)', price:30, color:'#8fd944' },
+    { id:'blue',    name:'Niebieska', price:30, color:'#8fc7ff' },
+  ];
+
+  const FACIAL_HAIR = [
+    { id:'mustache', name:'Wąsy (domyślne)', price:0 },
+    { id:'none',     name:'Gładko ogolony', price:10 },
+    { id:'beard',    name:'Broda', price:20 },
+    { id:'goatee',   name:'Kozia bródka', price:20 },
   ];
 
   // ---------- SCREENS ----------
@@ -1954,7 +2035,7 @@
     pctx.translate(canvas.width/2, 12);
     pctx.scale(previewFacing*scale, scale);
     pctx.translate(-20, 0);
-    drawCharacterSprite(pctx, sk.colors, bob, false, false, true, true);
+    drawCharacterSprite(pctx, getEffectiveColors(sk.colors, state.equippedHat, state.equippedSkinTone), bob, false, false, true, true, state.equippedFacialHair);
     pctx.restore();
     previewRaf = requestAnimationFrame(renderPreviewFrame);
   }
@@ -2167,18 +2248,62 @@
     document.getElementById('shopCoins').textContent = state.wallet;
   }
 
-  document.getElementById('tabSkins').onclick = () => {
-    document.getElementById('tabSkins').classList.add('active');
-    document.getElementById('tabTrails').classList.remove('active');
-    document.getElementById('skinsSection').classList.remove('hidden');
-    document.getElementById('trailsSection').classList.add('hidden');
-  };
-  document.getElementById('tabTrails').onclick = () => {
-    document.getElementById('tabTrails').classList.add('active');
-    document.getElementById('tabSkins').classList.remove('active');
-    document.getElementById('trailsSection').classList.remove('hidden');
-    document.getElementById('skinsSection').classList.add('hidden');
-  };
+  function renderCustomizeGrid(gridId, items, ownedArrName, equippedFieldName, previewFn){
+    const grid = document.getElementById(gridId);
+    if(!grid) return;
+    grid.innerHTML = '';
+    items.forEach(it => {
+      const owned = state[ownedArrName].includes(it.id);
+      const equipped = state[equippedFieldName] === it.id;
+      const afford = isTester() || state.wallet >= it.price;
+      const card = document.createElement('div');
+      card.className = 'trail-card' + (equipped ? ' selected':'') + (!owned && !afford ? ' locked':'');
+      card.innerHTML = `
+        ${previewFn(it)}
+        <div class="trail-name">${it.name}</div>
+        ${owned ? `<div class="buy-tag">${equipped ? 'ZAŁOŻONE' : 'POSIADASZ'}</div>` : `<div class="trail-price">${isTester() ? '🆓 DARMOWE' : '🪙 ' + it.price}</div>`}
+      `;
+      card.onclick = () => {
+        if(owned){
+          state[equippedFieldName] = it.id;
+          renderCustomize();
+          saveProfile();
+        } else if(afford){
+          if(!isTester()){ state.wallet -= it.price; state.totalSpent += it.price; }
+          state[ownedArrName].push(it.id);
+          state[equippedFieldName] = it.id;
+          renderCustomize();
+          saveProfile();
+          AudioEngine.sfxCoin();
+        }
+      };
+      grid.appendChild(card);
+    });
+    document.getElementById('shopCoins').textContent = state.wallet;
+  }
+
+  function renderCustomize(){
+    renderCustomizeGrid('hatsGrid', HATS, 'ownedHats', 'equippedHat',
+      (it) => `<div class="customize-swatch" style="background:${it.color || 'linear-gradient(45deg,#999,#ccc)'};"></div>`);
+    renderCustomizeGrid('skinTonesGrid', SKIN_TONES, 'ownedSkinTones', 'equippedSkinTone',
+      (it) => `<div class="customize-swatch" style="background:${it.color || 'linear-gradient(45deg,#999,#ccc)'};"></div>`);
+    const facialIcons = { mustache:'👨', none:'🙂', beard:'🧔', goatee:'🧑' };
+    renderCustomizeGrid('facialHairGrid', FACIAL_HAIR, 'ownedFacialHair', 'equippedFacialHair',
+      (it) => `<div class="customize-swatch" style="display:flex;align-items:center;justify-content:center;font-size:28px;background:#333;">${facialIcons[it.id]||'❓'}</div>`);
+  }
+
+  function showShopTab(tab){
+    const tabs = { skins:'tabSkins', trails:'tabTrails', customize:'tabCustomize' };
+    const sections = { skins:'skinsSection', trails:'trailsSection', customize:'customizeSection' };
+    Object.keys(tabs).forEach(k => {
+      document.getElementById(tabs[k]).classList.toggle('active', k===tab);
+      document.getElementById(sections[k]).classList.toggle('hidden', k!==tab);
+    });
+    if(tab === 'customize') renderCustomize();
+  }
+  document.getElementById('tabSkins').onclick = () => showShopTab('skins');
+  document.getElementById('tabTrails').onclick = () => showShopTab('trails');
+  document.getElementById('tabCustomize').onclick = () => showShopTab('customize');
 
   function renderLevels(){
     const grid = document.getElementById('levelGrid');
@@ -4540,10 +4665,21 @@
 
   function skinColors(){
     const sk = SKINS.find(s => s.id === state.equippedSkin) || SKINS[0];
-    return sk.colors;
+    return getEffectiveColors(sk.colors, state.equippedHat, state.equippedSkinTone);
   }
 
-  function drawCharacterSprite(targetCtx, c, bob, airborne, flat, shine, sparkle){
+  function getEffectiveColors(baseColors, hatId, skinToneId){
+    const hat = HATS.find(h=>h.id===hatId);
+    const tone = SKIN_TONES.find(s=>s.id===skinToneId);
+    return {
+      hat: (hat && hat.color) ? hat.color : baseColors.hat,
+      shirt: baseColors.shirt,
+      overalls: baseColors.overalls,
+      skin: (tone && tone.color) ? tone.color : baseColors.skin,
+    };
+  }
+
+  function drawCharacterSprite(targetCtx, c, bob, airborne, flat, shine, sparkle, facialHair){
     const tctx = targetCtx;
     // ---- cien pod stopami ----
     if(!flat){
@@ -4693,13 +4829,33 @@
     tctx.fillStyle = flat ? c.skin : shade(c.skin, 8);
     tctx.beginPath(); tctx.ellipse(29, 14, 4.2, 3.4, 0, 0, Math.PI*2); tctx.fill();
 
-    // wasy
+    // ---- zarost (wasy / broda / kozia brodka / brak) ----
+    const fh = facialHair || 'mustache';
     tctx.fillStyle = '#3a2a1a';
-    tctx.beginPath();
-    tctx.moveTo(18, 17);
-    tctx.quadraticCurveTo(24, 14, 30, 17.5);
-    tctx.quadraticCurveTo(24, 20.5, 18, 17);
-    tctx.fill();
+    if(fh === 'mustache'){
+      tctx.beginPath();
+      tctx.moveTo(18, 17);
+      tctx.quadraticCurveTo(24, 14, 30, 17.5);
+      tctx.quadraticCurveTo(24, 20.5, 18, 17);
+      tctx.fill();
+    } else if(fh === 'beard'){
+      tctx.beginPath();
+      tctx.moveTo(11, 15);
+      tctx.quadraticCurveTo(20, 30, 31, 15);
+      tctx.quadraticCurveTo(24, 24, 18, 17);
+      tctx.quadraticCurveTo(24, 14, 30, 17.5);
+      tctx.fill();
+    } else if(fh === 'goatee'){
+      tctx.beginPath();
+      tctx.moveTo(18, 17);
+      tctx.quadraticCurveTo(24, 14, 30, 17.5);
+      tctx.quadraticCurveTo(24, 20.5, 18, 17);
+      tctx.fill();
+      tctx.beginPath();
+      tctx.ellipse(24, 21, 4, 4.5, 0, 0, Math.PI*2);
+      tctx.fill();
+    }
+    // 'none' - nic nie rysujemy (gladko ogolony)
 
     // ---- czapka ----
     if(flat){ tctx.fillStyle = c.hat; }
@@ -4839,7 +4995,7 @@
     ctx.translate(px + player.w/2, py + 28*scale);
     ctx.scale(player.facing*scale, scale);
     ctx.translate(-20, -28);
-    drawCharacterSprite(ctx, c, bob, airborne, flat, shine, sparkle);
+    drawCharacterSprite(ctx, c, bob, airborne, flat, shine, sparkle, state.equippedFacialHair);
     ctx.restore();
   }
 
