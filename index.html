@@ -158,6 +158,14 @@
   .customize-grid {
     grid-template-columns:repeat(auto-fit, minmax(100px, 1fr));
   }
+  .customize-columns {
+    flex:1 1 420px;
+    max-width:620px;
+    min-width:0;
+  }
+  .customize-columns .shop-grid {
+    max-width:none;
+  }
   .customize-swatch {
     width:60px; height:60px;
     border-radius:50%;
@@ -1047,12 +1055,21 @@
       <div class="shop-grid trails-grid" id="trailsGrid"></div>
     </div>
     <div id="customizeSection" class="hidden">
-      <div class="customize-group-label">🧢 Czapka</div>
-      <div class="shop-grid customize-grid" id="hatsGrid"></div>
-      <div class="customize-group-label">🎨 Kolor skóry</div>
-      <div class="shop-grid customize-grid" id="skinTonesGrid"></div>
-      <div class="customize-group-label">🧔 Zarost</div>
-      <div class="shop-grid customize-grid" id="facialHairGrid"></div>
+      <div class="shop-layout">
+        <div class="customize-columns">
+          <div class="customize-group-label">🧢 Czapka</div>
+          <div class="shop-grid customize-grid" id="hatsGrid"></div>
+          <div class="customize-group-label">🎨 Kolor skóry</div>
+          <div class="shop-grid customize-grid" id="skinTonesGrid"></div>
+          <div class="customize-group-label">🧔 Zarost</div>
+          <div class="shop-grid customize-grid" id="facialHairGrid"></div>
+        </div>
+        <div class="shop-preview">
+          <canvas id="customizePreviewCanvas" width="180" height="240"></canvas>
+          <div class="preview-name">PODGLĄD</div>
+          <button class="menu-btn small" id="btnRotateCustomize">🔄 OBRÓĆ</button>
+        </div>
+      </div>
     </div>
     <div class="lives-shop">
       <div class="lives-shop-info">
@@ -2023,20 +2040,25 @@
   }
 
   function renderPreviewFrame(){
-    const canvas = document.getElementById('previewCanvas');
-    if(!canvas) return;
-    const pctx = canvas.getContext('2d');
-    pctx.clearRect(0,0,canvas.width,canvas.height);
     const sk = SKINS.find(s => s.id === previewSkinId) || SKINS[0];
     const bob = Math.sin(previewT) * 2;
     previewT += 0.06;
     const scale = 3.0;
-    pctx.save();
-    pctx.translate(canvas.width/2, 12);
-    pctx.scale(previewFacing*scale, scale);
-    pctx.translate(-20, 0);
-    drawCharacterSprite(pctx, getEffectiveColors(sk.colors, state.equippedHat, state.equippedSkinTone), bob, false, false, true, true, state.equippedFacialHair);
-    pctx.restore();
+    const colors = getEffectiveColors(sk.colors, state.equippedHat, state.equippedSkinTone);
+    // ten sam rysowany model idzie na oba podglady (zakladka SKINY i PERSONALIZACJA)
+    // zeby zawsze bylo widac na postaci aktualnie zalozona czapke/kolor skory/zarost
+    ['previewCanvas', 'customizePreviewCanvas'].forEach(canvasId => {
+      const canvas = document.getElementById(canvasId);
+      if(!canvas) return;
+      const pctx = canvas.getContext('2d');
+      pctx.clearRect(0,0,canvas.width,canvas.height);
+      pctx.save();
+      pctx.translate(canvas.width/2, 12);
+      pctx.scale(previewFacing*scale, scale);
+      pctx.translate(-20, 0);
+      drawCharacterSprite(pctx, colors, bob, false, false, true, true, state.equippedFacialHair);
+      pctx.restore();
+    });
     previewRaf = requestAnimationFrame(renderPreviewFrame);
   }
   function startPreviewLoop(){
@@ -2048,6 +2070,7 @@
   }
 
   document.getElementById('btnRotate').onclick = () => { previewFacing *= -1; };
+  document.getElementById('btnRotateCustomize').onclick = () => { previewFacing *= -1; };
 
   function updateBuyEquipButton(){
     const sk = SKINS.find(s => s.id === previewSkinId) || SKINS[0];
@@ -4831,31 +4854,50 @@
 
     // ---- zarost (wasy / broda / kozia brodka / brak) ----
     const fh = facialHair || 'mustache';
-    tctx.fillStyle = '#3a2a1a';
+    const facialHairColor = flat ? '#2a1d12' : '#3a2a1a';
+    // 'none' -> gladko ogolony, nic sie nie rysuje ponizej
     if(fh === 'mustache'){
-      tctx.beginPath();
-      tctx.moveTo(18, 17);
-      tctx.quadraticCurveTo(24, 14, 30, 17.5);
-      tctx.quadraticCurveTo(24, 20.5, 18, 17);
-      tctx.fill();
-    } else if(fh === 'beard'){
-      tctx.beginPath();
-      tctx.moveTo(11, 15);
-      tctx.quadraticCurveTo(20, 30, 31, 15);
-      tctx.quadraticCurveTo(24, 24, 18, 17);
-      tctx.quadraticCurveTo(24, 14, 30, 17.5);
-      tctx.fill();
+      drawMustacheShape(tctx, facialHairColor, shine);
     } else if(fh === 'goatee'){
+      drawMustacheShape(tctx, facialHairColor, shine);
+      // waska, spiczasta kepka pod ustami (kozia brodka)
+      tctx.fillStyle = facialHairColor;
       tctx.beginPath();
-      tctx.moveTo(18, 17);
-      tctx.quadraticCurveTo(24, 14, 30, 17.5);
-      tctx.quadraticCurveTo(24, 20.5, 18, 17);
+      tctx.moveTo(21, 19.5);
+      tctx.quadraticCurveTo(24, 18.7, 27, 19.5);
+      tctx.quadraticCurveTo(26.5, 25.5, 24, 28.5);
+      tctx.quadraticCurveTo(21.5, 25.5, 21, 19.5);
+      tctx.closePath();
       tctx.fill();
+      if(shine && !flat){
+        tctx.save(); tctx.globalAlpha = .18; tctx.fillStyle = '#fff';
+        tctx.beginPath(); tctx.ellipse(23.3, 22, 1.1, 3, -0.1, 0, Math.PI*2); tctx.fill();
+        tctx.restore();
+      }
+    } else if(fh === 'beard'){
+      // pelna broda: zarys od ucha, wokol szczeki, do spiczastego podbrodka i z powrotem,
+      // z wcieciem przy ustach zeby polaczyc sie z wasami
+      tctx.fillStyle = facialHairColor;
       tctx.beginPath();
-      tctx.ellipse(24, 21, 4, 4.5, 0, 0, Math.PI*2);
+      tctx.moveTo(9, 13.5);
+      tctx.quadraticCurveTo(6, 24, 14.5, 30.5);
+      tctx.quadraticCurveTo(20, 34, 25.5, 30.5);
+      tctx.quadraticCurveTo(34, 24, 31.5, 13.5);
+      tctx.quadraticCurveTo(29.5, 18.5, 25.5, 18.5);
+      tctx.quadraticCurveTo(24, 20, 22.5, 18.6);
+      tctx.quadraticCurveTo(20, 17.4, 17.5, 18.6);
+      tctx.quadraticCurveTo(16, 20, 14.5, 18.5);
+      tctx.quadraticCurveTo(11, 18.5, 9, 13.5);
+      tctx.closePath();
       tctx.fill();
+      if(shine && !flat){
+        tctx.save(); tctx.globalAlpha = .14; tctx.fillStyle = '#fff';
+        tctx.beginPath(); tctx.ellipse(13, 22, 3, 6, -0.2, 0, Math.PI*2); tctx.fill();
+        tctx.restore();
+      }
+      // wasy na wierzchu brody
+      drawMustacheShape(tctx, facialHairColor, shine);
     }
-    // 'none' - nic nie rysujemy (gladko ogolony)
 
     // ---- czapka ----
     if(flat){ tctx.fillStyle = c.hat; }
@@ -4915,6 +4957,28 @@
     tctx.closePath();
     tctx.fill();
     tctx.restore();
+  }
+
+  function drawMustacheShape(tctx, color, shine){
+    // dwa symetryczne "garby" z wcieciem na srodku pod nosem - rozpoznawalny ksztalt wasow
+    tctx.fillStyle = color;
+    tctx.beginPath();
+    tctx.moveTo(15, 18.3);
+    tctx.quadraticCurveTo(18, 13.6, 22.3, 17.3);
+    tctx.quadraticCurveTo(24, 18.6, 25.7, 17.3);
+    tctx.quadraticCurveTo(30, 13.6, 33, 18.3);
+    tctx.quadraticCurveTo(29, 21.2, 24, 19.7);
+    tctx.quadraticCurveTo(19, 21.2, 15, 18.3);
+    tctx.closePath();
+    tctx.fill();
+    if(shine){
+      tctx.save();
+      tctx.globalAlpha = .2;
+      tctx.fillStyle = '#fff';
+      tctx.beginPath(); tctx.ellipse(19.5, 16, 2.2, 1, -0.4, 0, Math.PI*2); tctx.fill();
+      tctx.beginPath(); tctx.ellipse(28.5, 16, 2.2, 1, 0.4, 0, Math.PI*2); tctx.fill();
+      tctx.restore();
+    }
   }
 
   function roundRectOn(tctx, x,y,w,h,r){
