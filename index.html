@@ -3031,7 +3031,7 @@
     if(editorTool === 'spawn'){ editorSpawn = {x:levelX, y:levelY}; redrawEditor(); return; }
     if(editorTool === 'flag'){ editorFlag = {x:levelX, y:levelY}; redrawEditor(); return; }
     if(editorTool === 'ground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w:200}); }
-    else if(editorTool === 'platform'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:90, h:22}); }
+    else if(editorTool === 'platform'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:22}); }
     else if(editorTool === 'pipe'){ editorElements.push({kind:'pipe', x:levelX, w:46, h:60}); }
     else if(editorTool === 'coin'){
       const coinCount = editorElements.filter(e=>e.kind==='coin').length;
@@ -3308,7 +3308,13 @@
     editorEditingCode = code;
     editorElements = [];
     (data.grounds||[]).forEach(g => editorElements.push({kind:'ground', x:g.x, y: g.y!==undefined ? g.y : EDITOR_GROUND_Y, w:g.w}));
-    (data.platforms||[]).forEach(p => editorElements.push({kind:'platform', x:p.x, y:p.y, w:p.w, h:p.h, isTrampoline:p.isTrampoline, isCrumbler:p.isCrumbler}));
+    const isBuiltinLoad = String(code).startsWith('BUILTIN:');
+    (data.platforms||[]).forEach(p => {
+      let px = p.x, pw = p.w;
+      // wbudowane poziomy: waskie platformy poszerzamy do MIN_PLATFORM_W (jak w grze), zeby edytor pokazywal to samo
+      if(isBuiltinLoad && p.h < 40 && pw < MIN_PLATFORM_W){ px -= (MIN_PLATFORM_W - pw)/2; pw = MIN_PLATFORM_W; }
+      editorElements.push({kind:'platform', x:px, y:p.y, w:pw, h:p.h, isTrampoline:p.isTrampoline, isCrumbler:p.isCrumbler});
+    });
     (data.pipes||[]).forEach(p => editorElements.push({kind:'pipe', x:p.x, w:p.w, h:p.h}));
     (data.coins||[]).forEach(c => editorElements.push({kind:'coin', x:c.x, y:c.y}));
     (data.enemies||[]).forEach(e => editorElements.push({kind:'enemy', x:e.x, y:e.y, enemyType:e.enemyType}));
@@ -4409,7 +4415,23 @@
     return { name:'Chwiejny Szlak', platforms, pipes, coins, enemies, crushers, shooters, flag:{x:4500,y:GROUND_Y-220,w:14,h:220}, width:4600, bg:'aurora' };
   }
 
-  const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11, level12, level13, level14, level15, level16, level17, level18, level19];
+  // Minimalna szerokosc platform (jak na poziomie 1): weza sie do 110 px, srodek zostaje w tym samym miejscu.
+  const MIN_PLATFORM_W = 110;
+  function widenPlatforms(lvl){
+    (lvl.platforms||[]).forEach(p => {
+      if(!p.isGround && p.h < 40 && p.w < MIN_PLATFORM_W){ p.x -= (MIN_PLATFORM_W - p.w)/2; p.w = MIN_PLATFORM_W; }
+    });
+    (lvl.movers||[]).forEach(m => {
+      if(m.w < MIN_PLATFORM_W){
+        const d = (MIN_PLATFORM_W - m.w)/2;
+        m.x -= d; if(m.baseX !== undefined) m.baseX -= d;
+        m.w = MIN_PLATFORM_W;
+      }
+    });
+    return lvl;
+  }
+  const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11, level12, level13, level14, level15, level16, level17, level18, level19]
+    .map(fn => () => widenPlatforms(fn()));
 
   function buildLevelFromCustomData(data){
     const platforms = [];
@@ -4459,7 +4481,7 @@
     currentLevelIndex = index;
     customLevelActive = !!customData;
     const override = (!customData && builtInOverrides[index]) ? builtInOverrides[index] : null;
-    level = customData ? buildLevelFromCustomData(customData) : (override ? buildLevelFromCustomData(override) : LEVELS[index]());
+    level = customData ? buildLevelFromCustomData(customData) : (override ? widenPlatforms(buildLevelFromCustomData(override)) : LEVELS[index]());
     // popraw isGround po ewentualnym resize
     level.platforms.forEach(p => { if(p.y === undefined) p.y = GROUND_Y; });
     const spawn = (customData && customData.spawn) ? customData.spawn : { x:40, y:GROUND_Y-54 };
