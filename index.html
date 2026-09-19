@@ -774,6 +774,8 @@
     flex-wrap:wrap;
     gap:6px;
     justify-content:center;
+    max-width:min(900px, 100%);   /* zeby paski narzedzi nie wchodzily pod przyciski w prawym gornym rogu */
+    margin:0 auto;
   }
   .editor-tool, .mp-toggle-btn {
     background:rgba(255,255,255,.1);
@@ -836,7 +838,7 @@
   /* ---- ekran RANKING ---- */
   .rank-sorts { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:2px 0 10px; }
   .rank-panel {
-    width:min(780px, 94vw);
+    width:min(520px, 94vw);
     max-height:50vh;
     overflow:auto;
     background:rgba(10,10,25,.55);
@@ -848,7 +850,7 @@
   }
   .rank-row, .rank-head {
     display:grid;
-    grid-template-columns:34px minmax(110px,1.7fr) repeat(6, minmax(58px,1fr));
+    grid-template-columns:40px minmax(110px,1fr) minmax(110px,auto);
     gap:8px;
     align-items:center;
     font-size:13px;
@@ -991,6 +993,8 @@
         <div class="editor-tools" id="editorTools">
           <button class="editor-tool active" data-tool="ground">🟫 Grunt</button>
           <button class="editor-tool" data-tool="platform">▬ Platforma</button>
+          <button class="editor-tool" data-tool="trampoline">🟠 Trampolina</button>
+          <button class="editor-tool" data-tool="crumbler">🧱 Kruszący blok</button>
           <button class="editor-tool" data-tool="pipe">🟢 Rura</button>
           <button class="editor-tool" data-tool="coin">🪙 Moneta</button>
           <button class="editor-tool" data-tool="walker">🟣 Wróg</button>
@@ -1004,6 +1008,7 @@
           <button class="editor-tool" data-tool="boss">👹 Boss</button>
           <button class="editor-tool" data-tool="spawn">🏁 Start gracza</button>
           <button class="editor-tool" data-tool="flag">🚩 Flaga (meta)</button>
+          <button class="editor-tool" data-tool="checkpoint">📍 Checkpoint</button>
           <button class="editor-tool" data-tool="erase">🧹 Gumka</button>
         </div>
       </div>
@@ -1016,6 +1021,7 @@
       <div class="editor-scroll-hint">Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć.</div>
       <div class="editor-scroll-hint" id="editorWeightHint">Waga poziomu: 0 B</div>
       <div class="editor-actions">
+        <button class="menu-btn small" id="btnEditorUndo">↩ COFNIJ (Ctrl+Z)</button>
         <button class="menu-btn small" id="btnEditorClear">🗑 WYCZYŚĆ</button>
         <button class="menu-btn small" id="btnEditorTest">▶ TESTUJ</button>
         <button class="menu-btn" id="btnEditorSave">💾 ZAPISZ I POKAŻ KOD</button>
@@ -1189,7 +1195,8 @@
     'Wyczyścić cały poziom w edytorze? Niezapisane zmiany przepadną.':'Clear the whole level in the editor? Unsaved changes will be lost.',
     // ---- statystyki / ustawienia ----
     'STATYSTYKI':'STATS','USTAWIENIA':'SETTINGS','Muzyka':'Music','🔊 WŁĄCZONA':'🔊 ON','🔇 WYŁĄCZONA':'🔇 OFF',
-    'Głośność':'Volume','Sortuj wg:':'Sort by:','🪙 Monety':'🪙 Coins','⏱ Czas gry':'⏱ Playtime','💰 Zarobione':'💰 Earned','👾 Wrogowie':'👾 Enemies','👹 Bossowie':'👹 Bosses','🗺 Poziom':'🗺 Level',
+    'Głośność':'Volume','🟠 Trampolina':'🟠 Trampoline','🧱 Kruszący blok':'🧱 Crumbling block','↩ COFNIJ (Ctrl+Z)':'↩ UNDO (Ctrl+Z)',
+    '↩ Nie ma czego cofać (maks. 3 cofnięcia)':'↩ Nothing to undo (max 3 undos)','Sortuj wg:':'Sort by:','🪙 Monety':'🪙 Coins','⏱ Czas gry':'⏱ Playtime','💰 Zarobione':'💰 Earned','👾 Wrogowie':'👾 Enemies','👹 Bossowie':'👹 Bosses','🗺 Poziom':'🗺 Level',
     'Ranking niedostępny bez konta (Supabase).':'Ranking unavailable without an account (Supabase).','Brak wyników.':'No results yet.','Grafika':'Graphics','Język':'Language','WYBIERZ POZIOM':'SELECT LEVEL','🔒 zablokowany':'🔒 locked',
     '🪙 Aktualne monety':'🪙 Current coins','💰 Łącznie zarobione monety':'💰 Total coins earned','🛒 Wydane monety':'🛒 Coins spent',
     '⏱ Dokładny czas gry':'⏱ Exact play time','💀 Liczba śmierci':'💀 Deaths','👾 Zabici przeciwnicy':'👾 Enemies killed',
@@ -1283,6 +1290,7 @@
     [/^⏱ Czas: (.*)$/, '⏱ Time: $1'],
     [/^Poziom (\d+)$/, 'Level $1'],
     [/^Twoje miejsce: #(\d+)$/, 'Your rank: #$1'],
+    [/^↩ Cofnięto \(pozostało (\d+)\)$/, '↩ Undone ($1 left)'],
     [/^Gracz( \d+| 💀)?$/, 'Player$1'],
     [/^✅ Zalogowano: (.*)$/, '✅ Logged in: $1'],
     [/^Autor: (.*) • ▶ (\d+) razy zagrany • KOD: (.*)$/, 'Author: $1 • ▶ played $2 times • CODE: $3'],
@@ -2207,6 +2215,7 @@
     { key:'total_coins_earned', label:'💰 Zarobione' },
     { key:'enemies_killed',     label:'👾 Wrogowie' },
     { key:'bosses_killed',      label:'👹 Bossowie' },
+    { key:'unlocked_level',     label:'🗺 Poziom' },
   ];
   let rankingSort = 'wallet';
   let rankingReq = 0;
@@ -2219,7 +2228,7 @@
   }
   function myRankValue(key){
     return ({ wallet: state.wallet, playtime_seconds: state.playtimeSeconds, total_coins_earned: state.totalCoinsEarned,
-              enemies_killed: state.enemiesKilled, bosses_killed: state.bossesKilled })[key] || 0;
+              enemies_killed: state.enemiesKilled, bosses_killed: state.bossesKilled, unlocked_level: state.unlockedLevel })[key] || 0;
   }
 
   async function renderRanking(){
@@ -2254,23 +2263,23 @@
       panel.innerHTML = '<div class="rank-empty">Brak wyników.</div>';
       return;
     }
-    const cols = [
-      { key:'wallet',             label:'🪙 Monety',    fmt: v => fmtNum(v) },
-      { key:'playtime_seconds',   label:'⏱ Czas gry',   fmt: v => fmtHM(v) },
-      { key:'total_coins_earned', label:'💰 Zarobione', fmt: v => fmtNum(v) },
-      { key:'enemies_killed',     label:'👾 Wrogowie',  fmt: v => fmtNum(v) },
-      { key:'bosses_killed',      label:'👹 Bossowie',  fmt: v => fmtNum(v) },
-      { key:'unlocked_level',     label:'🗺 Poziom',    fmt: v => (Math.min((v || 0) + 1, LEVELS.length)) + '/' + LEVELS.length },
-    ];
+    const fmts = {
+      wallet:             v => fmtNum(v),
+      playtime_seconds:   v => fmtHM(v),
+      total_coins_earned: v => fmtNum(v),
+      enemies_killed:     v => fmtNum(v),
+      bosses_killed:      v => fmtNum(v),
+      unlocked_level:     v => (Math.min((v || 0) + 1, LEVELS.length)) + '/' + LEVELS.length,
+    };
+    const fmt = fmts[rankingSort];
+    const colLabel = (RANK_SORTS.find(o => o.key === rankingSort) || {}).label || '';
     const medals = ['🥇','🥈','🥉'];
-    let html = '<div class="rank-head"><span>#</span><span>Gracz</span>' +
-      cols.map(c => `<span class="num${c.key === rankingSort ? ' sorted' : ''}">${c.label}</span>`).join('') + '</div>';
+    let html = `<div class="rank-head"><span>#</span><span>Gracz</span><span class="num sorted">${colLabel}</span></div>`;
     html += data.map((row, i) => {
       const isMe = currentUser && row.id === currentUser.id;
       const name = escapeHtml(row.display_name || 'Gracz');
       const pos = i < 3 ? `<span class="rank-medal">${medals[i]}</span>` : (i + 1) + '.';
-      return `<div class="rank-row${isMe ? ' me' : ''}"><span class="pos">${pos}</span><span class="nm">${name}</span>` +
-        cols.map(c => `<span class="num${c.key === rankingSort ? ' sorted' : ''}">${c.fmt(row[c.key])}</span>`).join('') + '</div>';
+      return `<div class="rank-row${isMe ? ' me' : ''}"><span class="pos">${pos}</span><span class="nm">${name}</span><span class="num sorted">${fmt(row[rankingSort])}</span></div>`;
     }).join('');
     panel.innerHTML = html;
 
@@ -2906,6 +2915,20 @@
         editorCtx.fillRect(ex, ey, el.w*editorScale, (editorCanvas.height-ey));
         editorCtx.fillStyle = '#3fae4a';
         editorCtx.fillRect(ex, ey, el.w*editorScale, 4);
+      } else if(el.kind==='platform' && el.isTrampoline){
+        const pw = el.w*editorScale;
+        editorCtx.fillStyle = '#7a4a1e';
+        editorCtx.fillRect(ex, ey+7, pw, 4);
+        editorCtx.fillStyle = '#ff5f6d';
+        editorCtx.fillRect(ex, ey, pw, 8);
+        editorCtx.strokeStyle = '#c0392b'; editorCtx.lineWidth = 1.5;
+        for(let sx=5; sx<pw-3; sx+=10){ editorCtx.beginPath(); editorCtx.moveTo(ex+sx, ey+8); editorCtx.lineTo(ex+sx+5, ey); editorCtx.stroke(); }
+      } else if(el.kind==='platform' && el.isCrumbler){
+        const pw = el.w*editorScale;
+        editorCtx.fillStyle = '#a06a3e';
+        editorCtx.fillRect(ex, ey, pw, 10);
+        editorCtx.strokeStyle = '#5a3a1e'; editorCtx.lineWidth = 1.5;
+        for(let cx2=0; cx2<pw; cx2+=16) editorCtx.strokeRect(ex+cx2, ey, Math.min(16, pw-cx2), 10);
       } else if(el.kind==='platform'){
         editorCtx.fillStyle = '#c96a2e';
         editorCtx.fillRect(ex, ey, el.w*editorScale, 10);
@@ -3053,6 +3076,19 @@
     editorCtx.fillStyle = '#fff'; editorCtx.font = 'bold 9px sans-serif';
     editorCtx.fillText('START', (editorSpawn.x-editorScrollX)*editorScale-14, editorSpawn.y*editorScale-12);
 
+    // checkpoint (slupek stoi na y, wysokosc 220 - jak w grze)
+    if(editorCheckpoint){
+      const cpx = (editorCheckpoint.x-editorScrollX)*editorScale, cpy = editorCheckpoint.y*editorScale;
+      editorCtx.fillStyle = '#b8bcc6';
+      editorCtx.fillRect(cpx, cpy-220*editorScale, 2, 220*editorScale);
+      editorCtx.fillStyle = '#2ecc71';
+      editorCtx.beginPath();
+      editorCtx.moveTo(cpx+2, cpy-220*editorScale+4); editorCtx.lineTo(cpx+16, cpy-220*editorScale+10); editorCtx.lineTo(cpx+2, cpy-220*editorScale+16);
+      editorCtx.fill();
+      editorCtx.fillStyle = '#fff'; editorCtx.font = 'bold 9px sans-serif';
+      editorCtx.fillText('CHECKPOINT', cpx-22, cpy-220*editorScale-4);
+    }
+
     // flaga
     if(editorFlag){
       editorCtx.fillStyle = '#e74c3c';
@@ -3064,6 +3100,47 @@
     }
   }
 
+  // ---------- COFANIE (Ctrl+Z, maks. 3 kroki) ----------
+  const EDITOR_UNDO_MAX = 3;
+  let editorUndoStack = [];   // zserializowane stany "przed zmiana"
+  function editorSnapshotJSON(){
+    return JSON.stringify({ els: editorElements, spawn: editorSpawn, flag: editorFlag, cp: editorCheckpoint });
+  }
+  function editorPushUndo(beforeJSON){
+    editorUndoStack.push(beforeJSON);
+    if(editorUndoStack.length > EDITOR_UNDO_MAX) editorUndoStack.shift();
+  }
+  function editorUndoFlash(msg, color){
+    const el = document.getElementById('editorSaveResult');
+    if(!el) return;
+    el.textContent = msg;
+    el.style.color = color || '';
+    clearTimeout(editorLimitWarnTimeout);
+    editorLimitWarnTimeout = setTimeout(() => { el.textContent = ''; el.style.color = ''; }, 1800);
+  }
+  function editorUndo(){
+    if(editorUndoStack.length === 0){
+      editorUndoFlash('↩ Nie ma czego cofać (maks. 3 cofnięcia)', '#ffd23f');
+      return;
+    }
+    const st = JSON.parse(editorUndoStack.pop());
+    editorElements = st.els;
+    editorSpawn = st.spawn;
+    editorFlag = st.flag;
+    editorCheckpoint = st.cp;
+    editorDrag = null;
+    redrawEditor();
+    editorUndoFlash('↩ Cofnięto (pozostało ' + editorUndoStack.length + ')', '#9be7a2');
+  }
+  window.addEventListener('keydown', (e) => {
+    if(!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey || e.code !== 'KeyZ') return;
+    if(editorScreen.classList.contains('hidden')) return;
+    const t = e.target && e.target.tagName;
+    if(t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return; // w polach tekstowych zostaje zwykle cofanie tekstu
+    e.preventDefault();
+    editorUndo();
+  });
+
   let editorLimitWarnTimeout = null;
   function editorFlashLimitWarning(msg){
     const el = document.getElementById('editorSaveResult');
@@ -3074,6 +3151,13 @@
     editorLimitWarnTimeout = setTimeout(() => { el.textContent = ''; el.style.color = ''; }, 2000);
   }
 
+  // odleglosc punktu od slupka checkpointa (odcinek od y-220 do y)
+  function editorCheckpointDist(levelX, levelY){
+    const top = editorCheckpoint.y - 220, bot = editorCheckpoint.y;
+    const dy = levelY < top ? top - levelY : (levelY > bot ? levelY - bot : 0);
+    return Math.hypot(editorCheckpoint.x - levelX, dy);
+  }
+
   function editorPlaceAt(levelX, levelY){
     if(editorTool === 'erase'){
       let bestIdx = -1, bestDist = 9999;
@@ -3082,14 +3166,19 @@
         const d = Math.hypot(el.x-levelX, ey-levelY);
         if(d < bestDist){ bestDist = d; bestIdx = i; }
       });
-      if(bestIdx >= 0 && bestDist < 120) editorElements.splice(bestIdx,1);
+      const dCp = editorCheckpoint ? editorCheckpointDist(levelX, levelY) : 9999;
+      if(dCp < bestDist && dCp < 120){ editorCheckpoint = null; }
+      else if(bestIdx >= 0 && bestDist < 120) editorElements.splice(bestIdx,1);
       redrawEditor();
       return;
     }
     if(editorTool === 'spawn'){ editorSpawn = {x:levelX, y:levelY}; redrawEditor(); return; }
     if(editorTool === 'flag'){ editorFlag = {x:levelX, y:levelY}; redrawEditor(); return; }
+    if(editorTool === 'checkpoint'){ editorCheckpoint = {x:levelX, y:EDITOR_GROUND_Y}; redrawEditor(); return; }
     if(editorTool === 'ground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w:200}); }
     else if(editorTool === 'platform'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:22}); }
+    else if(editorTool === 'trampoline'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:20, isTrampoline:true}); }
+    else if(editorTool === 'crumbler'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:20, isCrumbler:true}); }
     else if(editorTool === 'pipe'){ editorElements.push({kind:'pipe', x:levelX, w:46, h:60}); }
     else if(editorTool === 'coin'){
       const coinCount = editorElements.filter(e=>e.kind==='coin').length;
@@ -3133,6 +3222,10 @@
       const dFlag = Math.hypot(editorFlag.x-levelX, editorFlag.y-levelY);
       if(dFlag < bestDist){ bestDist = dFlag; best = {kind:'flag'}; }
     }
+    if(editorCheckpoint){
+      const dCp = editorCheckpointDist(levelX, levelY);
+      if(dCp < bestDist){ bestDist = dCp; best = {kind:'checkpoint'}; }
+    }
     for(let i=editorElements.length-1;i>=0;i--){
       const el = editorElements[i];
       const ey = el.y!==undefined ? el.y : (el.kind==='crusher' ? el.topY : levelY);
@@ -3146,10 +3239,12 @@
   let editorDragMoved = false;
   let editorSuppressClick = false;
 
+  let editorDragBefore = null;
   editorCanvas.addEventListener('mousedown', (e) => {
     const {levelX, levelY} = editorPointFromEvent(e);
     editorDragMoved = false;
     editorDrag = editorFindDraggable(levelX, levelY);
+    editorDragBefore = editorDrag ? editorSnapshotJSON() : null;
   });
 
   window.addEventListener('mousemove', (e) => {
@@ -3159,6 +3254,7 @@
     const sx = editorSnap(levelX, 20), sy = editorSnap(levelY, 20);
     if(editorDrag.kind === 'spawn'){ editorSpawn.x = Math.max(0, sx); editorSpawn.y = sy; }
     else if(editorDrag.kind === 'flag'){ editorFlag.x = Math.max(0, sx); editorFlag.y = sy; }
+    else if(editorDrag.kind === 'checkpoint'){ editorCheckpoint.x = Math.max(0, sx); }
     else if(editorDrag.kind === 'element'){
       editorDrag.el.x = Math.max(0, sx);
       if(editorDrag.el.kind === 'crusher'){
@@ -3173,15 +3269,22 @@
   });
 
   window.addEventListener('mouseup', () => {
-    if(editorDrag && editorDragMoved) editorSuppressClick = true;
+    if(editorDrag && editorDragMoved){
+      editorSuppressClick = true;
+      if(editorDragBefore !== null && editorDragBefore !== editorSnapshotJSON()) editorPushUndo(editorDragBefore);
+    }
     editorDrag = null;
+    editorDragBefore = null;
   });
 
   editorCanvas.addEventListener('click', (e) => {
     if(editorSuppressClick){ editorSuppressClick = false; return; }
     const {levelX, levelY} = editorPointFromEvent(e);
+    const before = editorSnapshotJSON();
     editorPlaceAt(editorSnap(levelX, 20), editorSnap(levelY, 20));
+    if(editorSnapshotJSON() !== before) editorPushUndo(before);   // tylko gdy cos sie realnie zmienilo
   });
+  document.getElementById('btnEditorUndo').onclick = editorUndo;
 
   document.querySelectorAll('.editor-tool').forEach(btn => {
     btn.onclick = () => {
@@ -3196,6 +3299,7 @@
   };
   document.getElementById('btnEditorBack').onclick = () => showScreen('menu');
   function editorResetBlank(){
+    editorUndoStack = [];
     editorEditingCode = null;
     editorElements = [];
     editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
@@ -3363,6 +3467,7 @@
   }
 
   function loadLevelDataIntoEditor(code, data){
+    editorUndoStack = [];
     editorEditingCode = code;
     editorElements = [];
     (data.grounds||[]).forEach(g => editorElements.push({kind:'ground', x:g.x, y: g.y!==undefined ? g.y : EDITOR_GROUND_Y, w:g.w}));
