@@ -990,6 +990,14 @@
           <option value="desert">🏜️ Pustynia</option>
           <option value="aurora">🌌 Zorza</option>
         </select>
+        <select id="editorLengthSelect" class="editor-bg-select" title="Długość poziomu">
+          <option value="3000">📏 3000 px</option>
+          <option value="6000" selected>📏 6000 px</option>
+          <option value="10000">📏 10000 px</option>
+          <option value="15000">📏 15000 px</option>
+          <option value="20000">📏 20000 px</option>
+          <option value="30000">📏 30000 px</option>
+        </select>
         <div class="editor-tools" id="editorTools">
           <button class="editor-tool active" data-tool="ground">🟫 Grunt</button>
           <button class="editor-tool" data-tool="platform">▬ Platforma</button>
@@ -1018,7 +1026,8 @@
         <input type="range" id="editorScrollRange" min="0" max="0" value="0" style="flex:1;">
         <button class="menu-btn small" id="btnEditorScrollRight">▶</button>
       </div>
-      <div class="editor-scroll-hint">Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć.</div>
+      <div class="editor-scroll-hint">Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć. Shift + klik z gruntem stawia długi odcinek (1000 px).</div>
+      <div class="editor-scroll-hint" id="editorPosHint"></div>
       <div class="editor-scroll-hint" id="editorWeightHint">Waga poziomu: 0 B</div>
       <div class="editor-actions">
         <button class="menu-btn small" id="btnEditorUndo">↩ COFNIJ (Ctrl+Z)</button>
@@ -1097,7 +1106,7 @@
       <div class="shop-layout">
         <div class="shop-grid" id="shopGrid"></div>
         <div class="shop-preview">
-          <canvas id="previewCanvas" width="180" height="240"></canvas>
+          <canvas id="previewCanvas" width="180" height="290"></canvas>
           <div class="preview-name" id="previewName">Klasyczny</div>
           <button class="menu-btn small" id="btnRotate">🔄 OBRÓĆ</button>
           <button class="menu-btn" id="btnBuyEquip">✅ ZAŁÓŻ</button>
@@ -1110,7 +1119,9 @@
     <div id="customizeSection" class="hidden">
       <div class="customize-layout">
         <div class="customize-left">
-          <div class="customize-group-label">🧢 Czapka</div>
+          <div class="customize-group-label">🎩 Fason czapki</div>
+          <div class="shop-grid customize-grid" id="hatStylesGrid"></div>
+          <div class="customize-group-label">🧢 Kolor czapki</div>
           <div class="shop-grid customize-grid" id="hatsGrid"></div>
           <div class="customize-group-label">🎨 Kolor skóry</div>
           <div class="shop-grid customize-grid" id="skinTonesGrid"></div>
@@ -1118,7 +1129,7 @@
           <div class="shop-grid customize-grid" id="facialHairGrid"></div>
         </div>
         <div class="shop-preview">
-          <canvas id="customPreviewCanvas" width="260" height="340"></canvas>
+          <canvas id="customPreviewCanvas" width="260" height="380"></canvas>
           <button class="menu-btn small" id="btnRotate2">🔄 OBRÓĆ</button>
         </div>
       </div>
@@ -1187,15 +1198,15 @@
     '▲ Kolce':'▲ Spikes','↔️ Platf. (poziom)':'↔️ Platf. (horiz.)','↕️ Platf. (pion)':'↕️ Platf. (vert.)',
     '💥 Miażdżarka':'💥 Crusher','🗼 Wieżyczka':'🗼 Turret','🏁 Start gracza':'🏁 Player start','🚩 Flaga (meta)':'🚩 Flag (goal)',
     '🧹 Gumka':'🧹 Eraser',
-    'Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć.':
-      'Scroll with the mouse wheel over the canvas or use the slider to edit further parts of a long level. Click and drag an existing element (or the start/flag) to move it.',
+    'Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć. Shift + klik z gruntem stawia długi odcinek (1000 px).':
+      'Scroll with the mouse wheel over the canvas or use the slider to edit further parts of a long level. Click and drag an existing element (or the start/flag) to move it. Shift + click with the Ground tool places a long stretch (1000 px).',
     '🗑 WYCZYŚĆ':'🗑 CLEAR','▶ TESTUJ':'▶ TEST','💾 ZAPISZ I POKAŻ KOD':'💾 SAVE & SHOW CODE',
     'Masz kod poziomu od znajomego?':'Got a level code from a friend?','▶ ZAGRAJ':'▶ PLAY',
     'Maksymalnie 40 monet na poziom!':'Maximum 40 coins per level!',
     'Wyczyścić cały poziom w edytorze? Niezapisane zmiany przepadną.':'Clear the whole level in the editor? Unsaved changes will be lost.',
     // ---- statystyki / ustawienia ----
     'STATYSTYKI':'STATS','USTAWIENIA':'SETTINGS','Muzyka':'Music','🔊 WŁĄCZONA':'🔊 ON','🔇 WYŁĄCZONA':'🔇 OFF',
-    'Głośność':'Volume','🟠 Trampolina':'🟠 Trampoline','🧱 Kruszący blok':'🧱 Crumbling block','↩ COFNIJ (Ctrl+Z)':'↩ UNDO (Ctrl+Z)',
+    'Głośność':'Volume','Długość poziomu':'Level length','🟠 Trampolina':'🟠 Trampoline','🧱 Kruszący blok':'🧱 Crumbling block','↩ COFNIJ (Ctrl+Z)':'↩ UNDO (Ctrl+Z)',
     '↩ Nie ma czego cofać (maks. 3 cofnięcia)':'↩ Nothing to undo (max 3 undos)','Sortuj wg:':'Sort by:','🪙 Monety':'🪙 Coins','⏱ Czas gry':'⏱ Playtime','💰 Zarobione':'💰 Earned','👾 Wrogowie':'👾 Enemies','👹 Bossowie':'👹 Bosses','🗺 Poziom':'🗺 Level',
     'Ranking niedostępny bez konta (Supabase).':'Ranking unavailable without an account (Supabase).','Brak wyników.':'No results yet.','Grafika':'Graphics','Język':'Language','WYBIERZ POZIOM':'SELECT LEVEL','🔒 zablokowany':'🔒 locked',
     '🪙 Aktualne monety':'🪙 Current coins','💰 Łącznie zarobione monety':'💰 Total coins earned','🛒 Wydane monety':'🛒 Coins spent',
@@ -1204,7 +1215,7 @@
     '🛠️ Stworzone poziomy':'🛠️ Levels created',
     // ---- sklep ----
     'SKLEP':'SHOP','👕 SKINY':'👕 SKINS','🎨 PERSONALIZACJA':'🎨 CUSTOMIZATION','🔄 OBRÓĆ':'🔄 ROTATE','✅ ZAŁÓŻ':'✅ EQUIP','👕 ZAŁÓŻ':'👕 EQUIP',
-    '🧢 Czapka':'🧢 Hat','🎨 Kolor skóry':'🎨 Skin tone','🧔 Zarost':'🧔 Facial hair','❤ Dodatkowe życia:':'❤ Extra lives:',
+    '🧢 Kolor czapki':'🧢 Hat color','🎩 Fason czapki':'🎩 Hat style','🎨 Kolor skóry':'🎨 Skin tone','🧔 Zarost':'🧔 Facial hair','❤ Dodatkowe życia:':'❤ Extra lives:',
     'Doliczane do startowych 3 żyć przy następnej grze':'Added to your starting 3 lives in the next game',
     '🪙 KUP ŻYCIE (100)':'🪙 BUY LIFE (100)','🛡 Tarcze:':'🛡 Shields:',
     'W grze naciśnij Q, by aktywować na 15 sekund - zabija każdego wroga dotykiem i chroni przed obrażeniami':
@@ -1227,6 +1238,12 @@
     // ---- personalizacja ----
     'Domyślna':'Default','Czerwona':'Red','Niebieska':'Blue','Zielona':'Green','Fioletowa':'Purple','Czarna':'Black','Różowa':'Pink',
     'Złota':'Gold','Jasna':'Light','Śniada':'Tan','Ciemna':'Dark','Blada':'Pale','Zielona (kosmita)':'Green (alien)',
+    'Pomarańczowa':'Orange','Turkusowa':'Teal','Biała':'White','Bordowa':'Maroon','Limonkowa':'Lime','Granatowa':'Navy','Brązowa':'Brown','Srebrna':'Silver',
+    'Bardzo ciemna':'Deep','Oliwkowa':'Olive','Szara':'Gray',
+    'Czapka z daszkiem':'Baseball cap','Czapka zimowa':'Beanie','Hełm':'Hard hat','Opaska ninja':'Ninja headband','Kapelusz kowbojski':'Cowboy hat',
+    'Cylinder':'Top hat','Kapelusz czarodzieja':'Wizard hat','Korona':'Crown',
+    'Cienkie wąsy':'Pencil mustache','Zarost 3-dniowy':'Stubble','Baki':'Sideburns','Wąsy kręcone':'Handlebar mustache','Wąsy morsa':'Walrus mustache',
+    'Długa broda':'Long beard','Broda Mikołaja':'Santa beard',
     'Wąsy (domyślne)':'Mustache (default)','Gładko ogolony':'Clean shaven','Broda':'Beard','Kozia bródka':'Goatee',
     // ---- nazwy poziomow ----
     'Zielone Wzgórza':'Green Hills','Skoki nad Przepaścią':'Leaps Over the Abyss','Kamienny Labirynt':'Stone Labyrinth',
@@ -1290,6 +1307,8 @@
     [/^⏱ Czas: (.*)$/, '⏱ Time: $1'],
     [/^Poziom (\d+)$/, 'Level $1'],
     [/^Twoje miejsce: #(\d+)$/, 'Your rank: #$1'],
+    [/^Widok: (\d+)–(\d+) \/ (\d+) px$/, 'View: $1–$2 / $3 px'],
+    [/^⚠ Nie można skrócić poziomu - elementy sięgają do (\d+) px$/, '⚠ Cannot shorten the level - elements reach up to $1 px'],
     [/^↩ Cofnięto \(pozostało (\d+)\)$/, '↩ Undone ($1 left)'],
     [/^Gracz( \d+| 💀)?$/, 'Player$1'],
     [/^✅ Zalogowano: (.*)$/, '✅ Logged in: $1'],
@@ -1808,6 +1827,7 @@
         skin: state.equippedSkin,
         trail: state.equippedTrail,
         hat: state.equippedHat,
+        hatStyle: state.equippedHatStyle,
         skinTone: state.equippedSkinTone,
         facialHair: state.equippedFacialHair,
         x: player.x, y: player.y,
@@ -1852,7 +1872,7 @@
       ctx.translate(rx + 19, ry + 28*scale);
       ctx.scale((rp.data.facing||1)*scale, scale);
       ctx.translate(-20, -28);
-      drawCharacterSprite(ctx, getEffectiveColors(sk.colors, rp.data.hat, rp.data.skinTone), 0, airborne, gfxQuality===0, gfxQuality>=2, false, rp.data.facialHair);
+      drawCharacterSprite(ctx, getEffectiveColors(sk.colors, rp.data.hat, rp.data.skinTone), 0, airborne, gfxQuality===0, gfxQuality>=2, false, rp.data.facialHair, rp.data.hatStyle);
       ctx.restore();
 
       // imie nad postacia, rysowane wprost na canvasie (dziala dla dowolnej liczby graczy)
@@ -1893,6 +1913,8 @@
     bossesKilled: 0,
     ownedHats: ['default'],
     equippedHat: 'default',
+    ownedHatStyles: ['cap'],
+    equippedHatStyle: 'cap',
     ownedSkinTones: ['default'],
     equippedSkinTone: 'default',
     ownedFacialHair: ['mustache'],
@@ -1929,8 +1951,15 @@
       state.totalSpent = data.total_spent ?? 0;
       state.enemiesKilled = data.enemies_killed ?? 0;
       state.bossesKilled = data.bosses_killed ?? 0;
-      state.ownedHats = data.owned_hats ?? ['default'];
-      state.equippedHat = data.equipped_hat ?? 'default';
+      // fason czapki trzymamy w istniejacych kolumnach: 'style:<id>' w owned_hats, 'kolor:fason' w equipped_hat
+      const rawHats = Array.isArray(data.owned_hats) ? data.owned_hats.map(String) : ['default'];
+      state.ownedHats = rawHats.filter(x => !x.startsWith('style:'));
+      if(!state.ownedHats.includes('default')) state.ownedHats.unshift('default');
+      state.ownedHatStyles = ['cap', ...rawHats.filter(x => x.startsWith('style:')).map(x => x.slice(6))]
+        .filter((x, i, a) => a.indexOf(x) === i && HAT_STYLES.some(h => h.id === x));
+      const [eqColor, eqStyle] = String(data.equipped_hat ?? 'default').split(':');
+      state.equippedHat = eqColor || 'default';
+      state.equippedHatStyle = (eqStyle && state.ownedHatStyles.includes(eqStyle)) ? eqStyle : 'cap';
       state.ownedSkinTones = data.owned_skin_tones ?? ['default'];
       state.equippedSkinTone = data.equipped_skin_tone ?? 'default';
       state.ownedFacialHair = data.owned_facial_hair ?? ['mustache'];
@@ -1983,8 +2012,8 @@
         total_spent: state.totalSpent,
         enemies_killed: state.enemiesKilled,
         bosses_killed: state.bossesKilled,
-        owned_hats: state.ownedHats,
-        equipped_hat: state.equippedHat,
+        owned_hats: state.ownedHats.concat(state.ownedHatStyles.filter(x => x !== 'cap').map(x => 'style:' + x)),
+        equipped_hat: state.equippedHat + (state.equippedHatStyle !== 'cap' ? ':' + state.equippedHatStyle : ''),
         owned_skin_tones: state.ownedSkinTones,
         equipped_skin_tone: state.equippedSkinTone,
         owned_facial_hair: state.ownedFacialHair,
@@ -2122,6 +2151,26 @@
     { id:'black',   name:'Czarna',   price:25, color:'#1a1a1a' },
     { id:'pink',    name:'Różowa',   price:25, color:'#ff6fa5' },
     { id:'gold',    name:'Złota',    price:40, color:'#ffd23f' },
+    { id:'orange',  name:'Pomarańczowa', price:25, color:'#ff8a2b' },
+    { id:'teal',    name:'Turkusowa', price:25, color:'#1fb5ad' },
+    { id:'white',   name:'Biała',    price:25, color:'#f2f2f2' },
+    { id:'maroon',  name:'Bordowa',  price:25, color:'#7a1f2b' },
+    { id:'lime',    name:'Limonkowa', price:25, color:'#a6e22e' },
+    { id:'navy',    name:'Granatowa', price:25, color:'#1c2f6b' },
+    { id:'brown',   name:'Brązowa',  price:20, color:'#8a5a2b' },
+    { id:'silver',  name:'Srebrna',  price:40, color:'#c0c6d0' },
+  ];
+
+  // fasony czapek (ksztalt); kolor czapki wybiera sie osobno w HATS
+  const HAT_STYLES = [
+    { id:'cap',      name:'Czapka z daszkiem',   price:0 },
+    { id:'beanie',   name:'Czapka zimowa',       price:25 },
+    { id:'helmet',   name:'Hełm',                price:30 },
+    { id:'headband', name:'Opaska ninja',        price:30 },
+    { id:'cowboy',   name:'Kapelusz kowbojski',  price:40 },
+    { id:'tophat',   name:'Cylinder',            price:45 },
+    { id:'wizard',   name:'Kapelusz czarodzieja', price:50 },
+    { id:'crown',    name:'Korona',              price:80 },
   ];
 
   const SKIN_TONES = [
@@ -2132,6 +2181,14 @@
     { id:'pale',    name:'Blada',    price:15, color:'#e8d8c8' },
     { id:'alien',   name:'Zielona (kosmita)', price:30, color:'#8fd944' },
     { id:'blue',    name:'Niebieska', price:30, color:'#8fc7ff' },
+    { id:'deep',    name:'Bardzo ciemna', price:15, color:'#6b4226' },
+    { id:'olive',   name:'Oliwkowa', price:15, color:'#c9a67a' },
+    { id:'pink',    name:'Różowa',   price:25, color:'#ffb3c7' },
+    { id:'purple',  name:'Fioletowa', price:30, color:'#b58cf0' },
+    { id:'gold',    name:'Złota',    price:40, color:'#f7d774' },
+    { id:'gray',    name:'Szara',    price:25, color:'#b8bcc6' },
+    { id:'orange',  name:'Pomarańczowa', price:30, color:'#ff9f43' },
+    { id:'red',     name:'Czerwona', price:30, color:'#e4573d' },
   ];
 
   const FACIAL_HAIR = [
@@ -2139,6 +2196,14 @@
     { id:'none',     name:'Gładko ogolony', price:10 },
     { id:'beard',    name:'Broda', price:20 },
     { id:'goatee',   name:'Kozia bródka', price:20 },
+    { id:'pencil',    name:'Cienkie wąsy',      price:15 },
+    { id:'stubble',   name:'Zarost 3-dniowy',   price:15 },
+    { id:'sideburns', name:'Baki',              price:20 },
+    { id:'handlebar', name:'Wąsy kręcone',      price:25 },
+    { id:'walrus',    name:'Wąsy morsa',        price:25 },
+    { id:'vandyke',   name:'Van Dyke',          price:30 },
+    { id:'fullbeard', name:'Długa broda',       price:35 },
+    { id:'santa',     name:'Broda Mikołaja',    price:45 },
   ];
 
   // ---------- SCREENS ----------
@@ -2466,10 +2531,10 @@
     previewT += 0.06;
     const scale = 3.0;
     pctx.save();
-    pctx.translate(canvas.width/2, 12);
+    pctx.translate(canvas.width/2, 72);
     pctx.scale(previewFacing*scale, scale);
     pctx.translate(-20, 0);
-    drawCharacterSprite(pctx, getEffectiveColors(sk.colors, state.equippedHat, state.equippedSkinTone), bob, false, false, true, true, state.equippedFacialHair);
+    drawCharacterSprite(pctx, getEffectiveColors(sk.colors, state.equippedHat, state.equippedSkinTone), bob, false, false, true, true, state.equippedFacialHair, state.equippedHatStyle);
     pctx.restore();
     const cc = document.getElementById('customPreviewCanvas');
     const cSec = document.getElementById('customizeSection');
@@ -2477,12 +2542,12 @@
       const cctx = cc.getContext('2d');
       cctx.clearRect(0,0,cc.width,cc.height);
       const csk = SKINS.find(s => s.id === state.equippedSkin) || SKINS[0];
-      const cs = 4.6;
+      const cs = 4.2;
       cctx.save();
-      cctx.translate(cc.width/2, 34);
+      cctx.translate(cc.width/2, 108);
       cctx.scale(previewFacing*cs, cs);
       cctx.translate(-20, 0);
-      drawCharacterSprite(cctx, getEffectiveColors(csk.colors, state.equippedHat, state.equippedSkinTone), bob, false, false, true, true, state.equippedFacialHair);
+      drawCharacterSprite(cctx, getEffectiveColors(csk.colors, state.equippedHat, state.equippedSkinTone), bob, false, false, true, true, state.equippedFacialHair, state.equippedHatStyle);
       cctx.restore();
     }
     previewRaf = requestAnimationFrame(renderPreviewFrame);
@@ -2698,6 +2763,9 @@
   }
 
   function renderCustomize(){
+    renderCustomizeGrid('hatStylesGrid', HAT_STYLES, 'ownedHatStyles', 'equippedHatStyle',
+      (it) => `<canvas class="facial-thumb" data-hat="${it.id}" width="96" height="96"></canvas>`);
+    document.querySelectorAll('#hatStylesGrid canvas.facial-thumb').forEach(cv => drawHatThumb(cv, cv.dataset.hat));
     renderCustomizeGrid('hatsGrid', HATS, 'ownedHats', 'equippedHat',
       (it) => `<div class="customize-swatch" style="background:${it.color || 'linear-gradient(45deg,#999,#ccc)'};"></div>`);
     renderCustomizeGrid('skinTonesGrid', SKIN_TONES, 'ownedSkinTones', 'equippedSkinTone',
@@ -2705,6 +2773,21 @@
     renderCustomizeGrid('facialHairGrid', FACIAL_HAIR, 'ownedFacialHair', 'equippedFacialHair',
       (it) => `<canvas class="facial-thumb" data-fh="${it.id}" width="96" height="96"></canvas>`);
     document.querySelectorAll('#facialHairGrid canvas.facial-thumb').forEach(cv => drawFacialThumb(cv, cv.dataset.fh));
+  }
+
+  // miniaturka czapki: wycinek postaci z glowa (ten sam rysunek co w grze)
+  function drawHatThumb(canvas, styleId){
+    const c = canvas.getContext('2d');
+    c.clearRect(0,0,canvas.width,canvas.height);
+    const sk = SKINS.find(s => s.id === state.equippedSkin) || SKINS[0];
+    const colors = getEffectiveColors(sk.colors, state.equippedHat, state.equippedSkinTone);
+    const sc = canvas.width / 40;
+    c.save();
+    c.translate(canvas.width/2, canvas.height/2);
+    c.scale(sc, sc);
+    c.translate(-20, 7);
+    drawCharacterSprite(c, colors, 0, false, true, false, false, state.equippedFacialHair, styleId);
+    c.restore();
   }
 
   // miniaturka twarzy z prawdziwym zarostem (ten sam rysunek co w grze)
@@ -2717,8 +2800,8 @@
     c.save();
     c.translate(canvas.width/2, canvas.height/2);
     c.scale(sc, sc);
-    c.translate(-21, -14);
-    drawCharacterSprite(c, colors, 0, false, true, false, false, fh);
+    c.translate(-21, -17);
+    drawCharacterSprite(c, colors, 0, false, true, false, false, fh, state.equippedHatStyle);
     c.restore();
   }
 
@@ -2839,7 +2922,8 @@
   });
 
   // ---------- EDYTOR POZIOMÓW ----------
-  const EDITOR_LEVEL_W = 6000;
+  let editorLevelW = 6000;   // dlugosc edytowanego poziomu (px), wybierana w pasku narzedzi
+  const EDITOR_LENGTH_DEFAULT = 6000, EDITOR_LENGTH_MIN = 1500, EDITOR_LENGTH_MAX = 30000;
   const EDITOR_LEVEL_H = 720;
   const editorCanvas = document.getElementById('editorCanvas');
   const editorCtx = editorCanvas.getContext('2d');
@@ -2851,18 +2935,56 @@
   let editorTesting = false;
   let editorElements = []; // {kind, x, y, w, enemyType, axis}
   let editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
-  let editorFlag = { x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220 };
+  let editorFlag = { x:editorLevelW-150, y:EDITOR_GROUND_Y-220 };
   let editorCheckpoint = null; // nieedytowalny w UI - tylko zachowywany przy edycji poziomow ktore juz go maja (np. wbudowany poziom 16)
   let editorScrollX = 0;
   let editorEditingCode = null; // null = nowy poziom; ustawiony = edytujemy/nadpisujemy istniejacy zapisany poziom
 
   const editorScrollRange = document.getElementById('editorScrollRange');
-  editorScrollRange.max = Math.max(0, EDITOR_LEVEL_W - EDITOR_VIEW_W);
+  editorScrollRange.max = Math.max(0, editorLevelW - EDITOR_VIEW_W);
   function editorSetScroll(x){
-    editorScrollX = Math.max(0, Math.min(EDITOR_LEVEL_W - EDITOR_VIEW_W, x));
+    editorScrollX = Math.max(0, Math.min(editorLevelW - EDITOR_VIEW_W, x));
     editorScrollRange.value = editorScrollX;
     redrawEditor();
   }
+  // ---- dlugosc poziomu ----
+  const editorLengthSelect = document.getElementById('editorLengthSelect');
+  function editorEnsureLengthOption(w){
+    const opts = [...editorLengthSelect.options];
+    if(opts.some(o => Number(o.value) === w)) return;
+    const o = document.createElement('option');
+    o.value = String(w); o.textContent = '📏 ' + w + ' px';
+    const after = opts.find(x => Number(x.value) > w);
+    editorLengthSelect.insertBefore(o, after || null);
+  }
+  function editorApplyLength(w){
+    editorLevelW = w;
+    editorEnsureLengthOption(w);
+    editorLengthSelect.value = String(w);
+    editorScrollRange.max = Math.max(0, w - EDITOR_VIEW_W);
+  }
+  // jak daleko siegaja elementy poziomu (bez flagi, jesli stoi na domyslnym koncu)
+  function editorContentMaxX(excludeFlag){
+    let m = editorSpawn.x + 40;
+    if(editorFlag && !excludeFlag) m = Math.max(m, editorFlag.x + 20);
+    if(editorCheckpoint) m = Math.max(m, editorCheckpoint.x + 20);
+    editorElements.forEach(el => { m = Math.max(m, el.x + (el.w || 40) + (el.kind === 'mover' && el.axis !== 'y' ? (el.range || 60) : 0)); });
+    return m;
+  }
+  editorLengthSelect.onchange = () => {
+    const w = Number(editorLengthSelect.value), old = editorLevelW;
+    const flagAtEnd = editorFlag && Math.abs(editorFlag.x - (old - 150)) < 1;
+    const need = editorContentMaxX(flagAtEnd);
+    if(w < need + 150){
+      editorLengthSelect.value = String(old);
+      editorFlashLimitWarning('Nie można skrócić poziomu - elementy sięgają do ' + Math.round(need) + ' px');
+      return;
+    }
+    if(flagAtEnd) editorFlag.x = w - 150;   // flaga zostaje na koncu poziomu
+    editorApplyLength(w);
+    editorUndoStack = [];                   // zmiana dlugosci zeruje historie cofania
+    editorSetScroll(editorScrollX);
+  };
   editorScrollRange.oninput = () => editorSetScroll(Number(editorScrollRange.value));
   document.getElementById('btnEditorScrollLeft').onclick = () => editorSetScroll(editorScrollX - 300);
   document.getElementById('btnEditorScrollRight').onclick = () => editorSetScroll(editorScrollX + 300);
@@ -2889,6 +3011,8 @@
       const bytes = new Blob([JSON.stringify(collectEditorData())]).size;
       weightEl.textContent = 'Waga poziomu: ' + formatBytes(bytes);
     }
+    const posEl = document.getElementById('editorPosHint');
+    if(posEl) posEl.textContent = 'Widok: ' + Math.round(editorScrollX) + '–' + Math.round(Math.min(editorLevelW, editorScrollX + EDITOR_VIEW_W)) + ' / ' + editorLevelW + ' px';
     const c = editorBgPreviewColors(document.getElementById('editorBgSelect').value);
     const grad = editorCtx.createLinearGradient(0,0,0,editorCanvas.height);
     grad.addColorStop(0, c.sky1); grad.addColorStop(1, c.sky2);
@@ -3158,12 +3282,22 @@
     return Math.hypot(editorCheckpoint.x - levelX, dy);
   }
 
+  let editorShiftHeld = false;   // ustawiane przy kliknieciu (Shift + klik = dlugi odcinek gruntu)
+  // odleglosc punktu od elementu; dla elementow o szerokosci liczymy do najblizszego punktu na ich dlugosci
+  function editorEraseDist(el, levelX, levelY){
+    const ey = el.y!==undefined ? el.y : (el.kind==='crusher' ? el.topY : levelY);
+    let dx = el.x - levelX;
+    if(el.w !== undefined && (el.kind==='ground' || el.kind==='platform' || el.kind==='pipe' || el.kind==='hazard')){
+      dx = levelX < el.x ? el.x - levelX : (levelX > el.x + el.w ? levelX - (el.x + el.w) : 0);
+    }
+    return Math.hypot(dx, ey - levelY);
+  }
+
   function editorPlaceAt(levelX, levelY){
     if(editorTool === 'erase'){
       let bestIdx = -1, bestDist = 9999;
       editorElements.forEach((el,i) => {
-        const ey = el.y!==undefined ? el.y : (el.kind==='crusher' ? el.topY : levelY);
-        const d = Math.hypot(el.x-levelX, ey-levelY);
+        const d = editorEraseDist(el, levelX, levelY);
         if(d < bestDist){ bestDist = d; bestIdx = i; }
       });
       const dCp = editorCheckpoint ? editorCheckpointDist(levelX, levelY) : 9999;
@@ -3175,7 +3309,7 @@
     if(editorTool === 'spawn'){ editorSpawn = {x:levelX, y:levelY}; redrawEditor(); return; }
     if(editorTool === 'flag'){ editorFlag = {x:levelX, y:levelY}; redrawEditor(); return; }
     if(editorTool === 'checkpoint'){ editorCheckpoint = {x:levelX, y:EDITOR_GROUND_Y}; redrawEditor(); return; }
-    if(editorTool === 'ground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w:200}); }
+    if(editorTool === 'ground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w: editorShiftHeld ? 1000 : 200}); }
     else if(editorTool === 'platform'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:22}); }
     else if(editorTool === 'trampoline'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:20, isTrampoline:true}); }
     else if(editorTool === 'crumbler'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:20, isCrumbler:true}); }
@@ -3196,7 +3330,7 @@
     else if(editorTool === 'mover_y'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'y', range:110}); }
     else if(editorTool === 'crusher'){ editorElements.push({kind:'crusher', x:levelX, w:50, h:50, topY:80, bottomY:EDITOR_GROUND_Y-55, speed:1.0, t:0}); }
     else if(editorTool === 'turret'){
-      const dir = levelX < EDITOR_LEVEL_W/2 ? 1 : -1;
+      const dir = levelX < editorLevelW/2 ? 1 : -1;
       editorElements.push({kind:'turret', x:levelX, y:EDITOR_GROUND_Y-90, dir, interval:245});
     }
     else if(editorTool === 'boss'){
@@ -3281,7 +3415,9 @@
     if(editorSuppressClick){ editorSuppressClick = false; return; }
     const {levelX, levelY} = editorPointFromEvent(e);
     const before = editorSnapshotJSON();
+    editorShiftHeld = !!e.shiftKey;
     editorPlaceAt(editorSnap(levelX, 20), editorSnap(levelY, 20));
+    editorShiftHeld = false;
     if(editorSnapshotJSON() !== before) editorPushUndo(before);   // tylko gdy cos sie realnie zmienilo
   });
   document.getElementById('btnEditorUndo').onclick = editorUndo;
@@ -3302,8 +3438,9 @@
     editorUndoStack = [];
     editorEditingCode = null;
     editorElements = [];
+    editorApplyLength(EDITOR_LENGTH_DEFAULT);
     editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
-    editorFlag = { x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220 };
+    editorFlag = { x:editorLevelW-150, y:EDITOR_GROUND_Y-220 };
     editorCheckpoint = null;
     document.getElementById('editorLevelName').value = '';
     document.getElementById('editorSaveResult').textContent = '';
@@ -3470,6 +3607,8 @@
     editorUndoStack = [];
     editorEditingCode = code;
     editorElements = [];
+    const loadedW = Math.round(Number(data.width));
+    editorApplyLength((loadedW >= EDITOR_LENGTH_MIN && loadedW <= EDITOR_LENGTH_MAX) ? loadedW : EDITOR_LENGTH_DEFAULT);
     (data.grounds||[]).forEach(g => editorElements.push({kind:'ground', x:g.x, y: g.y!==undefined ? g.y : EDITOR_GROUND_Y, w:g.w}));
     const isBuiltinLoad = String(code).startsWith('BUILTIN:');
     (data.platforms||[]).forEach(p => {
@@ -3488,7 +3627,7 @@
     if(data.boss) editorElements.push({kind:'boss', x:data.boss.x, y:data.boss.y});
     editorCheckpoint = data.checkpoint ? {x:data.checkpoint.x, y:data.checkpoint.y} : null;
     editorSpawn = data.spawn ? {x:data.spawn.x, y:data.spawn.y} : {x:40, y:EDITOR_GROUND_Y-54};
-    editorFlag = data.flag ? {x:data.flag.x, y:data.flag.y} : {x:EDITOR_LEVEL_W-150, y:EDITOR_GROUND_Y-220};
+    editorFlag = data.flag ? {x:data.flag.x, y:data.flag.y} : {x:editorLevelW-150, y:EDITOR_GROUND_Y-220};
     document.getElementById('editorLevelName').value = data.name || '';
     document.getElementById('editorBgSelect').value = data.bg || 'day';
     document.getElementById('editorSaveResult').textContent = String(code).startsWith('BUILTIN:')
@@ -3605,7 +3744,7 @@
     return {
       name: document.getElementById('editorLevelName').value.trim() || 'Poziom bez nazwy',
       bg: document.getElementById('editorBgSelect').value,
-      width: EDITOR_LEVEL_W,
+      width: editorLevelW,
       grounds, platforms, pipes, coins, enemies, hazards, movers, crushers, shooters,
       boss: bossEl ? {x:bossEl.x, y:bossEl.y} : null,
       flag: editorFlag, spawn: editorSpawn, checkpoint: editorCheckpoint,
@@ -5242,7 +5381,7 @@
     };
   }
 
-  function drawCharacterSprite(targetCtx, c, bob, airborne, flat, shine, sparkle, facialHair){
+  function drawCharacterSprite(targetCtx, c, bob, airborne, flat, shine, sparkle, facialHair, hatStyle){
     const tctx = targetCtx;
     // ---- cien pod stopami ----
     if(!flat){
@@ -5418,25 +5557,54 @@
       tctx.ellipse(24, 21, 4, 4.5, 0, 0, Math.PI*2);
       tctx.fill();
     }
+    else if(fh === 'pencil'){
+      tctx.strokeStyle = '#3a2a1a'; tctx.lineWidth = 1.4; tctx.lineCap = 'round';
+      tctx.beginPath(); tctx.moveTo(19, 17.4); tctx.quadraticCurveTo(24, 15.7, 30, 17.7); tctx.stroke();
+    } else if(fh === 'stubble'){
+      tctx.fillStyle = 'rgba(58,42,26,.6)';
+      for(let i = 0; i < 70; i++){
+        const r1 = Math.abs((Math.sin(i*12.9898)*43758.5453) % 1), r2 = Math.abs((Math.sin(i*78.233)*12345.6789) % 1);
+        const dx = 12 + r1*19, dy = 15.5 + r2*9.5;
+        if(((dx-20)/13)**2 + ((dy-12)/12)**2 <= 0.88){ tctx.beginPath(); tctx.arc(dx, dy, 0.75, 0, Math.PI*2); tctx.fill(); }
+      }
+    } else if(fh === 'sideburns'){
+      tctx.beginPath(); tctx.ellipse(11.5, 15, 2.8, 6.5, 0, 0, Math.PI*2); tctx.fill();
+      tctx.beginPath();
+      tctx.moveTo(18, 17); tctx.quadraticCurveTo(24, 14, 30, 17.5); tctx.quadraticCurveTo(24, 20.5, 18, 17);
+      tctx.fill();
+    } else if(fh === 'handlebar'){
+      tctx.strokeStyle = '#3a2a1a'; tctx.lineWidth = 3; tctx.lineCap = 'round';
+      tctx.beginPath(); tctx.moveTo(18.5, 17.6); tctx.quadraticCurveTo(24, 15, 29.5, 17.6); tctx.stroke();
+      tctx.beginPath(); tctx.moveTo(18.5, 17.6); tctx.quadraticCurveTo(15, 19.5, 14.5, 15.5); tctx.stroke();
+      tctx.beginPath(); tctx.moveTo(29.5, 17.6); tctx.quadraticCurveTo(33.5, 19.5, 33.5, 15.5); tctx.stroke();
+    } else if(fh === 'walrus'){
+      tctx.beginPath();
+      tctx.moveTo(16.5, 16.5); tctx.quadraticCurveTo(24, 12.5, 31.5, 16.5);
+      tctx.quadraticCurveTo(33.5, 21.5, 28, 21.5); tctx.quadraticCurveTo(24, 18.5, 20, 21.5);
+      tctx.quadraticCurveTo(14.5, 21.5, 16.5, 16.5);
+      tctx.fill();
+    } else if(fh === 'vandyke'){
+      tctx.beginPath();
+      tctx.moveTo(18.5, 17); tctx.quadraticCurveTo(24, 14.5, 29.5, 17.3); tctx.quadraticCurveTo(24, 19.6, 18.5, 17);
+      tctx.fill();
+      tctx.beginPath();
+      tctx.moveTo(21, 19.8); tctx.quadraticCurveTo(24, 21.5, 27, 19.8); tctx.lineTo(24, 28); tctx.closePath();
+      tctx.fill();
+    } else if(fh === 'fullbeard' || fh === 'santa'){
+      const santa = (fh === 'santa');
+      tctx.fillStyle = santa ? '#f4f4f4' : '#3a2a1a';
+      tctx.beginPath();
+      tctx.moveTo(10, 14);
+      tctx.quadraticCurveTo(20, 46, 32, 14);
+      tctx.quadraticCurveTo(24, 24, 18, 17);
+      tctx.quadraticCurveTo(24, 14, 30, 17.5);
+      tctx.fill();
+      if(santa){ tctx.strokeStyle = 'rgba(0,0,0,.28)'; tctx.lineWidth = 0.8; tctx.stroke(); }
+    }
     // 'none' - nic nie rysujemy (gladko ogolony)
 
-    // ---- czapka ----
-    if(flat){ tctx.fillStyle = c.hat; }
-    else {
-      const hatGrad = tctx.createLinearGradient(4,-6,34,10);
-      hatGrad.addColorStop(0, shade(c.hat, 22));
-      hatGrad.addColorStop(1, shade(c.hat, -10));
-      tctx.fillStyle = hatGrad;
-    }
-    roundRectOn(tctx, 5, -5, 28, 13, 7); tctx.fill();
-    // daszek
-    tctx.fillStyle = shade(c.hat, -14);
-    tctx.beginPath();
-    tctx.ellipse(11, 8, 9, 3.4, -0.15, 0, Math.PI*2);
-    tctx.fill();
-    // znaczek na czapce
-    tctx.fillStyle = '#fff';
-    tctx.beginPath(); tctx.arc(19, 1, 4.6, 0, Math.PI*2); tctx.fill();
+    // ---- czapka (fason wybierany w personalizacji) ----
+    drawHatStyle(tctx, c, hatStyle || 'cap', flat);
 
     // HIGH+: polysk na czapce i kombinezonie (dodaje "blasku")
     if(shine && !flat){
@@ -5462,6 +5630,74 @@
       drawSparkle(tctx, 34, -2, 4.5 + Math.sin(t)*1.8, t);
       drawSparkle(tctx, -1, 30, 3.6 + Math.cos(t*1.3)*1.5, t*1.4);
       drawSparkle(tctx, 39, 30, 3.2 + Math.sin(t*1.6)*1.4, t*1.7);
+    }
+  }
+
+  function drawHatStyle(t, c, style, flat){
+    const grad = (x0, y0, x1, y1) => {
+      if(flat) return c.hat;
+      const g = t.createLinearGradient(x0, y0, x1, y1);
+      g.addColorStop(0, shade(c.hat, 22)); g.addColorStop(1, shade(c.hat, -10));
+      return g;
+    };
+    if(style === 'tophat'){
+      t.fillStyle = shade(c.hat, -16);
+      t.beginPath(); t.ellipse(20, 2.5, 18.5, 3.4, 0, 0, Math.PI*2); t.fill();
+      t.fillStyle = grad(9, -20, 31, 3); roundRectOn(t, 9, -20, 22, 23, 3); t.fill();
+      t.fillStyle = shade(c.hat, -48); t.fillRect(9, -3, 22, 5.5);
+    } else if(style === 'beanie'){
+      t.fillStyle = grad(6, -10, 34, 4);
+      t.beginPath(); t.ellipse(20, 3, 14.5, 13, 0, Math.PI, 0); t.fill();
+      t.fillStyle = shade(c.hat, -18); roundRectOn(t, 5.5, 0, 29, 6, 3); t.fill();
+      t.strokeStyle = 'rgba(0,0,0,.2)'; t.lineWidth = 1;
+      for(let x = 8; x < 34; x += 4){ t.beginPath(); t.moveTo(x, 0.8); t.lineTo(x, 5.2); t.stroke(); }
+      t.fillStyle = '#fff'; t.beginPath(); t.arc(20, -10.5, 4.6, 0, Math.PI*2); t.fill();
+      t.fillStyle = 'rgba(0,0,0,.12)'; t.beginPath(); t.arc(21.4, -9.4, 2.6, 0, Math.PI*2); t.fill();
+    } else if(style === 'cowboy'){
+      t.fillStyle = shade(c.hat, -16);
+      t.beginPath(); t.ellipse(20, 2.5, 20, 4.2, 0, 0, Math.PI*2); t.fill();
+      t.fillStyle = grad(10, -12, 30, 3);
+      t.beginPath();
+      t.moveTo(10, 2.5); t.lineTo(11, -8); t.quadraticCurveTo(15, -13, 20, -7.5);
+      t.quadraticCurveTo(25, -13, 29, -8); t.lineTo(30, 2.5); t.closePath(); t.fill();
+      t.fillStyle = '#4a2f16'; t.fillRect(10.4, -2, 19.2, 3.6);
+    } else if(style === 'crown'){
+      const g = flat ? '#ffd23f' : (() => { const q = t.createLinearGradient(8, -13, 32, 5); q.addColorStop(0, '#ffe680'); q.addColorStop(1, '#d9a000'); return q; })();
+      t.fillStyle = g;
+      t.beginPath();
+      t.moveTo(8, 4); t.lineTo(8, -10); t.lineTo(14, -3); t.lineTo(20, -13); t.lineTo(26, -3); t.lineTo(32, -10); t.lineTo(32, 4); t.closePath(); t.fill();
+      t.fillStyle = '#e0a800'; t.fillRect(8, -1, 24, 5.5);
+      t.fillStyle = c.hat;
+      [14, 20, 26].forEach(x => { t.beginPath(); t.arc(x, 1.6, 1.7, 0, Math.PI*2); t.fill(); });
+      t.fillStyle = '#fff';
+      [[8, -10], [20, -13], [32, -10]].forEach(p => { t.beginPath(); t.arc(p[0], p[1], 1.7, 0, Math.PI*2); t.fill(); });
+    } else if(style === 'wizard'){
+      t.fillStyle = shade(c.hat, -16);
+      t.beginPath(); t.ellipse(20, 3, 19.5, 3.7, 0, 0, Math.PI*2); t.fill();
+      t.fillStyle = grad(5, -24, 35, 3);
+      t.beginPath(); t.moveTo(5, 3); t.quadraticCurveTo(16, -3, 19, -24); t.quadraticCurveTo(30, -15, 35, 3); t.closePath(); t.fill();
+      t.fillStyle = shade(c.hat, -40); t.fillRect(7.5, -1.2, 25, 3.2);
+      drawSparkle(t, 17, -9, 2.6, 0.3);
+      drawSparkle(t, 25, -3, 2.0, 0.6);
+    } else if(style === 'helmet'){
+      t.fillStyle = grad(5, -9, 35, 4);
+      t.beginPath(); t.ellipse(20, 4, 15, 12.5, 0, Math.PI, 0); t.fill();
+      t.fillStyle = shade(c.hat, -16); roundRectOn(t, 3, 3, 34, 4.4, 2); t.fill();
+      t.fillStyle = shade(c.hat, 12); roundRectOn(t, 17, -9, 6, 12, 2); t.fill();
+    } else if(style === 'headband'){
+      t.fillStyle = shade(c.hat, -10);
+      t.beginPath(); t.moveTo(7.5, 3); t.lineTo(-1, -0.5); t.lineTo(2.5, 4.6); t.closePath(); t.fill();
+      t.beginPath(); t.moveTo(7.5, 5); t.lineTo(-2, 8.5); t.lineTo(3.5, 9); t.closePath(); t.fill();
+      t.fillStyle = grad(6, 1, 34, 7); roundRectOn(t, 6.5, 1, 27, 5.6, 2.8); t.fill();
+      t.fillStyle = '#cfd6df'; roundRectOn(t, 22, 1.8, 8, 4, 1); t.fill();
+    } else {
+      // 'cap' - klasyczna czapka z daszkiem
+      t.fillStyle = grad(4, -6, 34, 10);
+      roundRectOn(t, 5, -5, 28, 13, 7); t.fill();
+      t.fillStyle = shade(c.hat, -14);
+      t.beginPath(); t.ellipse(11, 8, 9, 3.4, -0.15, 0, Math.PI*2); t.fill();
+      t.fillStyle = '#fff';
+      t.beginPath(); t.arc(19, 1, 4.6, 0, Math.PI*2); t.fill();
     }
   }
 
@@ -5558,7 +5794,7 @@
     ctx.translate(px + player.w/2, py + 28*scale);
     ctx.scale(player.facing*scale, scale);
     ctx.translate(-20, -28);
-    drawCharacterSprite(ctx, c, bob, airborne, flat, shine, sparkle, state.equippedFacialHair);
+    drawCharacterSprite(ctx, c, bob, airborne, flat, shine, sparkle, state.equippedFacialHair, state.equippedHatStyle);
     ctx.restore();
   }
 
