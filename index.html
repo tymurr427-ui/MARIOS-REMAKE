@@ -158,18 +158,23 @@
   }
   .customize-layout {
     display:flex;
-    gap:28px;
+    gap:22px;
     align-items:flex-start;
     justify-content:center;
     flex-wrap:wrap;
     width:100%;
   }
-  .customize-left {
-    display:flex;
-    flex-direction:column;
-    width:min(580px, 100%);
-  }
-  .customize-grid {
+  .customize-col { display:flex; flex-direction:column; }
+  .customize-col-a { width:min(450px, 100%); }
+  .customize-col-b { width:min(400px, 100%); }
+  .customize-preview { position:sticky; top:170px; align-self:flex-start; }   /* podglad jedzie razem ze scrollem, pod przyciskami w rogu */
+  .shop-grid.customize-grid.compact { grid-template-columns:repeat(6, 1fr); gap:8px; }
+  .trail-card.compact { padding:6px 2px; gap:3px; min-width:0; }
+  .trail-card.compact .trail-name { display:none; }          /* nazwa koloru w dymku (title) */
+  .trail-card.compact .customize-swatch { width:32px; height:32px; border-width:2px; }
+  .trail-card.compact .trail-price { font-size:10px; }
+  .trail-card.compact .buy-tag { font-size:8px; padding:1px 4px; }
+  .shop-grid.customize-grid {
     grid-template-columns:repeat(4, 1fr);
     max-height:none;
     overflow:visible;
@@ -1118,17 +1123,19 @@
     </div>
     <div id="customizeSection" class="hidden">
       <div class="customize-layout">
-        <div class="customize-left">
+        <div class="customize-col customize-col-a">
           <div class="customize-group-label">🎩 Fason czapki</div>
           <div class="shop-grid customize-grid" id="hatStylesGrid"></div>
+          <div class="customize-group-label">🧔 Zarost</div>
+          <div class="shop-grid customize-grid" id="facialHairGrid"></div>
+        </div>
+        <div class="customize-col customize-col-b">
           <div class="customize-group-label">🧢 Kolor czapki</div>
           <div class="shop-grid customize-grid" id="hatsGrid"></div>
           <div class="customize-group-label">🎨 Kolor skóry</div>
           <div class="shop-grid customize-grid" id="skinTonesGrid"></div>
-          <div class="customize-group-label">🧔 Zarost</div>
-          <div class="shop-grid customize-grid" id="facialHairGrid"></div>
         </div>
-        <div class="shop-preview">
+        <div class="shop-preview customize-preview">
           <canvas id="customPreviewCanvas" width="260" height="380"></canvas>
           <button class="menu-btn small" id="btnRotate2">🔄 OBRÓĆ</button>
         </div>
@@ -2728,16 +2735,18 @@
     document.getElementById('shopCoins').textContent = state.wallet;
   }
 
-  function renderCustomizeGrid(gridId, items, ownedArrName, equippedFieldName, previewFn){
+  function renderCustomizeGrid(gridId, items, ownedArrName, equippedFieldName, previewFn, compact){
     const grid = document.getElementById(gridId);
     if(!grid) return;
     grid.innerHTML = '';
+    grid.classList.toggle('compact', !!compact);
     items.forEach(it => {
       const owned = state[ownedArrName].includes(it.id);
       const equipped = state[equippedFieldName] === it.id;
       const afford = isTester() || state.wallet >= it.price;
       const card = document.createElement('div');
-      card.className = 'trail-card' + (equipped ? ' selected':'') + (!owned && !afford ? ' locked':'');
+      card.className = 'trail-card' + (compact ? ' compact' : '') + (equipped ? ' selected':'') + (!owned && !afford ? ' locked':'');
+      if(compact) card.title = it.name;
       card.innerHTML = `
         ${previewFn(it)}
         <div class="trail-name">${it.name}</div>
@@ -2767,9 +2776,9 @@
       (it) => `<canvas class="facial-thumb" data-hat="${it.id}" width="96" height="96"></canvas>`);
     document.querySelectorAll('#hatStylesGrid canvas.facial-thumb').forEach(cv => drawHatThumb(cv, cv.dataset.hat));
     renderCustomizeGrid('hatsGrid', HATS, 'ownedHats', 'equippedHat',
-      (it) => `<div class="customize-swatch" style="background:${it.color || 'linear-gradient(45deg,#999,#ccc)'};"></div>`);
+      (it) => `<div class="customize-swatch" style="background:${it.color || 'linear-gradient(45deg,#999,#ccc)'};"></div>`, true);
     renderCustomizeGrid('skinTonesGrid', SKIN_TONES, 'ownedSkinTones', 'equippedSkinTone',
-      (it) => `<div class="customize-swatch" style="background:${it.color || 'linear-gradient(45deg,#999,#ccc)'};"></div>`);
+      (it) => `<div class="customize-swatch" style="background:${it.color || 'linear-gradient(45deg,#999,#ccc)'};"></div>`, true);
     renderCustomizeGrid('facialHairGrid', FACIAL_HAIR, 'ownedFacialHair', 'equippedFacialHair',
       (it) => `<canvas class="facial-thumb" data-fh="${it.id}" width="96" height="96"></canvas>`);
     document.querySelectorAll('#facialHairGrid canvas.facial-thumb').forEach(cv => drawFacialThumb(cv, cv.dataset.fh));
