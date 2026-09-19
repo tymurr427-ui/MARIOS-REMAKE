@@ -42,6 +42,7 @@
     z-index:10;
   }
   .hidden { display:none !important; }
+  #menuScreen { gap:10px; }   /* 7 przyciskow menu miesci sie na ekranach ~720 px wysokosci */
   #shopScreen {
     justify-content:flex-start;
     overflow-y:auto;
@@ -438,7 +439,7 @@
     cursor:pointer;
     letter-spacing:1px;
   }
-  .lang-btn {
+  .lang-btn, .rank-sort-btn {
     background:rgba(255,255,255,.1);
     border:2px solid rgba(255,255,255,.25);
     color:#fff;
@@ -449,8 +450,8 @@
     cursor:pointer;
     letter-spacing:1px;
   }
-  .quality-btn:hover, .lang-btn:hover { background:rgba(255,255,255,.2); }
-  .quality-btn.active, .lang-btn.active {
+  .quality-btn:hover, .lang-btn:hover, .rank-sort-btn:hover { background:rgba(255,255,255,.2); }
+  .quality-btn.active, .lang-btn.active, .rank-sort-btn.active {
     background:linear-gradient(#ffd23f,#c8860a);
     border-color:#8a5a00;
     color:#3a2600;
@@ -832,40 +833,38 @@
     margin-top:6px;
   }
 
-  .leaderboard-panel {
-    position:absolute;
-    top:12px; left:12px;
-    z-index:30;
+  /* ---- ekran RANKING ---- */
+  .rank-sorts { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:2px 0 10px; }
+  .rank-panel {
+    width:min(780px, 94vw);
+    max-height:50vh;
+    overflow:auto;
     background:rgba(10,10,25,.55);
     border:2px solid rgba(255,255,255,.25);
     border-radius:12px;
-    padding:10px 14px;
-    min-width:190px;
-    backdrop-filter:blur(2px);
+    padding:8px 10px;
     color:#fff;
+    text-align:left;
   }
-  .lb-title {
-    font-weight:900;
-    font-size:13px;
-    color:#ffd23f;
-    margin-bottom:6px;
-    letter-spacing:1px;
-  }
-  .lb-row {
+  .rank-row, .rank-head {
     display:grid;
-    grid-template-columns:18px 1fr auto auto;
-    gap:6px;
+    grid-template-columns:34px minmax(110px,1.7fr) repeat(6, minmax(58px,1fr));
+    gap:8px;
     align-items:center;
-    font-size:12px;
-    padding:2px 0;
+    font-size:13px;
+    padding:6px 4px;
     white-space:nowrap;
+    border-bottom:1px solid rgba(255,255,255,.08);
   }
-  .lb-row.me { color:#ffd23f; font-weight:bold; }
-  .lb-rank { opacity:.7; }
-  .lb-name { overflow:hidden; text-overflow:ellipsis; max-width:70px; }
-  .lb-coins { color:#ffe27a; }
-  .lb-time { opacity:.75; }
-  .lb-empty { font-size:11px; color:#cfe3ff; opacity:.7; }
+  .rank-head { position:sticky; top:-8px; background:#152a55; font-size:11px; font-weight:900; letter-spacing:.5px; color:#ffd23f; z-index:1; }
+  .rank-row.me { background:rgba(255,210,63,.14); color:#ffd23f; font-weight:bold; border-radius:6px; }
+  .rank-row .num, .rank-head .num { text-align:right; }
+  .rank-row .pos { opacity:.75; }
+  .rank-row .nm { overflow:hidden; text-overflow:ellipsis; }
+  .rank-row .sorted, .rank-head .sorted { color:#ffe27a; font-weight:900; }
+  .rank-medal { font-size:15px; }
+  .rank-me-note { margin-top:8px; font-size:13px; color:#ffd23f; font-weight:bold; min-height:18px; }
+  .rank-empty { padding:16px; text-align:center; opacity:.8; font-size:13px; }
 </style>
 </head>
 <body>
@@ -874,7 +873,6 @@
   <button id="createLevelCorner" class="create-level-corner">🛠️ CREATE LEVEL</button>
   <button id="myLevelsCorner" class="create-level-corner my-levels-corner">🗂️ MY LEVELS</button>
   <button id="workshopCorner" class="create-level-corner workshop-corner">🏛️ WARSZTAT</button>
-  <div id="leaderboardBox" class="leaderboard-panel"></div>
 
   <!-- MENU -->
   <div id="menuScreen" class="screen">
@@ -886,6 +884,7 @@
     <button class="menu-btn blue" id="btnShop">🛒 SKLEP</button>
     <button class="menu-btn" id="btnMultiplayer" style="background:linear-gradient(#ff9f4a,#d9660e); border-color:#7a3a05; box-shadow:0 6px 0 #7a3a05,0 8px 10px rgba(0,0,0,.4);">👥 MULTIPLAYER</button>
     <button class="menu-btn" id="btnSpeedrun" style="background:linear-gradient(#ffd23f,#c98f00); border-color:#7a5600; box-shadow:0 6px 0 #7a5600,0 8px 10px rgba(0,0,0,.4);">🏁 SPEEDRUNY</button>
+    <button class="menu-btn" id="btnRanking" style="background:linear-gradient(#5ad1c4,#1f8f86); border-color:#0d4d48; box-shadow:0 6px 0 #0d4d48,0 8px 10px rgba(0,0,0,.4);">🏆 RANKING</button>
     <button class="menu-btn green" id="btnSettings">⚙ USTAWIENIA</button>
     <div id="authBox" class="auth-box"></div>
   </div>
@@ -963,6 +962,16 @@
     <select id="speedrunLevelSelect" class="editor-bg-select" style="margin-bottom:10px;"></select>
     <div class="my-levels-panel" id="speedrunPanel"></div>
     <button class="menu-btn small" id="btnSpeedrunBack">⬅ POWRÓT</button>
+  </div>
+
+  <!-- RANKING GRACZY -->
+  <div id="rankingScreen" class="screen hidden">
+    <div class="title" style="font-size:36px;">🏆 RANKING</div>
+    <div class="small-note">Sortuj wg:</div>
+    <div class="rank-sorts" id="rankSorts"></div>
+    <div class="rank-panel" id="rankPanel"></div>
+    <div class="rank-me-note" id="rankMeNote"></div>
+    <button class="menu-btn small" id="btnRankingBack">⬅ POWRÓT</button>
   </div>
 
   <!-- EDYTOR POZIOMÓW -->
@@ -1180,7 +1189,8 @@
     'Wyczyścić cały poziom w edytorze? Niezapisane zmiany przepadną.':'Clear the whole level in the editor? Unsaved changes will be lost.',
     // ---- statystyki / ustawienia ----
     'STATYSTYKI':'STATS','USTAWIENIA':'SETTINGS','Muzyka':'Music','🔊 WŁĄCZONA':'🔊 ON','🔇 WYŁĄCZONA':'🔇 OFF',
-    'Głośność':'Volume','Grafika':'Graphics','Język':'Language','WYBIERZ POZIOM':'SELECT LEVEL','🔒 zablokowany':'🔒 locked',
+    'Głośność':'Volume','Sortuj wg:':'Sort by:','🪙 Monety':'🪙 Coins','⏱ Czas gry':'⏱ Playtime','💰 Zarobione':'💰 Earned','👾 Wrogowie':'👾 Enemies','👹 Bossowie':'👹 Bosses','🗺 Poziom':'🗺 Level',
+    'Ranking niedostępny bez konta (Supabase).':'Ranking unavailable without an account (Supabase).','Brak wyników.':'No results yet.','Grafika':'Graphics','Język':'Language','WYBIERZ POZIOM':'SELECT LEVEL','🔒 zablokowany':'🔒 locked',
     '🪙 Aktualne monety':'🪙 Current coins','💰 Łącznie zarobione monety':'💰 Total coins earned','🛒 Wydane monety':'🛒 Coins spent',
     '⏱ Dokładny czas gry':'⏱ Exact play time','💀 Liczba śmierci':'💀 Deaths','👾 Zabici przeciwnicy':'👾 Enemies killed',
     '👹 Pokonani bossowie':'👹 Bosses defeated','👕 Posiadane skiny':'👕 Skins owned','🚩 Posiadane trailsy':'🚩 Trails owned',
@@ -1206,7 +1216,7 @@
     'Irlandia':'Ireland','Finlandia':'Finland','Norwegia':'Norway',
     'Dania':'Denmark','Islandia':'Iceland','Szwajcaria':'Switzerland','Czechy':'Czechia','Wielka Brytania':'United Kingdom','Kanada':'Canada',
     'Grecja':'Greece','Portugalia':'Portugal','Węgry':'Hungary','Rumunia':'Romania','Bułgaria':'Bulgaria','Turcja':'Turkey','Brazylia':'Brazil',
-    'Tęcza':'Rainbow','Piracka flaga':'Pirate Flag',
+    'Piracka flaga':'Pirate Flag',
     // ---- personalizacja ----
     'Domyślna':'Default','Czerwona':'Red','Niebieska':'Blue','Zielona':'Green','Fioletowa':'Purple','Czarna':'Black','Różowa':'Pink',
     'Złota':'Gold','Jasna':'Light','Śniada':'Tan','Ciemna':'Dark','Blada':'Pale','Zielona (kosmita)':'Green (alien)',
@@ -1272,6 +1282,7 @@
     [/^\+(\d+) monet$/, '+$1 coins'],
     [/^⏱ Czas: (.*)$/, '⏱ Time: $1'],
     [/^Poziom (\d+)$/, 'Level $1'],
+    [/^Twoje miejsce: #(\d+)$/, 'Your rank: #$1'],
     [/^Gracz( \d+| 💀)?$/, 'Player$1'],
     [/^✅ Zalogowano: (.*)$/, '✅ Logged in: $1'],
     [/^Autor: (.*) • ▶ (\d+) razy zagrany • KOD: (.*)$/, 'Author: $1 • ▶ played $2 times • CODE: $3'],
@@ -1972,7 +1983,6 @@
         equipped_facial_hair: state.equippedFacialHair,
         updated_at: new Date().toISOString(),
       });
-      refreshLeaderboard();
     }, 500);
   }
 
@@ -2092,7 +2102,6 @@
     { id:'bulgaria',    name:'Bułgaria',    price:40, colors:['#ffffff','#00966e','#d62612'] },
     { id:'turkey',      name:'Turcja',      price:50, colors:['#e30a17','#ffffff'] },
     { id:'brazil',      name:'Brazylia',    price:50, colors:['#009c3b','#ffdf00','#002776'] },
-    { id:'rainbow',     name:'Tęcza',       price:60, colors:['#e40303','#ff8c00','#ffed00','#008026','#004dff','#750787'] },
     { id:'pirate',      name:'Piracka flaga', price:60, colors:['#111111','#f2f2f2'] },
   ];
 
@@ -2135,6 +2144,7 @@
   const myLevelsScreen = document.getElementById('myLevelsScreen');
   const workshopScreen = document.getElementById('workshopScreen');
   const speedrunScreen = document.getElementById('speedrunScreen');
+  const rankingScreen = document.getElementById('rankingScreen');
 
   let gamePlaying = false;
   const mpChoiceScreen = document.getElementById('mpChoiceScreen');
@@ -2152,6 +2162,7 @@
     myLevelsScreen.classList.add('hidden');
     workshopScreen.classList.add('hidden');
     speedrunScreen.classList.add('hidden');
+    rankingScreen.classList.add('hidden');
     mpChoiceScreen.classList.add('hidden');
     mpLobbyScreen.classList.add('hidden');
     if(name==='menu') menuScreen.classList.remove('hidden');
@@ -2164,6 +2175,7 @@
     if(name==='myLevels'){ myLevelsScreen.classList.remove('hidden'); renderMyLevels(); renderAdminBuiltInLevels(); }
     if(name==='workshop'){ workshopScreen.classList.remove('hidden'); renderWorkshop(); }
     if(name==='speedrun'){ speedrunScreen.classList.remove('hidden'); renderSpeedrunBoard(); }
+    if(name==='ranking'){ rankingScreen.classList.remove('hidden'); renderRanking(); }
     if(name==='mpChoice') mpChoiceScreen.classList.remove('hidden');
     if(name==='mpLobby') mpLobbyScreen.classList.remove('hidden');
     document.getElementById('menuCoins').textContent = state.wallet;
@@ -2172,10 +2184,7 @@
     document.getElementById('createLevelCorner').style.display = (name==='game') ? 'none' : 'block';
     document.getElementById('myLevelsCorner').style.display = (name==='game') ? 'none' : 'block';
     document.getElementById('workshopCorner').style.display = (name==='game') ? 'none' : 'block';
-    const lb = document.getElementById('leaderboardBox');
-    if(lb) lb.style.display = (name==='game') ? 'none' : 'block';
     gamePlaying = (name === 'game');
-    if(name !== 'game') refreshLeaderboard();
   }
 
   // licznik czasu gry (co sekunde, tylko podczas aktywnej rozgrywki)
@@ -2191,27 +2200,89 @@
     return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 
-  async function refreshLeaderboard(){
-    const el = document.getElementById('leaderboardBox');
-    if(!el) return;
+  // ---------- RANKING GRACZY ----------
+  const RANK_SORTS = [
+    { key:'wallet',             label:'🪙 Monety' },
+    { key:'playtime_seconds',   label:'⏱ Czas gry' },
+    { key:'total_coins_earned', label:'💰 Zarobione' },
+    { key:'enemies_killed',     label:'👾 Wrogowie' },
+    { key:'bosses_killed',      label:'👹 Bossowie' },
+  ];
+  let rankingSort = 'wallet';
+  let rankingReq = 0;
+
+  function fmtNum(n){ return String(n || 0).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  function fmtHM(sec){
+    sec = Math.max(0, Math.floor(sec || 0));
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+    return h + 'h ' + String(m).padStart(2,'0') + 'm';
+  }
+  function myRankValue(key){
+    return ({ wallet: state.wallet, playtime_seconds: state.playtimeSeconds, total_coins_earned: state.totalCoinsEarned,
+              enemies_killed: state.enemiesKilled, bosses_killed: state.bossesKilled })[key] || 0;
+  }
+
+  async function renderRanking(){
+    const sortsEl = document.getElementById('rankSorts');
+    const panel = document.getElementById('rankPanel');
+    const meNote = document.getElementById('rankMeNote');
+    sortsEl.innerHTML = '';
+    RANK_SORTS.forEach(o => {
+      const b = document.createElement('button');
+      b.className = 'rank-sort-btn' + (o.key === rankingSort ? ' active' : '');
+      b.textContent = o.label;
+      b.onclick = () => { rankingSort = o.key; renderRanking(); };
+      sortsEl.appendChild(b);
+    });
+    meNote.textContent = '';
     if(!sb){
-      el.innerHTML = '<div class="lb-title">🏆 RANKING</div><div class="lb-empty">niedostępny bez konta</div>';
+      panel.innerHTML = '<div class="rank-empty">Ranking niedostępny bez konta (Supabase).</div>';
       return;
     }
+    const req = ++rankingReq;
+    panel.innerHTML = '<div class="rank-empty">Wczytywanie...</div>';
     const { data, error } = await sb.from('profiles')
-      .select('display_name,wallet,playtime_seconds')
-      .order('wallet', { ascending:false })
-      .limit(5);
-    if(error || !data || data.length === 0){
-      el.innerHTML = '<div class="lb-title">🏆 RANKING</div><div class="lb-empty">brak wynikow</div>';
+      .select('id,display_name,wallet,playtime_seconds,total_coins_earned,enemies_killed,bosses_killed,unlocked_level')
+      .order(rankingSort, { ascending:false, nullsFirst:false })
+      .limit(50);
+    if(req !== rankingReq) return; // przyszla nowsza prosba (ktos zmienil sortowanie)
+    if(error){
+      panel.innerHTML = '<div class="rank-empty">' + escapeHtml('⚠ Błąd wczytywania: ' + (error.message || error)) + '</div>';
       return;
     }
-    el.innerHTML = '<div class="lb-title">🏆 RANKING</div>' + data.map((row, i) => {
-      const hours = ((row.playtime_seconds || 0) / 3600).toFixed(1);
+    if(!data || data.length === 0){
+      panel.innerHTML = '<div class="rank-empty">Brak wyników.</div>';
+      return;
+    }
+    const cols = [
+      { key:'wallet',             label:'🪙 Monety',    fmt: v => fmtNum(v) },
+      { key:'playtime_seconds',   label:'⏱ Czas gry',   fmt: v => fmtHM(v) },
+      { key:'total_coins_earned', label:'💰 Zarobione', fmt: v => fmtNum(v) },
+      { key:'enemies_killed',     label:'👾 Wrogowie',  fmt: v => fmtNum(v) },
+      { key:'bosses_killed',      label:'👹 Bossowie',  fmt: v => fmtNum(v) },
+      { key:'unlocked_level',     label:'🗺 Poziom',    fmt: v => (Math.min((v || 0) + 1, LEVELS.length)) + '/' + LEVELS.length },
+    ];
+    const medals = ['🥇','🥈','🥉'];
+    let html = '<div class="rank-head"><span>#</span><span>Gracz</span>' +
+      cols.map(c => `<span class="num${c.key === rankingSort ? ' sorted' : ''}">${c.label}</span>`).join('') + '</div>';
+    html += data.map((row, i) => {
+      const isMe = currentUser && row.id === currentUser.id;
       const name = escapeHtml(row.display_name || 'Gracz');
-      const isMe = currentUser && row.display_name === state.displayName;
-      return `<div class="lb-row${isMe?' me':''}"><span class="lb-rank">${i+1}.</span><span class="lb-name">${name}</span><span class="lb-coins">🪙${row.wallet}</span><span class="lb-time">${hours}h</span></div>`;
+      const pos = i < 3 ? `<span class="rank-medal">${medals[i]}</span>` : (i + 1) + '.';
+      return `<div class="rank-row${isMe ? ' me' : ''}"><span class="pos">${pos}</span><span class="nm">${name}</span>` +
+        cols.map(c => `<span class="num${c.key === rankingSort ? ' sorted' : ''}">${c.fmt(row[c.key])}</span>`).join('') + '</div>';
     }).join('');
+    panel.innerHTML = html;
+
+    // moje miejsce (nawet jesli nie ma mnie w top 50)
+    if(currentUser){
+      const { count, error: cErr } = await sb.from('profiles')
+        .select('id', { count:'exact', head:true })
+        .gt(rankingSort, myRankValue(rankingSort));
+      if(req === rankingReq && !cErr && count !== null){
+        meNote.textContent = 'Twoje miejsce: #' + (count + 1);
+      }
+    }
   }
 
   document.getElementById('btnPlay').onclick = () => { showScreen('game'); startLevel(state.unlockedLevel); };
@@ -2219,6 +2290,8 @@
   document.getElementById('btnBack').onclick = () => showScreen('menu');
   document.getElementById('btnLevels').onclick = () => { showScreen('levels'); renderLevels(); };
   document.getElementById('btnLevelsBack').onclick = () => showScreen('menu');
+  document.getElementById('btnRanking').onclick = () => showScreen('ranking');
+  document.getElementById('btnRankingBack').onclick = () => showScreen('menu');
   document.getElementById('btnSettings').onclick = () => showScreen('settings');
   document.getElementById('btnSettingsBack').onclick = () => showScreen('menu');
   document.getElementById('btnStatsBack').onclick = () => showScreen('menu');
@@ -6202,11 +6275,6 @@
         g.fillStyle = c[2]; g.beginPath(); g.arc(0, 0, h*0.24, 0, Math.PI*2); g.fill();
         g.strokeStyle = '#ffffff'; g.lineWidth = Math.max(0.8, h*0.05);
         g.beginPath(); g.arc(0, h*0.06, h*0.2, Math.PI*1.15, Math.PI*1.85); g.stroke();
-        break;
-      }
-      case 'rainbow': {
-        const bh = h / c.length;
-        c.forEach((col,i) => { g.fillStyle = col; g.fillRect(x0, y0 + i*bh, w, bh + 0.5); });
         break;
       }
       case 'pirate': {
