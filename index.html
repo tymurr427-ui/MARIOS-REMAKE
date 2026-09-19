@@ -4586,6 +4586,18 @@
     }
   }
 
+  // ---------- HITBOXY ----------
+  // Obrazenia od wrogow liczymy z MNIEJSZYCH prostokatow niz tekstury (krawedzie, rece, czapka
+  // i rogi wroga juz nie zabijaja). Deptanie wroga dziala dalej na pelnych prostokatach.
+  // Ustaw wszystkie wartosci na 0, zeby wrocic do starych hitboxow.
+  const HURT_PLAYER = { x:6, top:6, bottom:0 };       // gracz 38x54 -> 26x48
+  const HURT_ENEMY  = { x:5, top:6, bottom:2 };       // zwykly wrog 34x34 -> 24x26
+  const HURT_BOSS   = { x:12, top:12, bottom:8 };     // boss 90x90 -> 66x70
+  function shrinkRect(r, i){ return { x:r.x+i.x, y:r.y+i.top, w:r.w-2*i.x, h:r.h-i.top-i.bottom }; }
+  function hurtOverlap(e){
+    return rectsOverlap(shrinkRect(player, HURT_PLAYER), shrinkRect(e, e.type === 'boss' ? HURT_BOSS : HURT_ENEMY));
+  }
+
   function updateEnemies(){
     level.enemies.forEach((e, idx) => {
       if(!e.alive) return;
@@ -4636,7 +4648,7 @@
             } else {
               broadcastEvent('boss_hit', { idx, hp: e.hp });
             }
-          } else if(!player.shieldActive){
+          } else if(!player.shieldActive && hurtOverlap(e)){
             takeDamage();
           }
         }
@@ -4666,7 +4678,7 @@
             AudioEngine.sfxStomp();
             spawnCoinPop();
             broadcastEvent('enemy_dead', { idx });
-          } else {
+          } else if(hurtOverlap(e)){
             takeDamage();
           }
         }
