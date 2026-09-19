@@ -156,18 +156,20 @@
     margin:10px 0 4px;
     text-align:left;
   }
+  #customizeSection { width:min(1240px, calc(100vw - 32px)); }
   .customize-layout {
     display:flex;
     gap:18px;
     align-items:flex-start;
     justify-content:center;
-    flex-wrap:wrap;
+    flex-wrap:nowrap;               /* lista po lewej, podglad zawsze po prawej */
     width:100%;
   }
+  @media (max-width: 1000px){ .customize-layout { flex-wrap:wrap; } }
   .customize-col { display:flex; flex-direction:column; }
-  .customize-col-a { width:min(430px, 100%); }
-  .customize-col-b { width:min(380px, 100%); }
-  .customize-preview { position:sticky; top:16px; align-self:flex-start; }   /* podglad jedzie razem ze scrollem */
+  .customize-col-a { flex:0 1 430px; min-width:0; }
+  .customize-col-b { flex:0 1 380px; min-width:0; }
+  .customize-preview { flex:0 0 302px; align-self:flex-start; }
   .shop-grid.customize-grid.compact { grid-template-columns:repeat(6, 1fr); gap:8px; }
   /* tylko lista fasonow czapek przewija sie sama (bedzie ich przybywac); reszta pokazuje sie w calosci */
   #hatStylesGrid {
@@ -1258,6 +1260,7 @@
     // ---- personalizacja ----
     'Domyślna':'Default','Czerwona':'Red','Niebieska':'Blue','Zielona':'Green','Fioletowa':'Purple','Czarna':'Black','Różowa':'Pink',
     'Złota':'Gold','Jasna':'Light','Śniada':'Tan','Ciemna':'Dark','Blada':'Pale','Zielona (kosmita)':'Green (alien)',
+    'Błękitna':'Sky blue','Miętowa':'Mint','Koralowa':'Coral','Żółta':'Yellow','Magenta':'Magenta','Indygo':'Indigo','Lawendowa':'Lavender','Brzoskwiniowa':'Peach','Łupkowa':'Slate','Leśna':'Forest green','Khaki':'Khaki','Cyjan':'Cyan','Miedziana':'Copper',
     'Pomarańczowa':'Orange','Turkusowa':'Teal','Biała':'White','Bordowa':'Maroon','Limonkowa':'Lime','Granatowa':'Navy','Brązowa':'Brown','Srebrna':'Silver',
     'Bardzo ciemna':'Deep','Oliwkowa':'Olive','Szara':'Gray',
     'Czapka z daszkiem':'Baseball cap','Czapka zimowa':'Beanie','Hełm':'Hard hat','Opaska ninja':'Ninja headband','Kapelusz kowbojski':'Cowboy hat',
@@ -2181,6 +2184,20 @@
     { id:'navy',    name:'Granatowa', price:25, color:'#1c2f6b' },
     { id:'brown',   name:'Brązowa',  price:20, color:'#8a5a2b' },
     { id:'silver',  name:'Srebrna',  price:40, color:'#c0c6d0' },
+    { id:'sky',      name:'Błękitna',    price:25, color:'#5ec8ff' },
+    { id:'mint',     name:'Miętowa',     price:25, color:'#7ee8c3' },
+    { id:'coral',    name:'Koralowa',    price:25, color:'#ff6f61' },
+    { id:'yellow',   name:'Żółta',       price:25, color:'#ffe94a' },
+    { id:'magenta',  name:'Magenta',     price:30, color:'#e0219a' },
+    { id:'olive',    name:'Oliwkowa',    price:20, color:'#7a8b2e' },
+    { id:'indigo',   name:'Indygo',      price:30, color:'#4b3bbf' },
+    { id:'lavender', name:'Lawendowa',   price:25, color:'#b79cff' },
+    { id:'peach',    name:'Brzoskwiniowa', price:25, color:'#ffb98a' },
+    { id:'slate',    name:'Łupkowa',     price:20, color:'#5d6b7a' },
+    { id:'forest',   name:'Leśna',       price:25, color:'#1e6b3a' },
+    { id:'khaki',    name:'Khaki',       price:20, color:'#b5a26a' },
+    { id:'cyan',     name:'Cyjan',       price:30, color:'#00c2d1' },
+    { id:'copper',   name:'Miedziana',   price:35, color:'#b86b3c' },
   ];
 
   // fasony czapek (ksztalt); kolor czapki wybiera sie osobno w HATS
