@@ -169,6 +169,17 @@
   .customize-col-b { width:min(380px, 100%); }
   .customize-preview { position:sticky; top:16px; align-self:flex-start; }   /* podglad jedzie razem ze scrollem */
   .shop-grid.customize-grid.compact { grid-template-columns:repeat(6, 1fr); gap:8px; }
+  /* tylko lista fasonow czapek przewija sie sama (bedzie ich przybywac); reszta pokazuje sie w calosci */
+  #hatStylesGrid {
+    max-height:344px;               /* 3 rzedy + kawalek nastepnego, zeby bylo widac, ze jest wiecej */
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:4px 6px 4px 4px;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(255,255,255,.4) transparent;
+  }
+  #hatStylesGrid::-webkit-scrollbar { width:6px; }
+  #hatStylesGrid::-webkit-scrollbar-thumb { background:rgba(255,255,255,.35); border-radius:3px; }
   .customize-col-a .shop-grid.customize-grid.compact { grid-template-columns:repeat(5, 1fr); }
   .trail-card.compact { padding:6px 2px; gap:3px; min-width:0; }
   .trail-card.compact .trail-name { display:none; }          /* nazwa koloru w dymku (title) */
