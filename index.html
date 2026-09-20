@@ -274,7 +274,7 @@
     grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));
     gap:14px;
     margin:10px 0;
-    max-height:44vh;
+    max-height:max(44vh, 494px);   /* skiny/trails: minimum 3 pelne rzedy widoczne, mniej przewijania */
     max-width:780px;
     overflow-y:auto;
   }
@@ -1262,6 +1262,7 @@
     'Złota':'Gold','Jasna':'Light','Śniada':'Tan','Ciemna':'Dark','Blada':'Pale','Zielona (kosmita)':'Green (alien)',
     'Błękitna':'Sky blue','Miętowa':'Mint','Koralowa':'Coral','Żółta':'Yellow','Magenta':'Magenta','Indygo':'Indigo','Lawendowa':'Lavender','Brzoskwiniowa':'Peach','Łupkowa':'Slate','Leśna':'Forest green','Khaki':'Khaki','Cyjan':'Cyan','Miedziana':'Copper',
     'Pomarańczowa':'Orange','Turkusowa':'Teal','Biała':'White','Bordowa':'Maroon','Limonkowa':'Lime','Granatowa':'Navy','Brązowa':'Brown','Srebrna':'Silver',
+    'Porcelanowa':'Porcelain','Piaskowa':'Sand','Miodowa':'Honey','Karmelowa':'Caramel','Mokka':'Mocha','Heban':'Ebony',
     'Bardzo ciemna':'Deep','Oliwkowa':'Olive','Szara':'Gray',
     'Czapka z daszkiem':'Baseball cap','Czapka zimowa':'Beanie','Hełm':'Hard hat','Opaska ninja':'Ninja headband','Kapelusz kowbojski':'Cowboy hat',
     'Kaszkiet':'Flat cap','Kapelusz wędkarza':'Bucket hat','Beret':'Beret','Czapeczka urodzinowa':'Party hat','Czapka ze śmigłem':'Propeller cap',
@@ -2240,6 +2241,20 @@
     { id:'gray',    name:'Szara',    price:25, color:'#b8bcc6' },
     { id:'orange',  name:'Pomarańczowa', price:30, color:'#ff9f43' },
     { id:'red',     name:'Czerwona', price:30, color:'#e4573d' },
+    { id:'porcelain', name:'Porcelanowa', price:15, color:'#f7e1d0' },
+    { id:'sand',      name:'Piaskowa',    price:15, color:'#e8c9a0' },
+    { id:'honey',     name:'Miodowa',     price:15, color:'#d9a066' },
+    { id:'caramel',   name:'Karmelowa',   price:15, color:'#b97a4b' },
+    { id:'mocha',     name:'Mokka',       price:15, color:'#8a5a3c' },
+    { id:'ebony',     name:'Heban',       price:20, color:'#4a2c1a' },
+    { id:'mint',      name:'Miętowa',     price:25, color:'#9be8c9' },
+    { id:'yellow',    name:'Żółta',       price:25, color:'#ffe066' },
+    { id:'teal',      name:'Turkusowa',   price:30, color:'#4fd1c5' },
+    { id:'lavender',  name:'Lawendowa',   price:25, color:'#cbb8ff' },
+    { id:'lime',      name:'Limonkowa',   price:30, color:'#b6e34a' },
+    { id:'white',     name:'Biała',       price:35, color:'#f5f5f5' },
+    { id:'black',     name:'Czarna',      price:35, color:'#2b2b33' },
+    { id:'magenta',   name:'Magenta',     price:30, color:'#e070c0' },
   ];
 
   const FACIAL_HAIR = [
