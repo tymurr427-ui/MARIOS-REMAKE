@@ -42,6 +42,7 @@
     z-index:10;
   }
   .hidden { display:none !important; }
+  .settings-note { font-size:12px; line-height:1.4; opacity:.85; text-align:left; color:#cfe3ff; }
   #menuScreen { gap:10px; }   /* 7 przyciskow menu miesci sie na ekranach ~720 px wysokosci */
   #shopScreen {
     justify-content:flex-start;
@@ -459,7 +460,7 @@
     cursor:pointer;
     letter-spacing:1px;
   }
-  .lang-btn, .rank-sort-btn {
+  .lang-btn, .rank-sort-btn, .fps-btn {
     background:rgba(255,255,255,.1);
     border:2px solid rgba(255,255,255,.25);
     color:#fff;
@@ -470,8 +471,8 @@
     cursor:pointer;
     letter-spacing:1px;
   }
-  .quality-btn:hover, .lang-btn:hover, .rank-sort-btn:hover { background:rgba(255,255,255,.2); }
-  .quality-btn.active, .lang-btn.active, .rank-sort-btn.active {
+  .quality-btn:hover, .lang-btn:hover, .rank-sort-btn:hover, .fps-btn:hover { background:rgba(255,255,255,.2); }
+  .quality-btn.active, .lang-btn.active, .rank-sort-btn.active, .fps-btn.active {
     background:linear-gradient(#ffd23f,#c8860a);
     border-color:#8a5a00;
     color:#3a2600;
@@ -1096,6 +1097,19 @@
         </div>
       </div>
       <div class="settings-row" style="align-items:flex-start;">
+        <span>Limit FPS</span>
+        <div class="quality-buttons" id="fpsButtons">
+          <button class="fps-btn" data-fps="60">60</button>
+          <button class="fps-btn" data-fps="144">144</button>
+          <button class="fps-btn" data-fps="0">BEZ LIMITU</button>
+        </div>
+      </div>
+      <div class="settings-note">60 FPS jest najlepsze dla fizyki - przy wyższych wartościach gra działa szybciej, bo fizyka liczy się w każdej klatce. Czasy speedrunów zapisują się tylko przy 60 FPS.</div>
+      <div class="settings-row">
+        <span>Licznik FPS</span>
+        <button class="menu-btn small" id="btnFpsCounter">📊 WŁĄCZONY</button>
+      </div>
+      <div class="settings-row" style="align-items:flex-start;">
         <span>Język</span>
         <div class="quality-buttons" id="langButtons">
           <button class="lang-btn" data-lang="en">ENGLISH</button>
@@ -1181,6 +1195,7 @@
       <div class="hud-pill">Poziom <span id="hudLevel">1</span></div>
       <div class="hud-pill" id="hudTimerPill">⏱ <span id="hudTimer">00:00.0</span></div>
       <div class="hud-pill shield-pill hidden" id="hudShieldPill">🛡 <span id="hudShieldText">0</span></div>
+      <div class="hud-pill" id="hudFpsPill">FPS <span id="hudFps">--</span></div>
     </div>
     <button id="fsBtn">⛶ PEŁNY EKRAN</button>
     <button id="muteBtn" style="left:auto;">🔊</button>
@@ -1228,6 +1243,9 @@
     'Wyczyścić cały poziom w edytorze? Niezapisane zmiany przepadną.':'Clear the whole level in the editor? Unsaved changes will be lost.',
     // ---- statystyki / ustawienia ----
     'STATYSTYKI':'STATS','USTAWIENIA':'SETTINGS','Muzyka':'Music','🔊 WŁĄCZONA':'🔊 ON','🔇 WYŁĄCZONA':'🔇 OFF',
+    'Limit FPS':'FPS limit','BEZ LIMITU':'UNLIMITED','Licznik FPS':'FPS counter','📊 WŁĄCZONY':'📊 ON','📊 WYŁĄCZONY':'📊 OFF',
+    '60 FPS jest najlepsze dla fizyki - przy wyższych wartościach gra działa szybciej, bo fizyka liczy się w każdej klatce. Czasy speedrunów zapisują się tylko przy 60 FPS.':
+      '60 FPS is best for physics - higher values make the game run faster, because physics is calculated every frame. Speedrun times are only saved at 60 FPS.',
     'Głośność':'Volume','Długość poziomu':'Level length','🟠 Trampolina':'🟠 Trampoline','🧱 Kruszący blok':'🧱 Crumbling block','↩ COFNIJ (Ctrl+Z)':'↩ UNDO (Ctrl+Z)',
     '↩ Nie ma czego cofać (maks. 3 cofnięcia)':'↩ Nothing to undo (max 3 undos)','Sortuj wg:':'Sort by:','🪙 Monety':'🪙 Coins','⏱ Czas gry':'⏱ Playtime','💰 Zarobione':'💰 Earned','👾 Wrogowie':'👾 Enemies','👹 Bossowie':'👹 Bosses','🗺 Poziom':'🗺 Level',
     'Ranking niedostępny bez konta (Supabase).':'Ranking unavailable without an account (Supabase).','Brak wyników.':'No results yet.','Grafika':'Graphics','Język':'Language','WYBIERZ POZIOM':'SELECT LEVEL','🔒 zablokowany':'🔒 locked',
@@ -3621,6 +3639,7 @@
 
   async function saveSpeedrunTime(levelIndex, timeMs){
     if(!sb || !currentUser) return;
+    if(fpsLimit !== 60) return;   // czasy do rankingu tylko przy 60 FPS (przy wiecej gra jest szybsza)
     try {
       const { data: existing } = await sb.from('level_times')
         .select('time_ms')
@@ -6898,9 +6917,62 @@
     }
   }
 
-  function loop(){
-    update();
-    draw();
+  // ---------- LIMIT FPS + LICZNIK ----------
+  // Fizyka gry liczy sie raz na klatke (zaprojektowana pod 60 klatek/s), wiec limit FPS = tempo gry.
+  let fpsLimit = 60;                 // 60 | 144 | 0 (bez limitu)
+  try { const v = localStorage.getItem('spb_fps'); if(v === '60' || v === '144' || v === '0') fpsLimit = Number(v); } catch(e){}
+  let fpsCounterOn = true;
+  try { fpsCounterOn = localStorage.getItem('spb_showfps') !== '0'; } catch(e){}
+  let fpsNext = 0, fpsFrames = 0, fpsStamp = 0;
+
+  // true = w tej klatce przeglada trzeba zrobic update+draw (harmonogram co 1000/limit ms, tolerancja 1.5 ms)
+  function fpsGate(ts){
+    if(!fpsLimit) return true;
+    const interval = 1000 / fpsLimit;
+    if(!fpsNext || ts - fpsNext > interval * 2) fpsNext = ts;   // pierwszy raz albo duze opoznienie (karta w tle)
+    if(ts + 1.5 < fpsNext) return false;
+    fpsNext += interval;
+    return true;
+  }
+  function fpsTick(ts){
+    fpsFrames++;
+    if(!fpsStamp) fpsStamp = ts;
+    const d = ts - fpsStamp;
+    if(d >= 500){
+      const el = document.getElementById('hudFps');
+      if(el) el.textContent = Math.round(fpsFrames * 1000 / d);
+      fpsFrames = 0; fpsStamp = ts;
+    }
+  }
+  function applyFpsUI(){
+    document.querySelectorAll('.fps-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.fps) === fpsLimit));
+    const pill = document.getElementById('hudFpsPill');
+    if(pill) pill.classList.toggle('hidden', !fpsCounterOn);
+    const tb = document.getElementById('btnFpsCounter');
+    if(tb) tb.textContent = fpsCounterOn ? '📊 WŁĄCZONY' : '📊 WYŁĄCZONY';
+  }
+  document.querySelectorAll('.fps-btn').forEach(b => {
+    b.onclick = () => {
+      fpsLimit = Number(b.dataset.fps);
+      fpsNext = 0; fpsFrames = 0; fpsStamp = 0;
+      try { localStorage.setItem('spb_fps', String(fpsLimit)); } catch(e){}
+      applyFpsUI();
+    };
+  });
+  document.getElementById('btnFpsCounter').onclick = () => {
+    fpsCounterOn = !fpsCounterOn;
+    try { localStorage.setItem('spb_showfps', fpsCounterOn ? '1' : '0'); } catch(e){}
+    applyFpsUI();
+  };
+  applyFpsUI();
+
+  function loop(ts){
+    const t = (ts !== undefined) ? ts : performance.now();
+    if(fpsGate(t)){
+      update();
+      draw();
+      fpsTick(t);
+    }
     if(!levelDone){
       rafId = requestAnimationFrame(loop);
     } else {
