@@ -246,10 +246,10 @@
   function updateEnemies(){
     level.enemies.forEach((e, idx) => {
       if(!e.alive) return;
-      e.animT = (e.animT||0) + 0.09;
+      e.animT = (e.animT||0) + 0.09 * ENEMY_SPEED_K;
 
       if(e.type === 'flyer'){
-        e.x += e.vx;
+        e.x += e.vx * ENEMY_SPEED_K;
         if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
         if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
         e.y = e.baseY + Math.sin(e.animT*0.6) * (e.amp||30);
@@ -257,13 +257,13 @@
         const hop = Math.abs(Math.sin(e.animT*0.25));
         e.y = e.baseY - hop*(e.jumpHeight||70);
       } else if(e.type === 'boss'){
-        e.x += e.vx;
+        e.x += e.vx * ENEMY_SPEED_K;
         if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
         if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
         e.y = e.baseY + Math.sin(e.animT*0.8) * 12;
         if(e.hitTimer > 0) e.hitTimer--;
       } else {
-        e.x += e.vx;
+        e.x += e.vx * ENEMY_SPEED_K;
         if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
         if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
       }
@@ -402,11 +402,15 @@
   // ---------- ORYGINALNE TEMPO MARIO ----------
   // Klasyczne NES Mario: chód ~1.5 px/klatke w jednostkach gry, bieg szybszy,
   // przyspieszenie/tarcie zamiast natychmiastowej predkosci, skok zmiennej wysokosci.
-  const WALK_MAX = 2.21; // 2.6 * 0.85 (chod o 15% wolniejszy)
-  const RUN_MAX = 4.5; // 5.0 * 0.9 (bieg o 10% wolniejszy)
-  const ACCEL = 0.32;
-  const DECEL_GROUND = 0.36;
-  const DECEL_AIR = 0.16;
+  // Tempo poziome: mnozniki predkosci (1 = poprzednie tempo, 1.1 = o 10% szybciej).
+  // Gracz: chod, bieg i przyspieszanie/hamowanie skaluja sie razem (ta sama "zwinnosc"). Skok pionowy bez zmian.
+  const PLAYER_SPEED_K = 1.1;
+  const ENEMY_SPEED_K = 1.1;   // wrogowie: ruch poziomy + tempo animacji (skoki jumperow, falowanie flyerow)
+  const WALK_MAX = 2.21 * PLAYER_SPEED_K; // 2.6 * 0.85 (chod o 15% wolniejszy)
+  const RUN_MAX = 4.5 * PLAYER_SPEED_K; // 5.0 * 0.9 (bieg o 10% wolniejszy)
+  const ACCEL = 0.32 * PLAYER_SPEED_K;
+  const DECEL_GROUND = 0.36 * PLAYER_SPEED_K;
+  const DECEL_AIR = 0.16 * PLAYER_SPEED_K;
   const JUMP_VELOCITY = -13.9 * JUMP_TIME_K;
   const TRAMPOLINE_VELOCITY = -21.5 * JUMP_TIME_K; // mocne odbicie - nowa przeszkoda
 
@@ -451,9 +455,9 @@
       level.coins.forEach(c => { if(!c.taken) c.t += 0.15; });
       level.enemies.forEach(e => {
         if(!e.alive) return;
-        e.animT = (e.animT||0) + 0.09;
+        e.animT = (e.animT||0) + 0.09 * ENEMY_SPEED_K;
         if(e.type === 'flyer'){
-          e.x += e.vx;
+          e.x += e.vx * ENEMY_SPEED_K;
           if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
           if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
           e.y = e.baseY + Math.sin(e.animT*0.6) * (e.amp||30);
@@ -461,7 +465,7 @@
           const hop = Math.abs(Math.sin(e.animT*0.25));
           e.y = e.baseY - hop*(e.jumpHeight||70);
         } else {
-          e.x += e.vx;
+          e.x += e.vx * ENEMY_SPEED_K;
           if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
           if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
         }
