@@ -882,3 +882,77 @@
   .rank-medal { font-size:15px; }
   .rank-me-note { margin-top:8px; font-size:13px; color:#ffd23f; font-weight:bold; min-height:18px; }
   .rank-empty { padding:16px; text-align:center; opacity:.8; font-size:13px; }
+
+  /* ---------- zadania / poziom gracza / osiagniecia ---------- */
+  .left-corner-btn {
+    position:absolute; top:12px; left:12px; z-index:30;
+    background:linear-gradient(#ffd23f,#c8860a); border:2px solid #7a5200; color:#3a2600;
+    font-weight:bold; font-size:11px; padding:6px 12px; border-radius:16px; cursor:pointer;
+    box-shadow:0 3px 0 #7a5200; letter-spacing:.5px; display:none;
+  }
+  .left-corner-btn.lvl-corner { top:48px; background:linear-gradient(#a06bff,#5b2ea8); border-color:#331a66; color:#fff; box-shadow:0 3px 0 #331a66; }
+  .left-corner-btn:hover { filter:brightness(1.1); }
+  .left-corner-btn:active { transform:translateY(2px); box-shadow:none; }
+  .corner-chip { display:inline-block; margin-left:6px; padding:1px 7px; border-radius:10px; background:rgba(0,0,0,.28); font-size:10px; }
+  .left-corner-btn.has-claim .corner-chip { background:#e8362a; color:#fff; animation:qPulse 1.2s infinite; }
+  @keyframes qPulse { 50% { transform:scale(1.15); } }
+
+  .q-screen { justify-content:flex-start; padding:22px 16px 18px; gap:10px; }
+  .q-head { display:flex; align-items:center; gap:16px; width:min(640px, 94vw); background:rgba(0,0,0,.3); border:2px solid rgba(255,255,255,.22); border-radius:14px; padding:10px 16px; }
+  .q-lvl-badge { display:flex; flex-direction:column; align-items:center; min-width:96px; }
+  .q-lvl-label { font-size:10px; letter-spacing:1px; color:#cfe3ff; }
+  .q-lvl-badge b { font-size:40px; line-height:1; color:#ffd23f; text-shadow:2px 2px 0 #7a1f0f; font-family:'Impact','Arial Black',sans-serif; }
+  .q-head-mid { flex:1; text-align:left; }
+  .q-title-line { font-size:13px; margin-bottom:6px; }
+  .q-title-line b { color:#ffd23f; }
+  .q-xpbar, .q-bar { height:10px; background:rgba(0,0,0,.4); border-radius:6px; overflow:hidden; border:1px solid rgba(255,255,255,.2); }
+  .q-xpbar i { display:block; height:100%; background:linear-gradient(#7dffb0,#1fae5a); }
+  .q-bar i { display:block; height:100%; background:linear-gradient(#ffd23f,#e08a0a); }
+  .q-xp-line { font-size:12px; margin-top:5px; color:#cfe3ff; }
+  .q-xp-line b { color:#fff; }
+  .q-dim { opacity:.5; }
+  .q-tabs { display:flex; gap:8px; }
+  .q-tab-btn { background:rgba(255,255,255,.1); border:2px solid rgba(255,255,255,.25); color:#fff; font-weight:bold; font-size:12px; padding:8px 14px; border-radius:10px; cursor:pointer; letter-spacing:1px; }
+  .q-tab-btn:hover { background:rgba(255,255,255,.2); }
+  .q-tab-btn.active { background:linear-gradient(#ffd23f,#c8860a); border-color:#8a5a00; color:#3a2600; }
+  .q-panel { position:relative; width:min(640px, 94vw); flex:1 1 auto; min-height:120px; max-height:calc(100vh - 330px); overflow:auto; background:rgba(10,10,25,.55); border:2px solid rgba(255,255,255,.25); border-radius:12px; padding:8px 10px; text-align:left; }
+  .q-info { font-size:12px; color:#cfe3ff; text-align:center; padding:2px 0 8px; }
+  .q-info b { color:#ffd23f; }
+  .q-row { display:flex; align-items:center; gap:10px; padding:8px 8px; border-radius:10px; background:rgba(255,255,255,.06); margin-bottom:6px; }
+  .q-row.ready { background:rgba(255,210,63,.16); box-shadow:inset 0 0 0 2px rgba(255,210,63,.5); }
+  .q-row.claimed { opacity:.55; }
+  .q-row.locked { opacity:.6; }
+  .q-row.current { box-shadow:inset 0 0 0 2px #7dffb0; }
+  .q-ico { font-size:22px; width:30px; text-align:center; }
+  .q-mid { flex:1; min-width:0; }
+  .q-desc { font-size:13px; font-weight:bold; margin-bottom:4px; }
+  .q-num { font-size:11px; color:#cfe3ff; min-width:74px; text-align:right; }
+  .q-xp { font-size:12px; font-weight:bold; color:#7dffb0; min-width:60px; text-align:right; }
+  .q-right { min-width:78px; text-align:center; }
+  .q-claim { background:linear-gradient(#3fd06b,#1f8a44); border:2px solid #0f5a2a; color:#fff; font-weight:bold; font-size:11px; padding:6px 10px; border-radius:8px; cursor:pointer; letter-spacing:.5px; box-shadow:0 2px 0 #0f5a2a; }
+  .q-claim:hover { filter:brightness(1.1); }
+  .q-check { font-size:16px; }
+  .q-lock { opacity:.6; font-size:14px; }
+  .q-lv { font-family:'Impact','Arial Black',sans-serif; font-size:18px; color:#ffd23f; min-width:64px; text-align:left; }
+  .q-rw-mid { display:flex; align-items:center; gap:14px; font-size:13px; font-weight:bold; }
+  .q-rw-coins { color:#ffd23f; }
+  .q-rw-title { color:#d9c2ff; }
+
+  .ach-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:10px; width:min(960px, 96vw); max-height:calc(100vh - 210px); overflow:auto; padding:4px; }
+  .ach-card { background:rgba(10,10,25,.55); border:2px solid rgba(255,255,255,.2); border-radius:12px; padding:10px 10px 12px; text-align:center; display:flex; flex-direction:column; gap:5px; align-items:center; opacity:.8; }
+  .ach-card.on { opacity:1; border-color:#ffd23f; box-shadow:0 0 14px rgba(255,210,63,.35); background:rgba(60,45,5,.55); }
+  .ach-ico { font-size:30px; filter:grayscale(1); }
+  .ach-card.on .ach-ico { filter:none; }
+  .ach-name { font-size:13px; font-weight:bold; }
+  .ach-desc { font-size:11px; color:#cfe3ff; min-height:28px; }
+  .ach-card .q-bar { width:100%; }
+  .ach-prog { font-size:10px; color:#cfe3ff; }
+  .ach-badge { font-size:10px; font-weight:bold; letter-spacing:1px; color:#3a2600; background:linear-gradient(#ffd23f,#c8860a); padding:3px 8px; border-radius:8px; }
+
+  .toast-stack { position:absolute; bottom:22px; left:50%; transform:translateX(-50%); z-index:80; display:flex; flex-direction:column-reverse; gap:8px; pointer-events:none; align-items:center; }
+  .q-toast { display:flex; align-items:center; gap:10px; background:rgba(15,15,40,.94); border:2px solid #ffd23f; border-radius:12px; padding:8px 16px; color:#fff; box-shadow:0 4px 16px rgba(0,0,0,.45); animation:qToastIn .35s ease-out; text-align:left; }
+  .q-toast.out { opacity:0; transform:translateY(10px); transition:all .45s; }
+  .q-toast-ico { font-size:26px; }
+  .q-toast-title { font-size:12px; font-weight:bold; color:#ffd23f; letter-spacing:.5px; }
+  .q-toast-text { font-size:13px; font-weight:bold; }
+  @keyframes qToastIn { from { opacity:0; transform:translateY(14px); } }
