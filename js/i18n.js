@@ -117,6 +117,16 @@
     'Zapisywanie...':'Saving...','✅ Zapisano! Kod poziomu:':'✅ Saved! Level code:',
     '— podaj go znajomemu, żeby zagrał na tym samym poziomie (też w multiplayer). Znajdziesz go też w "MOJE POZIOMY".':
       '— give it to a friend so they can play the same level (also in multiplayer). You can also find it in "MY LEVELS".',
+    // ---- zadania / poziom gracza / osiagniecia ----
+    '🏅 OSIĄGNIĘCIA':'🏅 ACHIEVEMENTS','⭐ POZIOM GRACZA':'⭐ PLAYER LEVEL','POZIOM GRACZA':'PLAYER LEVEL',
+    '📅 DZIENNE':'📅 DAILY','♾️ STAŁE':'♾️ PERMANENT','🎁 NAGRODY':'🎁 REWARDS','ODBIERZ':'CLAIM',
+    'Nowe zadania za':'New quests in','Bonus za wszystkie 5 zadań dziennych':'Bonus for all 5 daily quests',
+    'Tytuł:':'Title:','MAKSYMALNY POZIOM':'MAX LEVEL','Do następnego poziomu:':'To next level:',
+    'Odblokowane:':'Unlocked:','ODBLOKOWANE':'UNLOCKED',
+    'Zaloguj się przez Google, aby zapisywać postęp.':'Log in with Google to save your progress.',
+    'Osiągnięcie odblokowane!':'Achievement unlocked!','Nowy poziom gracza!':'Level up!',
+    'Odebrano nagrodę!':'Reward claimed!','Bonus dzienny!':'Daily bonus!',
+    'Wszystkie zadania dzienne wykonane':'All daily quests completed',
     // ---- banery ----
     'POZIOM WŁASNY UKOŃCZONY!':'CUSTOM LEVEL COMPLETED!','POZIOM UKOŃCZONY!':'LEVEL COMPLETED!','UKOŃCZYLIŚCIE WSZYSTKIE POZIOMY!':'YOU FINISHED ALL LEVELS!',
     'UKOŃCZYŁEŚ WSZYSTKIE POZIOMY!':'YOU FINISHED ALL LEVELS!','PRZEGRANA - RESTART POZIOMU':'DEFEAT - RESTARTING LEVEL'
@@ -295,5 +305,13 @@
   startObserver();
   document.querySelectorAll('.lang-btn').forEach(function(b){ b.onclick = function(){ setLang(b.dataset.lang); }; });
   updateLangButtons();
-  window.I18N = { tr: tr, setLang: setLang, get lang(){ return lang; } };
+  // dodawanie tlumaczen z innych plikow (np. quests.js); istniejace wpisy nie sa nadpisywane
+  function addDict(obj){
+    Object.keys(obj).forEach(function(k){
+      var key = nf(k.replace(/\s+/g,' ').trim());
+      if(!DICT.has(key)) DICT.set(key, obj[k]);
+    });
+    cache.clear();
+  }
+  window.I18N = { tr: tr, setLang: setLang, addDict: addDict, get lang(){ return lang; } };
 })();

@@ -28,6 +28,7 @@
     equippedSkinTone: 'default',
     ownedFacialHair: ['mustache'],
     equippedFacialHair: 'mustache',
+    quests: null,   // zadania/XP/osiagniecia (quests.js), zapis w kolumnie quest_data
   };
 
   function nameFromUser(user){
@@ -73,10 +74,12 @@
       state.equippedSkinTone = data.equipped_skin_tone ?? 'default';
       state.ownedFacialHair = data.owned_facial_hair ?? ['mustache'];
       state.equippedFacialHair = data.equipped_facial_hair ?? 'mustache';
+      state.quests = normalizeQuests(data.quest_data);
       if(data.display_name) state.displayName = data.display_name;
       else await sb.from('profiles').update({ display_name: state.displayName }).eq('id', user.id);
     }
     applySettingsFromState();
+    questsAfterLoad();
   }
 
   function applySettingsFromState(){
@@ -101,7 +104,7 @@
     if(!sb || !currentUser) return;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(async () => {
-      await sb.from('profiles').upsert({
+      const row = {
         id: currentUser.id,
         wallet: state.wallet,
         owned_skins: state.ownedSkins,
@@ -127,8 +130,15 @@
         equipped_skin_tone: state.equippedSkinTone,
         owned_facial_hair: state.ownedFacialHair,
         equipped_facial_hair: state.equippedFacialHair,
+        quest_data: state.quests,
         updated_at: new Date().toISOString(),
-      });
+      };
+      const res = await sb.from('profiles').upsert(row);
+      // brak kolumny quest_data (SQL jeszcze nie odpalony) -> zapisz reszte profilu bez niej
+      if(res && res.error && /quest_data/.test(res.error.message || '')){
+        delete row.quest_data;
+        await sb.from('profiles').upsert(row);
+      }
     }, 500);
   }
 
@@ -144,6 +154,7 @@
     await sb.auth.signOut();
     currentUser = null;
     state.wallet = 0; state.ownedSkins = ['classic']; state.equippedSkin = 'classic'; state.unlockedLevel = 0;
+    state.quests = defaultQuests();
     updateAuthUI();
     showScreen('menu');
   }

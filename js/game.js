@@ -284,6 +284,7 @@
             if(e.hp <= 0){
               e.alive = false;
               state.bossesKilled++;
+              questEvent('kill');
               runCoins += 20;
               document.getElementById('hudCoins').textContent = runCoins;
               for(let i=0;i<10;i++) spawnCoinPop();
@@ -304,6 +305,7 @@
         if(rectsOverlap(player, e)){
           e.alive = false;
           state.enemiesKilled++;
+          questEvent('kill');
           runCoins += 1;
           document.getElementById('hudCoins').textContent = runCoins;
           AudioEngine.sfxStomp();
@@ -316,6 +318,7 @@
           if(stomp){
             e.alive = false;
             state.enemiesKilled++;
+            questEvent('kill');
             player.vy = -9.5 * JUMP_TIME_K;
             player.invuln = 20;
             runCoins += 1;
@@ -501,6 +504,7 @@
       player.vy = JUMP_VELOCITY;
       player.onGround = false;
       player.jumping = true;
+      questEvent('jump');
       AudioEngine.sfxJump();
     }
     if(!jumpHeld && player.vy < -JUMP_CUT*6){
@@ -606,6 +610,7 @@
         if(rectsOverlap(player, cb)){
           c.taken = true;
           runCoins++;
+          questEvent('coin');
           document.getElementById('hudCoins').textContent = runCoins;
           spawnCoinPop();
           AudioEngine.sfxCoin();
@@ -646,6 +651,10 @@
     }
     if(!customLevelActive && won && !mpChannel){
       saveSpeedrunTime(currentLevelIndex, runElapsedMs);
+    }
+    if(won && !editorTesting){
+      questEvent('win');
+      if(!customLevelActive && currentLevelIndex === LEVELS.length - 1) state.quests.c.beatGame++;
     }
     saveProfile();
     setTimeout(() => {

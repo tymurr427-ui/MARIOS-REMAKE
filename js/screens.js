@@ -12,6 +12,7 @@
   const workshopScreen = document.getElementById('workshopScreen');
   const speedrunScreen = document.getElementById('speedrunScreen');
   const rankingScreen = document.getElementById('rankingScreen');
+  // ekrany lvlScreen / achScreen (zadania, poziom gracza, osiagniecia) sa w quests.js
 
   let gamePlaying = false;
   const mpChoiceScreen = document.getElementById('mpChoiceScreen');
@@ -30,6 +31,8 @@
     workshopScreen.classList.add('hidden');
     speedrunScreen.classList.add('hidden');
     rankingScreen.classList.add('hidden');
+    lvlScreen.classList.add('hidden');
+    achScreen.classList.add('hidden');
     mpChoiceScreen.classList.add('hidden');
     mpLobbyScreen.classList.add('hidden');
     if(name==='menu') menuScreen.classList.remove('hidden');
@@ -43,6 +46,8 @@
     if(name==='workshop'){ workshopScreen.classList.remove('hidden'); renderWorkshop(); }
     if(name==='speedrun'){ speedrunScreen.classList.remove('hidden'); renderSpeedrunBoard(); }
     if(name==='ranking'){ rankingScreen.classList.remove('hidden'); renderRanking(); }
+    if(name==='lvl'){ lvlScreen.classList.remove('hidden'); openLevelScreen(); }
+    if(name==='achievements'){ achScreen.classList.remove('hidden'); checkAchievements(true); renderAchievements(); }
     if(name==='mpChoice') mpChoiceScreen.classList.remove('hidden');
     if(name==='mpLobby') mpLobbyScreen.classList.remove('hidden');
     document.getElementById('menuCoins').textContent = state.wallet;
@@ -51,6 +56,9 @@
     document.getElementById('createLevelCorner').style.display = (name==='menu') ? 'block' : 'none';   // skroty tylko w menu glownym
     document.getElementById('myLevelsCorner').style.display = (name==='menu') ? 'block' : 'none';   // skroty tylko w menu glownym
     document.getElementById('workshopCorner').style.display = (name==='menu') ? 'block' : 'none';   // skroty tylko w menu glownym
+    document.getElementById('achCorner').style.display = (name==='menu') ? 'block' : 'none';
+    document.getElementById('lvlCorner').style.display = (name==='menu') ? 'block' : 'none';
+    if(name==='menu') updateCorner();
     gamePlaying = (name === 'game');
   }
 
