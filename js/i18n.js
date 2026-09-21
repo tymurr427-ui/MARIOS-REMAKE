@@ -54,6 +54,7 @@
     'Cień':'Shadow','Królewski':'Royal','Neonowy':'Neon','Złoty VIP':'Golden VIP','Kosmiczny':'Cosmic','Wojownik':'Warrior',
     'Leśny':'Forest','Wampir':'Vampire','Plażowy':'Beach','Diamentowy':'Diamond','Samuraj':'Samurai','Toksyczny':'Toxic',
     'Faraon':'Pharaoh','Cukierkowy':'Candy',
+    'Kowboj':'Cowboy','Astronauta':'Astronaut','Lawowy':'Lava','Morski':'Sailor','Zachód słońca':'Sunset','Miętowy':'Mint','Czekoladowy':'Chocolate','Duch':'Ghost','Szmaragdowy':'Emerald','Panda':'Panda',
     // ---- trails ----
     'Brak':'None','Ukraina':'Ukraine','Polska':'Poland','Litwa':'Lithuania','Łotwa':'Latvia','Niemcy':'Germany','Włochy':'Italy',
     'Szwecja':'Sweden','Japonia':'Japan','Francja':'France','Hiszpania':'Spain','Holandia':'Netherlands','Belgia':'Belgium',

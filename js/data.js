@@ -26,6 +26,16 @@ const SKINS = [
   { id:'pharaoh', name:'Faraon', price:110, colors:{hat:'#ffd23f', shirt:'#1e5aa8', overalls:'#0a2a5a', skin:'#c9946a'} },
   { id:'candy',   name:'Cukierkowy', price:70, colors:{hat:'#ff6fa5', shirt:'#ffb3d1', overalls:'#7a3ac9', skin:'#f6b17a'} },
   { id:'steampunk', name:'Steampunk', price:115, colors:{hat:'#a86a2e', shirt:'#5a3a1a', overalls:'#2e1a0a', skin:'#e0a86e'} },
+  { id:'cowboy', name:'Kowboj', price:55, colors:{hat:'#8a5a2e', shirt:'#d9b98a', overalls:'#3a5a8a', skin:'#e0a86e'} },
+  { id:'astronaut', name:'Astronauta', price:90, colors:{hat:'#f2f2f2', shirt:'#f7f7f7', overalls:'#e8792e', skin:'#f6b17a'} },
+  { id:'lava', name:'Lawowy', price:85, colors:{hat:'#ff5a1a', shirt:'#2e1a1a', overalls:'#c92a0a', skin:'#d8946a'} },
+  { id:'ocean', name:'Morski', price:60, colors:{hat:'#1e6f9f', shirt:'#f0f0f0', overalls:'#123a5a', skin:'#f6b17a'} },
+  { id:'sunset', name:'Zachód słońca', price:75, colors:{hat:'#ff7a3d', shirt:'#ff3d7a', overalls:'#5a2a8a', skin:'#f6b17a'} },
+  { id:'mint', name:'Miętowy', price:65, colors:{hat:'#7ee8c1', shirt:'#b8f5df', overalls:'#2e8a72', skin:'#f6b17a'} },
+  { id:'chocolate', name:'Czekoladowy', price:70, colors:{hat:'#5a3220', shirt:'#7a4a2e', overalls:'#3a1e10', skin:'#e0a86e'} },
+  { id:'ghost', name:'Duch', price:75, colors:{hat:'#e8eaf5', shirt:'#cfd4ea', overalls:'#9aa3d0', skin:'#f0f2ff'} },
+  { id:'emerald', name:'Szmaragdowy', price:110, colors:{hat:'#2ee08a', shirt:'#14a85a', overalls:'#0a4a2a', skin:'#f6b17a'} },
+  { id:'panda', name:'Panda', price:65, colors:{hat:'#f4f4f4', shirt:'#f4f4f4', overalls:'#1a1a1a', skin:'#e8e8e8'} },
 ];
 
 const TRAILS = [
