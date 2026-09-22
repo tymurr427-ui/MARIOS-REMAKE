@@ -128,6 +128,9 @@
     level = customData ? buildLevelFromCustomData(customData) : (override ? widenPlatforms(buildLevelFromCustomData(override)) : LEVELS[index]());
     // popraw isGround po ewentualnym resize
     level.platforms.forEach(p => { if(p.y === undefined) p.y = GROUND_Y; });
+    // kruszarki (crushers) dostaja swoje 'y' dopiero z fizyki (updateCrushers) - bez tego pierwsza
+    // klatka (przed pierwszym tickiem) probuje rysowac kruszarke z c.y===undefined -> crash w drawCrushers
+    (level.crushers||[]).forEach(c => { if(c.y === undefined) c.y = c.topY; });
     const spawn = (customData && customData.spawn) ? customData.spawn : { x:40, y:GROUND_Y-54 };
     player = {
       x:spawn.x, y:spawn.y, w:38, h:54,
