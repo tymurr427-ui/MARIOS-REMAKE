@@ -5,16 +5,27 @@
 // Tlumaczenia nazw (zadania, osiagniecia, tytuly) rejestrujemy tu przez I18N.addDict.
 
   // ---------- KONFIG ----------
-  const XP_MAX_LEVEL = 30;
+  const XP_MAX_LEVEL = 100;
   const DAILY_COUNT = 5;
   const DAILY_BONUS_XP = 50;
-  const xpNeed = lvl => 100 + 25 * (lvl - 1);                        // XP z poziomu lvl na lvl+1
-  const levelReward = lvl => (lvl % 5 === 0) ? 100 + lvl * 5 : 20 + lvl * 5;   // monety za osiagniecie poziomu
+  // UWAGA: krzywa XP jest powielona w SQL (spb_level_from_xp w supabase-anticheat-v3.sql) - zmieniasz tu, zmien tam.
+  const xpNeed = lvl => 100 + 4 * (lvl - 1);                          // XP z poziomu lvl na lvl+1 (do 100 lvl ~29 tys. XP)
+  const levelReward = lvl => 20 + 2 * lvl + (lvl % 5 === 0 ? 50 : 0);   // monety za osiagniecie poziomu (maks. 270)
   const PLAYER_TITLES = [   // [od poziomu, PL, EN]
     [1, 'Nowicjusz', 'Novice'], [5, 'Adept', 'Apprentice'], [10, 'Wędrowiec', 'Wanderer'],
-    [15, 'Weteran', 'Veteran'], [20, 'Mistrz', 'Master'], [25, 'Legenda', 'Legend'],
-    [30, 'Bohater Królestwa', 'Champion of the Kingdom'],
+    [20, 'Poszukiwacz przygód', 'Adventurer'], [30, 'Ekspert', 'Expert'], [40, 'Weteran', 'Veteran'],
+    [50, 'Mistrz', 'Master'], [60, 'Arcymistrz', 'Grandmaster'], [70, 'Czempion', 'Champion'],
+    [80, 'Bohater', 'Hero'], [90, 'Legenda', 'Legend'], [100, 'Nieśmiertelny', 'Immortal'],
   ];
+  // przedmioty nagrodowe (pola lvl w data.js): poziom -> lista [{kind, id, name, en, icon}]
+  const LEVEL_ITEMS = {};
+  [['skin', SKINS, '👕'], ['hat', HATS, '🎨'], ['style', HAT_STYLES, '🎩']].forEach(([kind, list, icon]) => {
+    list.forEach(it => { if(it.lvl) (LEVEL_ITEMS[it.lvl] = LEVEL_ITEMS[it.lvl] || []).push({ kind, id:it.id, name:it.name, en:it.en, icon }); });
+  });
+  function grantLevelItem(it){
+    const arr = it.kind === 'skin' ? state.ownedSkins : it.kind === 'hat' ? state.ownedHats : state.ownedHatStyles;
+    if(!arr.includes(it.id)) arr.push(it.id);
+  }
   function titleForLevel(lvl){
     let t = PLAYER_TITLES[0];
     PLAYER_TITLES.forEach(x => { if(lvl >= x[0]) t = x; });
@@ -97,7 +108,9 @@
   ach('run_600',     '💨', 'Sprinter',         'Sprinter',      'Biegaj łącznie 10 minut',                'Run for 10 minutes in total',      600,   () => state.quests.c.runSec);
   ach('plv_5',       '⭐', 'Pnący się',        'Climber',       'Osiągnij 5. poziom gracza',              'Reach player level 5',             5,     () => playerLevel());
   ach('plv_15',      '🌟', 'Doświadczony',     'Experienced',   'Osiągnij 15. poziom gracza',             'Reach player level 15',            15,    () => playerLevel());
-  ach('plv_30',      '🔱', 'Maksymalny poziom','Max Level',     'Osiągnij maksymalny poziom gracza (30)', 'Reach the maximum player level (30)', 30,   () => playerLevel());
+  ach('plv_30',      '🔱', 'Ekspert',          'Expert',        'Osiągnij 30. poziom gracza',             'Reach player level 30',            30,    () => playerLevel());
+  ach('plv_50',      '🎖️', 'Mistrz poziomów',  'Level Master',  'Osiągnij 50. poziom gracza',             'Reach player level 50',            50,    () => playerLevel());
+  ach('plv_100',     '👑', 'Maksymalny poziom','Max Level',     'Osiągnij maksymalny poziom gracza (100)','Reach the maximum player level (100)', 100, () => playerLevel());
   ach('daily_all',   '📅', 'Perfekcjonista',   'Perfectionist', 'Wykonaj wszystkie 5 zadań dziennych jednego dnia', 'Complete all 5 daily quests in one day', 1, () => state.quests.c.dailyAllDone);
   ach('quests_25',   '📋', 'Zadaniowiec',      'Taskmaster',    'Odbierz nagrodę za 25 zadań',            'Claim the reward for 25 quests',   25,    () => state.quests.c.questsClaimed);
 
@@ -222,6 +235,7 @@
     document.getElementById('menuCoins').textContent = state.wallet;
     document.getElementById('shopCoins').textContent = state.wallet;
     questToast('🎁', 'Odebrano nagrodę!', '+' + coins + ' monet');
+    (LEVEL_ITEMS[lvl] || []).forEach(it => { grantLevelItem(it); questToast(it.icon, 'Nowy przedmiot!', it.name); });
     afterClaim();
   }
   function afterClaim(){
@@ -360,8 +374,9 @@
         : ready ? `<button class="q-claim" data-kind="lvl" data-id="${l}">ODBIERZ</button>` : '<span class="q-lock">🔒</span>';
       const reward = l === 1 ? '' : `<span class="q-rw-coins">🪙 ${levelReward(l)}</span>`;
       const title = t ? `<span class="q-rw-title"><span>🏷</span> <span>${escapeHtml(t[1])}</span></span>` : '';
+      const items = (LEVEL_ITEMS[l] || []).map(it => `<span class="q-rw-item"><span>${it.icon}</span> <span>${escapeHtml(it.name)}</span></span>`).join('');
       html += `<div class="q-row rw ${claimed ? 'claimed' : (ready ? 'ready' : 'locked')} ${l === pl ? 'current' : ''}" data-lv="${l}">
-        <div class="q-lv">LV ${l}</div><div class="q-mid q-rw-mid">${reward}${title}</div><div class="q-right">${right}</div></div>`;
+        <div class="q-lv">LV ${l}</div><div class="q-mid q-rw-mid">${reward}${title}${items}</div><div class="q-right">${right}</div></div>`;
     }
     return html;
   }
@@ -409,5 +424,6 @@
     PERM_QUESTS.forEach(d => { dict[d.pl] = d.en; });
     ACHIEVEMENTS.forEach(a => { dict[a.pl] = a.en; dict[a.dpl] = a.den; });
     PLAYER_TITLES.forEach(t => { dict[t[1]] = t[2]; });
+    Object.keys(LEVEL_ITEMS).forEach(l => LEVEL_ITEMS[l].forEach(it => { dict[it.name] = it.en; }));
     if(window.I18N && I18N.addDict) I18N.addDict(dict);
   })();

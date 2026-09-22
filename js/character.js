@@ -435,6 +435,109 @@
       t.fillStyle = c.hat; roundRectOn(t, 5.5, 0, 29, 5, 2); t.fill();
       t.fillStyle = '#eee';
       [9.5, 15, 20, 25, 30.5].forEach(x => { t.beginPath(); t.arc(x, 2.5, 0.8, 0, Math.PI*2); t.fill(); });
+    } else if(style === 'horns'){
+      t.fillStyle = grad(6, 0, 34, 6); roundRectOn(t, 6.5, 0.6, 27, 3.8, 1.9); t.fill();
+      t.fillStyle = c.hat; t.strokeStyle = 'rgba(0,0,0,.32)'; t.lineWidth = 0.8;
+      t.beginPath(); t.moveTo(9, 1.5); t.quadraticCurveTo(2, -4, 6.5, -15); t.quadraticCurveTo(11, -6.5, 15.5, 0.5); t.closePath(); t.fill(); t.stroke();
+      t.beginPath(); t.moveTo(31, 1.5); t.quadraticCurveTo(38, -4, 33.5, -15); t.quadraticCurveTo(29, -6.5, 24.5, 0.5); t.closePath(); t.fill(); t.stroke();
+      t.fillStyle = 'rgba(255,255,255,.28)';
+      t.beginPath(); t.ellipse(8.4, -6, 0.9, 3.6, 0.35, 0, Math.PI*2); t.fill();
+      t.beginPath(); t.ellipse(31.6, -6, 0.9, 3.6, -0.35, 0, Math.PI*2); t.fill();
+    } else if(style === 'halo'){
+      t.lineCap = 'round';
+      t.strokeStyle = 'rgba(255,225,120,.35)'; t.lineWidth = 5.4;
+      t.beginPath(); t.ellipse(20, -8.5, 10.5, 3.2, 0, 0, Math.PI*2); t.stroke();
+      t.strokeStyle = flat ? '#ffd23f' : '#ffe680'; t.lineWidth = 2.4;
+      t.beginPath(); t.ellipse(20, -8.5, 10.5, 3.2, 0, 0, Math.PI*2); t.stroke();
+      t.strokeStyle = c.hat; t.lineWidth = 0.9;
+      t.beginPath(); t.ellipse(20, -8.5, 10.5, 3.2, 0, Math.PI*0.15, Math.PI*0.85); t.stroke();
+    } else if(style === 'antlers'){
+      t.fillStyle = grad(6, 0, 34, 6); roundRectOn(t, 6.5, 0.6, 27, 3.8, 1.9); t.fill();
+      t.strokeStyle = '#8a5a2e'; t.lineWidth = 2; t.lineCap = 'round'; t.lineJoin = 'round';
+      const antler = (m) => {
+        const X = x => m ? 40 - x : x;
+        t.beginPath(); t.moveTo(X(12), 1); t.lineTo(X(9.5), -6); t.lineTo(X(7), -15); t.stroke();
+        t.beginPath(); t.moveTo(X(9.5), -6); t.lineTo(X(4), -9.5); t.stroke();
+        t.beginPath(); t.moveTo(X(8.3), -10.5); t.lineTo(X(12), -14.5); t.stroke();
+      };
+      antler(false); antler(true);
+      t.fillStyle = c.hat; t.beginPath(); t.arc(20, 2.5, 1.7, 0, Math.PI*2); t.fill();
+    } else if(style === 'unicorn'){
+      t.fillStyle = grad(6, 0, 34, 6); roundRectOn(t, 6.5, 0.6, 27, 3.8, 1.9); t.fill();
+      t.fillStyle = c.hat;
+      t.beginPath(); t.moveTo(9, 1); t.lineTo(9.5, -7); t.lineTo(15.5, 0); t.closePath(); t.fill();
+      t.beginPath(); t.moveTo(31, 1); t.lineTo(30.5, -7); t.lineTo(24.5, 0); t.closePath(); t.fill();
+      t.fillStyle = flat ? '#fff3c8' : (() => { const q = t.createLinearGradient(17, -21, 23, 1); q.addColorStop(0, '#ffffff'); q.addColorStop(1, '#ffe08a'); return q; })();
+      t.beginPath(); t.moveTo(16.5, 1.5); t.lineTo(20, -22); t.lineTo(23.5, 1.5); t.closePath(); t.fill();
+      t.strokeStyle = shade(c.hat, 10); t.lineWidth = 1.1;
+      [[-3, 0.3], [-8, -0.1], [-13, -0.5]].forEach(q => { t.beginPath(); t.moveTo(17.6 + q[1]*4, q[0]+3.5); t.lineTo(22.4 - q[1]*4, q[0]-0.5); t.stroke(); });
+    } else if(style === 'flame'){
+      const flame = (x, w, h, col) => {
+        t.fillStyle = col; t.beginPath();
+        t.moveTo(x - w, 3); t.quadraticCurveTo(x - w*1.15, -h*0.45, x - w*0.15, -h);
+        t.quadraticCurveTo(x + w*0.05, -h*0.45, x + w*0.5, -h*0.62);
+        t.quadraticCurveTo(x + w*1.2, -h*0.2, x + w, 3); t.closePath(); t.fill();
+      };
+      flame(20, 13, 23, c.hat);
+      flame(12.5, 6.5, 13, shade(c.hat, 18));
+      flame(28, 6.5, 12, shade(c.hat, 18));
+      flame(20, 7.5, 14, shade(c.hat, 62));
+      flame(20, 3.6, 7.5, '#fff6d0');
+    } else if(style === 'pumpkin'){
+      t.fillStyle = flat ? '#ff8a1f' : (() => { const q = t.createLinearGradient(6, -10, 34, 4); q.addColorStop(0, '#ffb04a'); q.addColorStop(1, '#e0650a'); return q; })();
+      t.beginPath(); t.ellipse(20, -1.5, 15, 10.5, 0, 0, Math.PI*2); t.fill();
+      t.strokeStyle = 'rgba(120,45,0,.35)'; t.lineWidth = 1;
+      [-6.5, 0, 6.5].forEach(dx => { t.beginPath(); t.ellipse(20 + dx*0.5, -1.5, Math.abs(dx) + 4, 10.4, 0, -1.2, 1.2); t.stroke(); });
+      t.fillStyle = c.hat; t.fillRect(18.4, -14, 3.6, 5.6);
+      t.fillStyle = '#2f8a3a'; t.beginPath(); t.ellipse(24.5, -10.5, 4.3, 1.6, -0.5, 0, Math.PI*2); t.fill();
+      t.fillStyle = '#ffe36a';
+      t.beginPath(); t.moveTo(11.5, -4); t.lineTo(15.5, -4); t.lineTo(13.5, -7.6); t.closePath(); t.fill();
+      t.beginPath(); t.moveTo(24.5, -4); t.lineTo(28.5, -4); t.lineTo(26.5, -7.6); t.closePath(); t.fill();
+    } else if(style === 'wings'){
+      t.fillStyle = grad(6, 0, 34, 6); roundRectOn(t, 6.5, 0.6, 27, 3.8, 1.9); t.fill();
+      const wing = (m) => {
+        const X = x => m ? 40 - x : x;
+        t.fillStyle = flat ? '#f4f4f4' : (() => { const q = t.createLinearGradient(X(0), -14, X(10), 3); q.addColorStop(0, '#ffffff'); q.addColorStop(1, '#cfd8e6'); return q; })();
+        t.strokeStyle = 'rgba(0,0,0,.22)'; t.lineWidth = 0.7;
+        [[-3.5, -16, 9.5, 2], [-1, -11.5, 10.5, 0.8], [1.5, -7, 10, 0]].forEach(f => {
+          t.beginPath(); t.moveTo(X(10), f[3] + 1); t.quadraticCurveTo(X(f[0]), f[1] + 2, X(f[0] - 1), f[1]); t.quadraticCurveTo(X(f[0] + 6), f[1] + 1, X(f[2] + 2), f[3] - 2); t.closePath(); t.fill(); t.stroke();
+        });
+      };
+      wing(false); wing(true);
+    } else if(style === 'astro'){
+      t.fillStyle = flat ? '#f2f5fa' : (() => { const q = t.createLinearGradient(6, -12, 34, 5); q.addColorStop(0, '#ffffff'); q.addColorStop(1, '#bcc7d8'); return q; })();
+      t.beginPath(); t.ellipse(20, 3.5, 16, 14, 0, Math.PI, 0); t.fill();
+      t.fillStyle = c.hat; roundRectOn(t, 3.5, 2, 33, 4.4, 2); t.fill();
+      t.fillStyle = 'rgba(120,200,255,.55)';
+      t.beginPath(); t.ellipse(20, -3.5, 9.5, 5.2, 0, Math.PI*1.06, Math.PI*1.94); t.lineTo(20, -3); t.closePath(); t.fill();
+      t.strokeStyle = 'rgba(255,255,255,.7)'; t.lineWidth = 1.2; t.lineCap = 'round';
+      t.beginPath(); t.arc(20, 3.5, 11.5, Math.PI*1.12, Math.PI*1.34); t.stroke();
+      t.strokeStyle = '#8b96a8'; t.lineWidth = 1.3;
+      t.beginPath(); t.moveTo(29, -6); t.lineTo(32, -15); t.stroke();
+      t.fillStyle = '#ff5a5a'; t.beginPath(); t.arc(32.2, -15.6, 1.7, 0, Math.PI*2); t.fill();
+    } else if(style === 'kabuto'){
+      t.fillStyle = shade(c.hat, -30);
+      t.beginPath(); t.moveTo(3.5, 3); t.lineTo(9, 3); t.lineTo(9, 9); t.lineTo(2, 8); t.closePath(); t.fill();
+      t.beginPath(); t.moveTo(36.5, 3); t.lineTo(31, 3); t.lineTo(31, 9); t.lineTo(38, 8); t.closePath(); t.fill();
+      t.fillStyle = grad(5, -9, 35, 4);
+      t.beginPath(); t.ellipse(20, 3.5, 15.5, 12.5, 0, Math.PI, 0); t.fill();
+      t.fillStyle = shade(c.hat, -16); roundRectOn(t, 3.5, 2.6, 33, 4.4, 2); t.fill();
+      t.strokeStyle = 'rgba(0,0,0,.22)'; t.lineWidth = 0.8;
+      [12, 20, 28].forEach(x => { t.beginPath(); t.moveTo(x, 2.6); t.lineTo(20 + (x - 20) * 0.32, -8.6); t.stroke(); });
+      t.strokeStyle = '#ffd23f'; t.lineWidth = 2; t.lineCap = 'round';
+      t.beginPath(); t.arc(20, -7, 9.5, Math.PI*1.16, Math.PI*1.84); t.stroke();
+      t.fillStyle = '#ffd23f'; t.beginPath(); t.arc(20, -6.5, 1.8, 0, Math.PI*2); t.fill();
+    } else if(style === 'grandcrown'){
+      const g = flat ? '#ffd23f' : (() => { const q = t.createLinearGradient(3, -22, 37, 6); q.addColorStop(0, '#fff0a0'); q.addColorStop(0.5, '#ffd23f'); q.addColorStop(1, '#c48a00'); return q; })();
+      t.fillStyle = shade(c.hat, -20);
+      t.beginPath(); t.moveTo(9, 2); t.lineTo(10, -8); t.quadraticCurveTo(20, -13, 30, -8); t.lineTo(31, 2); t.closePath(); t.fill();
+      t.fillStyle = g;
+      t.beginPath();
+      t.moveTo(4, 5); t.lineTo(2.5, -14); t.lineTo(11, -5); t.lineTo(14.5, -18); t.lineTo(20, -6); t.lineTo(25.5, -18); t.lineTo(29, -5); t.lineTo(37.5, -14); t.lineTo(36, 5); t.closePath(); t.fill();
+      t.fillStyle = '#c48a00'; t.fillRect(4, 0.5, 32, 4.8);
+      [[2.5, -14], [14.5, -18], [25.5, -18], [37.5, -14]].forEach(q => { t.fillStyle = '#fff'; t.beginPath(); t.arc(q[0], q[1], 2, 0, Math.PI*2); t.fill(); });
+      [[10, 3], [20, 3], [30, 3]].forEach((q, i) => { t.fillStyle = i === 1 ? '#3fa9ff' : c.hat; t.beginPath(); t.arc(q[0], q[1], 1.9, 0, Math.PI*2); t.fill(); });
+      t.fillStyle = '#e8362a'; t.beginPath(); t.moveTo(20, -13); t.lineTo(22.6, -9); t.lineTo(20, -5); t.lineTo(17.4, -9); t.closePath(); t.fill();
     } else {
       // 'cap' - klasyczna czapka z daszkiem
       t.fillStyle = grad(4, -6, 34, 10);

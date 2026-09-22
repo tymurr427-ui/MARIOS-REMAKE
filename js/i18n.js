@@ -126,7 +126,7 @@
     'Zaloguj się przez Google, aby zapisywać postęp.':'Log in with Google to save your progress.',
     'Osiągnięcie odblokowane!':'Achievement unlocked!','Nowy poziom gracza!':'Level up!',
     'Odebrano nagrodę!':'Reward claimed!','Bonus dzienny!':'Daily bonus!',
-    'Wszystkie zadania dzienne wykonane':'All daily quests completed',
+    'Wszystkie zadania dzienne wykonane':'All daily quests completed','Nowy przedmiot!':'New item!','🆓 ODBLOKUJ (ADMIN)':'🆓 UNLOCK (ADMIN)',
     // ---- banery ----
     'POZIOM WŁASNY UKOŃCZONY!':'CUSTOM LEVEL COMPLETED!','POZIOM UKOŃCZONY!':'LEVEL COMPLETED!','UKOŃCZYLIŚCIE WSZYSTKIE POZIOMY!':'YOU FINISHED ALL LEVELS!',
     'UKOŃCZYŁEŚ WSZYSTKIE POZIOMY!':'YOU FINISHED ALL LEVELS!','PRZEGRANA - RESTART POZIOMU':'DEFEAT - RESTARTING LEVEL'
@@ -143,6 +143,7 @@
     [/^(👥 MULTIPLAYER · .*) · ktoś zginął, gra dalej!$/, '$1 · someone died, the game goes on!'],
     [/^Waga poziomu: (.*)$/, 'Level size: $1'],
     [/^🪙 KUP ZA (\d+)$/, '🪙 BUY FOR $1'],
+    [/^🔒 WYMAGANY POZIOM GRACZA (\d+)$/, '🔒 REQUIRES PLAYER LEVEL $1'],
     [/^\+(\d+) monet zebranych$/, '+$1 coins collected'],
     [/^\+(\d+) monet$/, '+$1 coins'],
     [/^⏱ Czas: (.*)$/, '⏱ Time: $1'],

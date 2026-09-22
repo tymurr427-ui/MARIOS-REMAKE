@@ -36,6 +36,17 @@ const SKINS = [
   { id:'ghost', name:'Duch', price:75, colors:{hat:'#e8eaf5', shirt:'#cfd4ea', overalls:'#9aa3d0', skin:'#f0f2ff'} },
   { id:'emerald', name:'Szmaragdowy', price:110, colors:{hat:'#2ee08a', shirt:'#14a85a', overalls:'#0a4a2a', skin:'#f6b17a'} },
   { id:'panda', name:'Panda', price:65, colors:{hat:'#f4f4f4', shirt:'#f4f4f4', overalls:'#1a1a1a', skin:'#e8e8e8'} },
+  // --- skiny nagrodowe: odblokowuje sie je poziomem gracza (lvl), nie kupuje ---
+  { id:'bronze', name:'Brązowy Medalista', en:'Bronze Medalist', lvl:10, colors:{hat:'#cd7f32', shirt:'#a05a1e', overalls:'#5a3210', skin:'#f6b17a'} },
+  { id:'silver', name:'Srebrny Wojownik', en:'Silver Fighter', lvl:20, colors:{hat:'#dfe4ea', shirt:'#aab2bd', overalls:'#6b7480', skin:'#f6b17a'} },
+  { id:'platinum', name:'Platynowy', en:'Platinum', lvl:30, colors:{hat:'#e5f3ff', shirt:'#b8d8f0', overalls:'#5f8fb8', skin:'#f6b17a'} },
+  { id:'thunder', name:'Piorun', en:'Thunder', lvl:40, colors:{hat:'#ffe600', shirt:'#2b2f80', overalls:'#101450', skin:'#f6b17a'} },
+  { id:'dragon', name:'Smoczy', en:'Dragon', lvl:50, colors:{hat:'#c0392b', shirt:'#1f7a3a', overalls:'#5a1010', skin:'#e0a86e'} },
+  { id:'phoenix', name:'Feniks', en:'Phoenix', lvl:60, colors:{hat:'#ffb400', shirt:'#ff5a1a', overalls:'#b3160a', skin:'#f6b17a'} },
+  { id:'abyss', name:'Otchłań', en:'Abyss', lvl:70, colors:{hat:'#1b1b3a', shirt:'#0a0a1f', overalls:'#4a1a6a', skin:'#c8c8e8'} },
+  { id:'galaxy', name:'Galaktyczny', en:'Galactic', lvl:80, colors:{hat:'#7a4dff', shirt:'#23205a', overalls:'#ff3df0', skin:'#f6b17a'} },
+  { id:'aurora', name:'Zorza', en:'Aurora', lvl:90, colors:{hat:'#5cffc8', shirt:'#2d6cff', overalls:'#a24dff', skin:'#f6b17a'} },
+  { id:'legend', name:'Legendarny', en:'Legendary', lvl:100, colors:{hat:'#ffd700', shirt:'#fff6c0', overalls:'#d4145a', skin:'#f6b17a'} },
 ];
 
 const TRAILS = [
@@ -105,6 +116,18 @@ const HATS = [
   { id:'khaki',    name:'Khaki',       price:20, color:'#b5a26a' },
   { id:'cyan',     name:'Cyjan',       price:30, color:'#00c2d1' },
   { id:'copper',   name:'Miedziana',   price:35, color:'#b86b3c' },
+  // --- kolory nagrodowe (poziom gracza) ---
+  { id:'rookie', name:'Rekrucka', en:'Recruit', lvl:3, color:'#7a8c5a' },
+  { id:'jade', name:'Nefrytowa', en:'Jade', lvl:12, color:'#2fbf8f' },
+  { id:'amethyst', name:'Ametystowa', en:'Amethyst', lvl:18, color:'#9b59d0' },
+  { id:'sunfire', name:'Słoneczna', en:'Sunfire', lvl:27, color:'#ff9d1a' },
+  { id:'frost', name:'Szronowa', en:'Frost', lvl:36, color:'#a8e6ff' },
+  { id:'crimson', name:'Karmazynowa', en:'Crimson', lvl:45, color:'#a10f2b' },
+  { id:'obsidian', name:'Obsydianowa', en:'Obsidian', lvl:54, color:'#221a2e' },
+  { id:'polar', name:'Polarna', en:'Polar', lvl:66, color:'#5cffc8' },
+  { id:'royal', name:'Królewska', en:'Royal', lvl:78, color:'#3a1a8a' },
+  { id:'plasma', name:'Plazmowa', en:'Plasma', lvl:88, color:'#ff3df0' },
+  { id:'celestial', name:'Niebiańska', en:'Celestial', lvl:95, color:'#f5f0ff' },
 ];
 
 // fasony czapek (ksztalt); kolor czapki wybiera sie osobno w HATS
@@ -129,6 +152,17 @@ const HAT_STYLES = [
   { id:'pirate',    name:'Kapelusz pirata',       price:50 },
   { id:'sombrero',  name:'Sombrero',              price:55 },
   { id:'viking',    name:'Hełm wikinga',          price:60 },
+  // --- fasony nagrodowe (poziom gracza) ---
+  { id:'horns', name:'Diabelskie rogi', en:'Devil Horns', lvl:8 },
+  { id:'halo', name:'Aureola', en:'Halo', lvl:16 },
+  { id:'antlers', name:'Poroże', en:'Antlers', lvl:24 },
+  { id:'unicorn', name:'Róg jednorożca', en:'Unicorn Horn', lvl:32 },
+  { id:'flame', name:'Płomień', en:'Flame', lvl:42 },
+  { id:'pumpkin', name:'Dynia', en:'Pumpkin', lvl:52 },
+  { id:'wings', name:'Skrzydełka', en:'Wings', lvl:62 },
+  { id:'astro', name:'Kask astronauty', en:'Astronaut Helmet', lvl:72 },
+  { id:'kabuto', name:'Kabuto samuraja', en:'Samurai Kabuto', lvl:84 },
+  { id:'grandcrown', name:'Wielka korona', en:'Grand Crown', lvl:100 },
 ];
 
 const SKIN_TONES = [

@@ -71,6 +71,12 @@
     } else if(owned){
       btn.textContent = '👕 ZAŁÓŻ';
       btn.disabled = false;
+    } else if(sk.lvl && !isTester()){
+      btn.textContent = `🔒 WYMAGANY POZIOM GRACZA ${sk.lvl}`;
+      btn.disabled = true;
+    } else if(sk.lvl){
+      btn.textContent = '🆓 ODBLOKUJ (ADMIN)';
+      btn.disabled = false;
     } else {
       btn.textContent = `🪙 KUP ZA ${sk.price}`;
       btn.disabled = state.wallet < sk.price;
@@ -84,7 +90,12 @@
       state.equippedSkin = sk.id;
       renderShop();
       saveProfile();
-    } else if(state.wallet >= sk.price){
+    } else if(sk.lvl && isTester()){
+      state.ownedSkins.push(sk.id);
+      state.equippedSkin = sk.id;
+      renderShop();
+      saveProfile();
+    } else if(!sk.lvl && state.wallet >= sk.price){
       state.wallet -= sk.price;
       state.totalSpent += sk.price;
       state.ownedSkins.push(sk.id);
@@ -138,11 +149,12 @@
       const equipped = state.equippedSkin === sk.id;
       const previewed = previewSkinId === sk.id;
       const card = document.createElement('div');
-      card.className = 'skin-card' + (equipped ? ' selected':'') + (previewed && !equipped ? ' previewed':'') + (!owned && state.wallet < sk.price ? ' locked':'');
+      const skinLocked = !owned && (sk.lvl ? !isTester() : state.wallet < sk.price);   // za poziom gracza (lvl) albo za monety
+      card.className = 'skin-card' + (equipped ? ' selected':'') + (previewed && !equipped ? ' previewed':'') + (skinLocked ? ' locked':'');
       card.innerHTML = `
         <canvas class="skin-thumb" width="70" height="90"></canvas>
         <div class="skin-name">${sk.name}</div>
-        ${owned ? `<div class="buy-tag">${equipped ? 'ZAŁOŻONE' : 'POSIADASZ'}</div>` : `<div class="skin-price">🪙 ${sk.price}</div>`}
+        ${owned ? `<div class="buy-tag">${equipped ? 'ZAŁOŻONE' : 'POSIADASZ'}</div>` : `<div class="skin-price">${sk.lvl ? '🔒 LV ' + sk.lvl : '🪙 ' + sk.price}</div>`}
       `;
       card.onclick = () => {
         previewSkinId = sk.id;
@@ -232,14 +244,14 @@
     items.forEach(it => {
       const owned = state[ownedArrName].includes(it.id);
       const equipped = state[equippedFieldName] === it.id;
-      const afford = isTester() || state.wallet >= it.price;
+      const afford = it.lvl ? isTester() : (isTester() || state.wallet >= it.price);   // lvl = tylko za poziom gracza
       const card = document.createElement('div');
       card.className = 'trail-card' + (compact ? ' compact' : '') + (equipped ? ' selected':'') + (!owned && !afford ? ' locked':'');
       if(compact) card.title = it.name;
       card.innerHTML = `
         ${previewFn(it)}
         <div class="trail-name">${it.name}</div>
-        ${owned ? `<div class="buy-tag">${equipped ? 'ZAŁOŻONE' : 'POSIADASZ'}</div>` : `<div class="trail-price">${isTester() ? '🆓 DARMOWE' : '🪙 ' + it.price}</div>`}
+        ${owned ? `<div class="buy-tag">${equipped ? 'ZAŁOŻONE' : 'POSIADASZ'}</div>` : `<div class="trail-price">${it.lvl && !isTester() ? '🔒 LV ' + it.lvl : (isTester() ? '🆓 DARMOWE' : '🪙 ' + it.price)}</div>`}
       `;
       card.onclick = () => {
         if(owned){
