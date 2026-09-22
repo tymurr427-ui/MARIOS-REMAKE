@@ -934,7 +934,8 @@
   .q-check { font-size:16px; }
   .q-lock { opacity:.6; font-size:14px; }
   .q-lv { font-family:'Impact','Arial Black',sans-serif; font-size:18px; color:#ffd23f; min-width:64px; text-align:left; }
-  .q-rw-mid { display:flex; align-items:center; gap:14px; font-size:13px; font-weight:bold; }
+  .q-rw-mid { display:flex; align-items:center; flex-wrap:wrap; gap:6px 14px; font-size:13px; font-weight:bold; }
+  .q-rw-item { color:#9fe8ff; background:rgba(120,200,255,.14); border:1px solid rgba(120,200,255,.35); border-radius:8px; padding:2px 8px; }
   .q-rw-coins { color:#ffd23f; }
   .q-rw-title { color:#d9c2ff; }
 
