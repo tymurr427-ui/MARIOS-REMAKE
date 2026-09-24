@@ -26,8 +26,11 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    justify-content:center;
+    justify-content:center;   /* fallback dla przegladarek bez "safe center" nizej */
+    justify-content:safe center;   /* gdy tresc jest wyzsza niz ekran, wyrownaj do gory zamiast obcinac i blokowac scroll */
     gap:16px;
+    padding:16px 0;
+    overflow-y:auto;   /* na niskich oknach/przegladarce z paskami: przewijanie ZAMIAST ucinania gornej czesci bez mozliwosci przewiniecia */
     background:
       radial-gradient(circle at 20% 20%, #7ec8ff 0%, transparent 40%),
       linear-gradient(#3a6ee8, #123a99 60%, #041333);
