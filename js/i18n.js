@@ -33,7 +33,7 @@
     'Fizyka gry zawsze liczy się 60 razy na sekundę, więc tempo gry jest takie samo przy każdym limicie. Więcej FPS = płynniejszy obraz, mniej FPS = mniejsze obciążenie komputera. „Bez limitu” dopasuje się do odświeżania monitora.':
       'Game physics always runs 60 times per second, so the game speed is the same at every limit. More FPS = smoother picture, fewer FPS = lower load on your computer. "Unlimited" matches your monitor refresh rate.',
     'Głośność':'Volume','Długość poziomu':'Level length','🟠 Trampolina':'🟠 Trampoline','🧱 Kruszący blok':'🧱 Crumbling block','↩ COFNIJ (Ctrl+Z)':'↩ UNDO (Ctrl+Z)',
-    '↩ Nie ma czego cofać (maks. 3 cofnięcia)':'↩ Nothing to undo (max 3 undos)','Sortuj wg:':'Sort by:','🪙 Monety':'🪙 Coins','⏱ Czas gry':'⏱ Playtime','💰 Zarobione':'💰 Earned','👾 Wrogowie':'👾 Enemies','👹 Bossowie':'👹 Bosses','🗺 Poziom':'🗺 Level',
+    '↩ Nie ma czego cofać (maks. 3 cofnięcia)':'↩ Nothing to undo (max 3 undos)','Sortuj wg:':'Sort by:','🪙 Monety':'🪙 Coins','⏱ Czas gry':'⏱ Playtime','💰 Zarobione':'💰 Earned','👾 Wrogowie':'👾 Enemies','👹 Bossowie':'👹 Bosses','🗺 Poziom':'🗺 Level','⭐ Poziom gracza':'⭐ Player Level',
     'Ranking niedostępny bez konta (Supabase).':'Ranking unavailable without an account (Supabase).','Brak wyników.':'No results yet.','Grafika':'Graphics','Język':'Language','WYBIERZ POZIOM':'SELECT LEVEL','🔒 zablokowany':'🔒 locked',
     '🪙 Aktualne monety':'🪙 Current coins','💰 Łącznie zarobione monety':'💰 Total coins earned','🛒 Wydane monety':'🛒 Coins spent',
     '⏱ Dokładny czas gry':'⏱ Exact play time','💀 Liczba śmierci':'💀 Deaths','👾 Zabici przeciwnicy':'👾 Enemies killed',

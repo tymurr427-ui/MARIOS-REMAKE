@@ -83,6 +83,7 @@
     { key:'enemies_killed',     label:'👾 Wrogowie' },
     { key:'bosses_killed',      label:'👹 Bossowie' },
     { key:'unlocked_level',     label:'🗺 Poziom' },
+    { key:'xp',                 label:'⭐ Poziom gracza' },
   ];
   let rankingSort = 'wallet';
   let rankingReq = 0;
@@ -95,7 +96,8 @@
   }
   function myRankValue(key){
     return ({ wallet: state.wallet, playtime_seconds: state.playtimeSeconds, total_coins_earned: state.totalCoinsEarned,
-              enemies_killed: state.enemiesKilled, bosses_killed: state.bossesKilled, unlocked_level: state.unlockedLevel })[key] || 0;
+              enemies_killed: state.enemiesKilled, bosses_killed: state.bossesKilled, unlocked_level: state.unlockedLevel,
+              xp: state.quests.xp })[key] || 0;
   }
 
   async function renderRanking(){
@@ -118,7 +120,7 @@
     const req = ++rankingReq;
     panel.innerHTML = '<div class="rank-empty">Wczytywanie...</div>';
     const { data, error } = await sb.from('profiles')
-      .select('id,display_name,wallet,playtime_seconds,total_coins_earned,enemies_killed,bosses_killed,unlocked_level')
+      .select('id,display_name,wallet,playtime_seconds,total_coins_earned,enemies_killed,bosses_killed,unlocked_level,xp')
       .order(rankingSort, { ascending:false, nullsFirst:false })
       .limit(50);
     if(req !== rankingReq) return; // przyszla nowsza prosba (ktos zmienil sortowanie)
@@ -137,6 +139,7 @@
       enemies_killed:     v => fmtNum(v),
       bosses_killed:      v => fmtNum(v),
       unlocked_level:     v => (Math.min((v || 0) + 1, LEVELS.length)) + '/' + LEVELS.length,
+      xp:                 v => 'LV ' + levelInfo(v || 0).lvl,
     };
     const fmt = fmts[rankingSort];
     const colLabel = (RANK_SORTS.find(o => o.key === rankingSort) || {}).label || '';

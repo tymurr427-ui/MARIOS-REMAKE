@@ -131,6 +131,7 @@
         owned_facial_hair: state.ownedFacialHair,
         equipped_facial_hair: state.equippedFacialHair,
         quest_data: state.quests,
+        xp: state.quests.xp,   // kolumna-lustrzanka quest_data.xp, zeby ranking mogl sortowac po niej wprost (order() nie lubi jsonb)
         updated_at: new Date().toISOString(),
       };
       const res = await sb.from('profiles').upsert(row);
