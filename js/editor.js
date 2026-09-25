@@ -15,7 +15,7 @@
   let editorElements = []; // {kind, x, y, w, enemyType, axis}
   let editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
   let editorFlag = { x:editorLevelW-150, y:EDITOR_GROUND_Y-220 };
-  let editorCheckpoint = null; // nieedytowalny w UI - tylko zachowywany przy edycji poziomow ktore juz go maja (np. wbudowany poziom 16)
+  let editorCheckpoint = null; // edytowalny (x i y) - stawiany na wysokosci klikniecia, przeciagalny w obie osie
   let editorScrollX = 0;
   let editorEditingCode = null; // null = nowy poziom; ustawiony = edytujemy/nadpisujemy istniejacy zapisany poziom
 
@@ -413,7 +413,7 @@
     }
     if(editorTool === 'spawn'){ editorSpawn = {x:levelX, y:levelY}; redrawEditor(); return; }
     if(editorTool === 'flag'){ editorFlag = {x:levelX, y:levelY}; redrawEditor(); return; }
-    if(editorTool === 'checkpoint'){ editorCheckpoint = {x:levelX, y:EDITOR_GROUND_Y}; redrawEditor(); return; }
+    if(editorTool === 'checkpoint'){ editorCheckpoint = {x:levelX, y:levelY}; redrawEditor(); return; }
     if(editorTool === 'ground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w: editorShiftHeld ? 1000 : 200}); }
     else if(editorTool === 'platform'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:22}); }
     else if(editorTool === 'trampoline'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:20, isTrampoline:true}); }
@@ -493,7 +493,7 @@
     const sx = editorSnap(levelX, 20), sy = editorSnap(levelY, 20);
     if(editorDrag.kind === 'spawn'){ editorSpawn.x = Math.max(0, sx); editorSpawn.y = sy; }
     else if(editorDrag.kind === 'flag'){ editorFlag.x = Math.max(0, sx); editorFlag.y = sy; }
-    else if(editorDrag.kind === 'checkpoint'){ editorCheckpoint.x = Math.max(0, sx); }
+    else if(editorDrag.kind === 'checkpoint'){ editorCheckpoint.x = Math.max(0, sx); editorCheckpoint.y = sy; }
     else if(editorDrag.kind === 'element'){
       editorDrag.el.x = Math.max(0, sx);
       if(editorDrag.el.kind === 'crusher'){
