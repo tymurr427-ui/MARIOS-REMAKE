@@ -98,7 +98,7 @@
     const crushers = (data.crushers||[]).map(c => ({
       x:c.x, w:c.w||50, h:c.h||50, topY:c.topY||80, bottomY:c.bottomY||GROUND_Y-55, speed:c.speed||1.0, t:c.t||0
     }));
-    const shooters = (data.shooters||[]).map(s => ({ x:s.x, y:s.y, dir:s.dir||1, interval:s.interval||245 }));
+    const shooters = (data.shooters||[]).map(s => ({ x:s.x, y:s.y, dir:s.dir||1, interval:Math.round((s.interval||245)*0.9) }));
     const enemies = (data.enemies||[]).map(e => {
       if(e.enemyType==='flyer') return {x:e.x, y:e.y, w:32, h:32, alive:true, type:'flyer', vx:0.5, minX:Math.max(0,e.x-100), maxX:e.x+100, baseY:e.y, amp:35};
       if(e.enemyType==='jumper') return {x:e.x, y:e.y, w:34, h:34, alive:true, type:'jumper', jumpHeight:70, baseY:e.y};
@@ -371,7 +371,7 @@
       s.timer = (s.timer===undefined ? s.interval : s.timer) - 1;
       if(s.timer <= 0){
         s.timer = s.interval;
-        level.projectiles.push({x:s.x, y:s.y, vx:(s.dir||1)*1.5, w:16, h:16, life:220});
+        level.projectiles.push({x:s.x, y:s.y, vx:(s.dir||1)*1.65, w:16, h:16, life:220});
       }
     }
     for(let i=level.projectiles.length-1;i>=0;i--){
@@ -450,7 +450,7 @@
         if(!level.projectiles) level.projectiles = [];
         level.shooters.forEach(s => {
           s.timer = (s.timer===undefined ? s.interval : s.timer) - 1;
-          if(s.timer <= 0){ s.timer = s.interval; level.projectiles.push({x:s.x,y:s.y,vx:(s.dir||1)*1.5,w:16,h:16,life:220}); }
+          if(s.timer <= 0){ s.timer = s.interval; level.projectiles.push({x:s.x,y:s.y,vx:(s.dir||1)*1.65,w:16,h:16,life:220}); }
         });
         for(let i=level.projectiles.length-1;i>=0;i--){
           const p = level.projectiles[i];
