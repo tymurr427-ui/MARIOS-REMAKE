@@ -372,7 +372,33 @@
     return Math.hypot(dx, ey - levelY);
   }
 
+  const EDITOR_BLOCK_MAX = 100; // maks. sztuk danego typu bloku na poziom (osobno dla kazdego narzedzia)
+  function editorCountByTool(tool){
+    switch(tool){
+      case 'ground': return editorElements.filter(e=>e.kind==='ground').length;
+      case 'platform': return editorElements.filter(e=>e.kind==='platform' && !e.isTrampoline && !e.isCrumbler).length;
+      case 'trampoline': return editorElements.filter(e=>e.kind==='platform' && e.isTrampoline).length;
+      case 'crumbler': return editorElements.filter(e=>e.kind==='platform' && e.isCrumbler).length;
+      case 'pipe': return editorElements.filter(e=>e.kind==='pipe').length;
+      case 'walker': return editorElements.filter(e=>e.kind==='enemy' && e.enemyType==='walker').length;
+      case 'flyer': return editorElements.filter(e=>e.kind==='enemy' && e.enemyType==='flyer').length;
+      case 'jumper': return editorElements.filter(e=>e.kind==='enemy' && e.enemyType==='jumper').length;
+      case 'hazard': return editorElements.filter(e=>e.kind==='hazard').length;
+      case 'mover': return editorElements.filter(e=>e.kind==='mover' && e.axis==='x').length;
+      case 'mover_y': return editorElements.filter(e=>e.kind==='mover' && e.axis==='y').length;
+      case 'crusher': return editorElements.filter(e=>e.kind==='crusher').length;
+      case 'turret': return editorElements.filter(e=>e.kind==='turret').length;
+      default: return 0;
+    }
+  }
+
   function editorPlaceAt(levelX, levelY){
+    if(['ground','platform','trampoline','crumbler','pipe','walker','flyer','jumper','hazard','mover','mover_y','crusher','turret'].includes(editorTool)){
+      if(editorCountByTool(editorTool) >= EDITOR_BLOCK_MAX){
+        editorFlashLimitWarning('Maksymalnie ' + EDITOR_BLOCK_MAX + ' na poziom dla tego typu elementu!');
+        return;
+      }
+    }
     if(editorTool === 'erase'){
       let bestIdx = -1, bestDist = 9999;
       editorElements.forEach((el,i) => {
