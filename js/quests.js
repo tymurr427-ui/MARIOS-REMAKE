@@ -40,6 +40,8 @@
     { ev:'playSec', icon:'⏱', fmt:'min', tiers:[{t:300,xp:20},{t:900,xp:45}], pl:n=>`Graj przez ${n/60} min`,         en:n=>`Play for ${n/60} min` },
     { ev:'jump',    icon:'🦘', fmt:'',    tiers:[{t:50,xp:15},{t:150,xp:30}],  pl:n=>`Skocz ${n} razy`,              en:n=>`Jump ${n} times` },
     { ev:'runSec',  icon:'💨', fmt:'s',   tiers:[{t:30,xp:20},{t:90,xp:40}],   pl:n=>`Biegaj (Shift) przez ${n} s`,   en:n=>`Run (hold Shift) for ${n} s` },
+    { ev:'boss',    icon:'👹', fmt:'',    tiers:[{t:1,xp:40},{t:2,xp:90}],     pl:n=>n===1?'Pokonaj 1 bossa':`Pokonaj ${n} bossów`, en:n=>n===1?'Defeat 1 boss':`Defeat ${n} bosses` },
+    { ev:'noHit',   icon:'🛡', fmt:'',    tiers:[{t:1,xp:30},{t:2,xp:70}],     pl:n=>n===1?'Ukończ poziom bez obrażeń':`Ukończ ${n} poziomy bez obrażeń`, en:n=>n===1?'Finish a level without taking damage':`Finish ${n} levels without taking damage` },
   ];
 
   function hashStr(s){ let h = 2166136261 >>> 0; for(let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; }

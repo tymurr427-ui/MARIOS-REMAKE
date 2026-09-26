@@ -254,6 +254,35 @@
       }
       tctx.closePath(); tctx.fill();
       if(santa){ tctx.strokeStyle = 'rgba(0,0,0,.3)'; tctx.lineWidth = 0.9; tctx.stroke(); }
+    } else if(fh === 'soulpatch'){
+      tctx.beginPath(); tctx.ellipse(24, 21.5, 2, 2.6, 0, 0, Math.PI*2); tctx.fill();
+    } else if(fh === 'chinstrap'){
+      tctx.strokeStyle = '#3a2a1a'; tctx.lineWidth = 3; tctx.lineCap = 'round';
+      tctx.beginPath();
+      tctx.moveTo(9, 13); tctx.quadraticCurveTo(11, 25, 20.7, 28); tctx.quadraticCurveTo(30, 25, 33, 13);
+      tctx.stroke();
+    } else if(fh === 'horseshoe'){
+      tctx.beginPath();
+      tctx.moveTo(18, 17); tctx.quadraticCurveTo(24, 14, 30, 17.5); tctx.quadraticCurveTo(24, 20.5, 18, 17);
+      tctx.fill();
+      tctx.strokeStyle = '#3a2a1a'; tctx.lineWidth = 2.6; tctx.lineCap = 'round';
+      tctx.beginPath(); tctx.moveTo(18.5, 17.5); tctx.quadraticCurveTo(17, 23, 18.5, 27.5); tctx.stroke();
+      tctx.beginPath(); tctx.moveTo(29.5, 17.5); tctx.quadraticCurveTo(31, 23, 29.5, 27.5); tctx.stroke();
+    } else if(fh === 'mutton'){
+      tctx.beginPath();
+      tctx.moveTo(8.5, 9); tctx.quadraticCurveTo(7.5, 20, 13, 26); tctx.quadraticCurveTo(17, 24, 17.5, 18); tctx.quadraticCurveTo(15, 10, 8.5, 9);
+      tctx.closePath(); tctx.fill();
+      tctx.beginPath();
+      tctx.moveTo(39.5, 9); tctx.quadraticCurveTo(40.5, 20, 35, 26); tctx.quadraticCurveTo(31, 24, 30.5, 18); tctx.quadraticCurveTo(33, 10, 39.5, 9);
+      tctx.closePath(); tctx.fill();
+    } else if(fh === 'anchor'){
+      tctx.beginPath();
+      tctx.moveTo(18, 17); tctx.quadraticCurveTo(24, 14, 30, 17.5); tctx.quadraticCurveTo(24, 20.5, 18, 17);
+      tctx.fill();
+      tctx.strokeStyle = '#3a2a1a'; tctx.lineWidth = 2; tctx.lineCap = 'round';
+      tctx.beginPath(); tctx.moveTo(18.5, 17.5); tctx.quadraticCurveTo(18, 22, 21, 25.5); tctx.stroke();
+      tctx.beginPath(); tctx.moveTo(29.5, 17.5); tctx.quadraticCurveTo(30, 22, 27, 25.5); tctx.stroke();
+      tctx.beginPath(); tctx.moveTo(20, 24.5); tctx.quadraticCurveTo(24, 27, 28, 24.5); tctx.lineTo(24, 33); tctx.closePath(); tctx.fill();
     }
     // 'none' - nic nie rysujemy (gladko ogolony)
 

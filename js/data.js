@@ -228,4 +228,9 @@ const FACIAL_HAIR = [
   { id:'vandyke',   name:'Van Dyke',          price:30 },
   { id:'fullbeard', name:'Długa broda',       price:35 },
   { id:'santa',     name:'Broda Mikołaja',    price:45 },
+  { id:'soulpatch', name:'Mała kozia bródka',  price:15 },
+  { id:'chinstrap', name:'Pasek przy szczęce', price:20 },
+  { id:'horseshoe', name:'Wąsy podkowa',       price:25 },
+  { id:'mutton',    name:'Grube bokobrody',    price:25 },
+  { id:'anchor',    name:'Kotwica',            price:30 },
 ];

@@ -48,6 +48,7 @@
 
   let level, player, camera, runCoins, lives, levelDone, timeAlive, currentLevelIndex;
   let levelCheckpointReached = false;
+  let hitThisRun = false;
   let levelStartTime = 0, runElapsedMs = 0;
   function formatRunTime(ms){
     const totalMs = Math.max(0, ms|0);
@@ -147,6 +148,7 @@
     levelDone = false;
     timeAlive = 0;
     levelCheckpointReached = false;
+    hitThisRun = false;
     levelStartTime = performance.now();
     runElapsedMs = 0;
     document.getElementById('hudTimer').textContent = formatRunTime(0);
@@ -204,6 +206,7 @@
 
   function takeDamage(){
     if(player.invuln > 0 || player.shieldActive) return;
+    hitThisRun = true;
     lives--;
     document.getElementById('hudLives').textContent = lives;
     AudioEngine.sfxHurt();
@@ -288,6 +291,7 @@
               e.alive = false;
               state.bossesKilled++;
               questEvent('kill');
+              questEvent('boss');
               runCoins += 20;
               document.getElementById('hudCoins').textContent = runCoins;
               for(let i=0;i<10;i++) spawnCoinPop();
@@ -657,6 +661,7 @@
     }
     if(won && !editorTesting){
       questEvent('win');
+      if(!hitThisRun) questEvent('noHit');
       if(!customLevelActive && currentLevelIndex === LEVELS.length - 1) state.quests.c.beatGame++;
     }
     saveProfile();
