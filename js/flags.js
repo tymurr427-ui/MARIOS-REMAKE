@@ -12,7 +12,6 @@
     switch(id){
       case 'ukraine':
       case 'poland':
-      case 'belarus':
       case 'monaco':
       case 'sanmarino':
       case 'liechtenstein':
@@ -257,6 +256,38 @@
           }
           g.closePath(); g.fill();
         }
+        break;
+      }
+      case 'belarus': {
+        g.fillStyle = c[0]; g.fillRect(x0, y0, w, h*0.67);
+        g.fillStyle = c[1]; g.fillRect(x0, y0+h*0.67, w, h*0.33);
+        const ow = w*0.12;
+        g.fillStyle = '#ffffff'; g.fillRect(x0, y0, ow, h);
+        g.fillStyle = c[0];
+        for(let i=0;i<5;i++){ g.fillRect(x0+ow*0.15, y0 + h*(i/5) + h*0.02, ow*0.7, h*0.08); }
+        break;
+      }
+      case 'albania': {
+        g.fillStyle = c[0]; g.fillRect(x0, y0, w, h);
+        g.fillStyle = '#000000';
+        g.beginPath(); g.ellipse(0, 0, w*0.05, h*0.22, 0, 0, Math.PI*2); g.fill();
+        g.beginPath(); g.moveTo(0, -h*0.05); g.lineTo(-w*0.32, -h*0.28); g.lineTo(-w*0.14, h*0.02); g.closePath(); g.fill();
+        g.beginPath(); g.moveTo(0, -h*0.05); g.lineTo(w*0.32, -h*0.28); g.lineTo(w*0.14, h*0.02); g.closePath(); g.fill();
+        g.beginPath(); g.moveTo(0, h*0.05); g.lineTo(-w*0.3, h*0.22); g.lineTo(-w*0.12, h*0.1); g.closePath(); g.fill();
+        g.beginPath(); g.moveTo(0, h*0.05); g.lineTo(w*0.3, h*0.22); g.lineTo(w*0.12, h*0.1); g.closePath(); g.fill();
+        g.beginPath(); g.arc(-w*0.06, -h*0.26, h*0.07, 0, Math.PI*2); g.fill();
+        g.beginPath(); g.arc(w*0.06, -h*0.26, h*0.07, 0, Math.PI*2); g.fill();
+        break;
+      }
+      case 'montenegro': {
+        g.fillStyle = c[0]; g.fillRect(x0, y0, w, h);
+        const bw = Math.min(w,h)*0.1;
+        g.fillStyle = c[1];
+        g.fillRect(x0, y0, w, bw); g.fillRect(x0, y0+h-bw, w, bw);
+        g.fillRect(x0, y0, bw, h); g.fillRect(x0+w-bw, y0, bw, h);
+        g.beginPath(); g.arc(0, 0, h*0.16, 0, Math.PI*2); g.fill();
+        g.fillStyle = c[0];
+        g.beginPath(); g.arc(0, 0, h*0.1, 0, Math.PI*2); g.fill();
         break;
       }
       default: {
