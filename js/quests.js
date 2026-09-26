@@ -81,6 +81,12 @@
   permDef('spent',  '🛒', '',  [[100,30],[500,80],[2000,200]],             () => state.totalSpent,      n=>`Wydaj ${n} monet w sklepie`, n=>`Spend ${n} coins in the shop`);
   permDef('skins',  '👕', '',  [[5,40],[15,100],[SKINS.length,250]],       () => state.ownedSkins.length, n=>`Posiadaj ${n} skinów`, n=>`Own ${n} skins`);
   permDef('daily',  '📅', '',  [[10,50],[50,150],[100,300]],               () => state.quests.c.dailyClaimed, n=>`Wykonaj ${n} zadań dziennych`, n=>`Complete ${n} daily quests`);
+  permDef('jumps',  '🦘', '',  [[100,20],[1000,60],[5000,150]],            () => state.quests.c.jumps,  n=>`Skocz łącznie ${n} razy`, n=>`Jump ${n} times in total`);
+  permDef('run',    '💨', '',  [[60,20],[600,60],[3600,150]],              () => state.quests.c.runSec, n=>`Biegaj łącznie ${n} s`, n=>`Run for ${n} s in total`);
+  permDef('nohit',  '🛡',  '',  [[5,50],[20,120],[50,250]],                 () => state.quests.c.noHitWins, n=>`Ukończ ${n} poziomów bez obrażeń`, n=>`Finish ${n} levels without damage`);
+  permDef('trails', '🚩', '',  [[5,40],[15,100],[TRAILS.length,250]],      () => state.ownedTrails.length,     n=>`Posiadaj ${n} flag`, n=>`Own ${n} flags`);
+  permDef('hats',   '🎩', '',  [[5,30],[15,80],[HATS.length,200]],         () => state.ownedHats.length,       n=>`Posiadaj ${n} kolorów czapki`, n=>`Own ${n} hat colors`);
+  permDef('facial', '🧔', '',  [[3,30],[8,80],[FACIAL_HAIR.length,200]],   () => state.ownedFacialHair.length, n=>`Posiadaj ${n} rodzajów zarostu`, n=>`Own ${n} facial hair styles`);
 
   // ---------- OSIAGNIECIA (odblokowuja sie same) ----------
   const ACHIEVEMENTS = [];
@@ -119,7 +125,7 @@
   // ---------- DANE ----------
   function defaultQuests(){
     return { xp:0, day:'', daily:{ prog:{}, claimed:{}, bonus:false }, permClaimed:{}, lvlClaimed:{}, ach:{},
-             c:{ levelsCompleted:0, beatGame:0, jumps:0, runSec:0, dailyAllDone:0, dailyClaimed:0, questsClaimed:0 } };
+             c:{ levelsCompleted:0, beatGame:0, jumps:0, runSec:0, dailyAllDone:0, dailyClaimed:0, questsClaimed:0, noHitWins:0 } };
   }
   function normalizeQuests(raw){
     const d = defaultQuests();
@@ -167,6 +173,7 @@
     if(ev === 'jump') q.c.jumps += n;
     else if(ev === 'runSec') q.c.runSec += n;
     else if(ev === 'win') q.c.levelsCompleted += n;
+    else if(ev === 'noHit') q.c.noHitWins += n;
     dailySet().forEach(d => {
       if(d.ev === ev) q.daily.prog[d.id] = Math.min(d.target, (q.daily.prog[d.id] || 0) + n);
     });
