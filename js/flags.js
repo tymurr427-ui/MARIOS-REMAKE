@@ -27,14 +27,42 @@
       case 'bulgaria':
       case 'estonia':
       case 'croatia':
-      case 'slovakia':
-      case 'slovenia':
       case 'serbia':
       case 'luxembourg':
         g.fillStyle = c[0]; g.fillRect(x0, y0, w, h/3);
         g.fillStyle = c[1]; g.fillRect(x0, y0+h/3, w, h/3);
         g.fillStyle = c[2]; g.fillRect(x0, y0+2*h/3, w, h/3);
         break;
+      case 'slovakia': {
+        g.fillStyle = c[0]; g.fillRect(x0, y0, w, h/3);
+        g.fillStyle = c[1]; g.fillRect(x0, y0+h/3, w, h/3);
+        g.fillStyle = c[2]; g.fillRect(x0, y0+2*h/3, w, h/3);
+        // uproszczony herb (tarcza z podwojnym krzyzem) po lewej, zeby odroznic od Slowenii
+        const sx = x0 + w*0.28, sw = w*0.22, sh = h*0.66;
+        g.fillStyle = '#c8102e';
+        g.beginPath(); g.moveTo(sx-sw/2, -sh/2); g.lineTo(sx+sw/2, -sh/2); g.lineTo(sx+sw/2, sh*0.18);
+        g.quadraticCurveTo(sx+sw/2, sh/2, sx, sh/2); g.quadraticCurveTo(sx-sw/2, sh/2, sx-sw/2, sh*0.18);
+        g.closePath(); g.fill();
+        g.fillStyle = '#ffffff';
+        g.fillRect(sx-sw*0.09, -sh*0.32, sw*0.18, sh*0.6);
+        g.fillRect(sx-sw*0.28, -sh*0.08, sw*0.56, sh*0.14);
+        g.fillRect(sx-sw*0.28, sh*0.12, sw*0.56, sh*0.14);
+        break;
+      }
+      case 'slovenia': {
+        g.fillStyle = c[0]; g.fillRect(x0, y0, w, h/3);
+        g.fillStyle = c[1]; g.fillRect(x0, y0+h/3, w, h/3);
+        g.fillStyle = c[2]; g.fillRect(x0, y0+2*h/3, w, h/3);
+        // uproszczony herb (tarcza z gora Triglav) przy drzewcu, wyzej niz slowacki
+        const sx = x0 + w*0.24, sw = w*0.2, sh = h*0.5, sy = y0+h*0.06;
+        g.fillStyle = '#005da4';
+        g.fillRect(sx-sw/2, sy, sw, sh*0.7);
+        g.fillStyle = '#ffffff';
+        g.beginPath(); g.moveTo(sx-sw/2, sy+sh*0.7); g.lineTo(sx, sy+sh*0.15); g.lineTo(sx+sw/2, sy+sh*0.7); g.closePath(); g.fill();
+        g.fillStyle = '#ffd700';
+        for(let i=0;i<3;i++){ g.beginPath(); g.arc(sx-sw*0.28+i*sw*0.28, sy-sh*0.14, sh*0.07, 0, Math.PI*2); g.fill(); }
+        break;
+      }
       case 'latvia':
         g.fillStyle = c[0]; g.fillRect(x0, y0, w, h*0.4);
         g.fillStyle = c[1]; g.fillRect(x0, y0+h*0.4, w, h*0.2);
@@ -188,6 +216,47 @@
         g.fillStyle = c[0];
         g.beginPath(); g.arc(-h*0.09, -h*0.06, h*0.06, 0, Math.PI*2); g.fill();
         g.beginPath(); g.arc(h*0.09, -h*0.06, h*0.06, 0, Math.PI*2); g.fill();
+        break;
+      }
+      case 'macedonia': {
+        g.save();
+        g.beginPath(); g.rect(x0, y0, w, h); g.clip();
+        g.fillStyle = c[0]; g.fillRect(x0, y0, w, h);
+        g.fillStyle = c[1];
+        const farR = Math.max(w, h) * 0.9, rayHalf = Math.PI/16;
+        for(let i=0;i<8;i++){
+          const ang = i * Math.PI/4;
+          const a1 = ang - rayHalf, a2 = ang + rayHalf;
+          g.beginPath();
+          g.moveTo(0, 0);
+          g.lineTo(Math.cos(a1)*farR, Math.sin(a1)*farR);
+          g.lineTo(Math.cos(ang)*farR, Math.sin(ang)*farR);
+          g.lineTo(Math.cos(a2)*farR, Math.sin(a2)*farR);
+          g.closePath(); g.fill();
+        }
+        g.beginPath(); g.arc(0, 0, h*0.16, 0, Math.PI*2); g.fill();
+        g.restore();
+        break;
+      }
+      case 'bosnia': {
+        g.fillStyle = c[0]; g.fillRect(x0, y0, w, h);
+        g.fillStyle = c[1];
+        g.beginPath();
+        g.moveTo(x0, y0); g.lineTo(x0+w*0.78, y0); g.lineTo(x0, y0+h);
+        g.closePath(); g.fill();
+        g.fillStyle = '#ffffff';
+        for(let i=0;i<6;i++){
+          const t = (i+0.5)/6;
+          const sx2 = x0 + w*0.78*(1-t), sy2 = y0 + h*t;
+          g.beginPath();
+          for(let p=0;p<5;p++){
+            const ang = -Math.PI/2 + p*(2*Math.PI/5);
+            const rr = h*0.045;
+            const px2 = sx2 + Math.cos(ang)*rr, py2 = sy2 + Math.sin(ang)*rr;
+            if(p) g.lineTo(px2, py2); else g.moveTo(px2, py2);
+          }
+          g.closePath(); g.fill();
+        }
         break;
       }
       default: {
