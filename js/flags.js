@@ -1,5 +1,51 @@
 // Flagi (trails): miniatury i flaga za graczem.
 // Klasyczny skrypt (bez IIFE): wspolny zasieg globalny z pozostalymi plikami js/.
+  function drawEagleSilhouette(g, cx, cy, s, color){
+    g.save();
+    g.translate(cx, cy);
+    g.fillStyle = color;
+    // korpus/ogon zwezajacy sie ku dolowi
+    g.beginPath();
+    g.moveTo(-s*0.09, -s*0.1);
+    g.lineTo(s*0.09, -s*0.1);
+    g.quadraticCurveTo(s*0.1, s*0.15, s*0.05, s*0.3);
+    g.lineTo(0, s*0.42);
+    g.lineTo(-s*0.05, s*0.3);
+    g.quadraticCurveTo(-s*0.1, s*0.15, -s*0.09, -s*0.1);
+    g.closePath(); g.fill();
+    function feather(bx, by, angleDeg, len, wid){
+      g.save();
+      g.translate(bx, by);
+      g.rotate(angleDeg * Math.PI/180);
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.quadraticCurveTo(len*0.32, wid, len, 0);
+      g.quadraticCurveTo(len*0.32, -wid, 0, 0);
+      g.closePath(); g.fill();
+      g.restore();
+    }
+    const n = 7;
+    for(let side=-1; side<=1; side+=2){
+      const bx = side*s*0.07, by = -s*0.02;
+      for(let i=0;i<n;i++){
+        const t = i/(n-1);
+        const ang = -55 + t*130;                        // wachlarz piór: gora -> dol
+        const finalAngle = side === 1 ? ang : 180-ang;   // lustro dla lewego skrzydla
+        const len = s*(0.30 + 0.14*Math.sin(t*Math.PI));
+        feather(bx, by, finalAngle, len, s*0.05);
+      }
+    }
+    for(let side=-1; side<=1; side+=2){
+      const hx = side*s*0.065, hy = -s*0.14;
+      g.beginPath(); g.arc(hx, hy, s*0.075, 0, Math.PI*2); g.fill();
+      g.beginPath();
+      g.moveTo(hx+side*s*0.06, hy-s*0.01);
+      g.lineTo(hx+side*s*0.13, hy+s*0.015);
+      g.lineTo(hx+side*s*0.06, hy+s*0.035);
+      g.closePath(); g.fill();
+    }
+    g.restore();
+  }
   function drawMiniFlag(px, py, w, h, id, colors, targetCtx){
     const g = targetCtx || ctx;   // domyslnie glowny canvas gry; sklep podaje wlasny canvas miniaturki
     const c = colors;
@@ -238,15 +284,20 @@
         break;
       }
       case 'bosnia': {
+        g.save();
+        g.beginPath(); g.rect(x0, y0, w, h); g.clip();
         g.fillStyle = c[0]; g.fillRect(x0, y0, w, h);
+        const triLeftX = x0 + w*0.27, triRightX = x0 + w*0.78;
         g.fillStyle = c[1];
         g.beginPath();
-        g.moveTo(x0, y0); g.lineTo(x0+w*0.78, y0); g.lineTo(x0, y0+h);
+        g.moveTo(triLeftX, y0); g.lineTo(triRightX, y0); g.lineTo(triRightX, y0+h);
         g.closePath(); g.fill();
         g.fillStyle = '#ffffff';
-        for(let i=0;i<6;i++){
-          const t = (i+0.5)/6;
-          const sx2 = x0 + w*0.78*(1-t), sy2 = y0 + h*t;
+        const nStars = 9;
+        for(let i=-1; i<=nStars; i++){
+          const t = (i+0.5)/nStars;
+          const sx2 = triLeftX + (triRightX-triLeftX)*t;
+          const sy2 = y0 + h*t;
           g.beginPath();
           for(let p=0;p<5;p++){
             const ang = -Math.PI/2 + p*(2*Math.PI/5);
@@ -256,6 +307,7 @@
           }
           g.closePath(); g.fill();
         }
+        g.restore();
         break;
       }
       case 'belarus': {
@@ -268,26 +320,24 @@
         break;
       }
       case 'albania': {
+        g.save();
+        g.beginPath(); g.rect(x0, y0, w, h); g.clip();
         g.fillStyle = c[0]; g.fillRect(x0, y0, w, h);
-        g.fillStyle = '#000000';
-        g.beginPath(); g.ellipse(0, 0, w*0.05, h*0.22, 0, 0, Math.PI*2); g.fill();
-        g.beginPath(); g.moveTo(0, -h*0.05); g.lineTo(-w*0.32, -h*0.28); g.lineTo(-w*0.14, h*0.02); g.closePath(); g.fill();
-        g.beginPath(); g.moveTo(0, -h*0.05); g.lineTo(w*0.32, -h*0.28); g.lineTo(w*0.14, h*0.02); g.closePath(); g.fill();
-        g.beginPath(); g.moveTo(0, h*0.05); g.lineTo(-w*0.3, h*0.22); g.lineTo(-w*0.12, h*0.1); g.closePath(); g.fill();
-        g.beginPath(); g.moveTo(0, h*0.05); g.lineTo(w*0.3, h*0.22); g.lineTo(w*0.12, h*0.1); g.closePath(); g.fill();
-        g.beginPath(); g.arc(-w*0.06, -h*0.26, h*0.07, 0, Math.PI*2); g.fill();
-        g.beginPath(); g.arc(w*0.06, -h*0.26, h*0.07, 0, Math.PI*2); g.fill();
+        drawEagleSilhouette(g, 0, 0, h, '#000000');
+        g.restore();
         break;
       }
       case 'montenegro': {
+        g.save();
+        g.beginPath(); g.rect(x0, y0, w, h); g.clip();
         g.fillStyle = c[0]; g.fillRect(x0, y0, w, h);
-        const bw = Math.min(w,h)*0.1;
+        const bw = Math.min(w,h)*0.09;
         g.fillStyle = c[1];
         g.fillRect(x0, y0, w, bw); g.fillRect(x0, y0+h-bw, w, bw);
         g.fillRect(x0, y0, bw, h); g.fillRect(x0+w-bw, y0, bw, h);
-        g.beginPath(); g.arc(0, 0, h*0.16, 0, Math.PI*2); g.fill();
-        g.fillStyle = c[0];
-        g.beginPath(); g.arc(0, 0, h*0.1, 0, Math.PI*2); g.fill();
+        g.beginPath(); g.arc(0, 0, h*0.24, 0, Math.PI*2); g.fillStyle = c[0]; g.fill();
+        drawEagleSilhouette(g, 0, h*0.02, h*0.36, c[1]);
+        g.restore();
         break;
       }
       default: {
