@@ -251,6 +251,21 @@
     return rectsOverlap(shrinkRect(player, HURT_PLAYER), shrinkRect(e, e.type === 'boss' ? HURT_BOSS : HURT_ENEMY));
   }
 
+  function enemySolidHit(e){
+    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...(level.movers||[])]);
+    for(const p of solids){
+      if(p.isCrumbler && p.state === 'gone') continue;
+      if(rectsOverlap(e, p)) return p;
+    }
+    return null;
+  }
+  function applyEnemyWallBlock(e){
+    const hit = enemySolidHit(e);
+    if(hit){
+      if(e.vx > 0){ e.x = hit.x - e.w; e.vx = -Math.abs(e.vx); }
+      else if(e.vx < 0){ e.x = hit.x + hit.w; e.vx = Math.abs(e.vx); }
+    }
+  }
   function updateEnemies(){
     level.enemies.forEach((e, idx) => {
       if(!e.alive) return;
@@ -268,12 +283,14 @@
         e.x += e.vx * ENEMY_SPEED_K;
         if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
         if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
+        applyEnemyWallBlock(e);
         e.y = e.baseY + Math.sin(e.animT*0.8) * 12;
         if(e.hitTimer > 0) e.hitTimer--;
       } else if(e.type === 'shooter'){
         e.x += e.vx * ENEMY_SPEED_K;
         if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
         if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
+        applyEnemyWallBlock(e);
         e.shootTimer = (e.shootTimer||0) - 1;
         if(e.shootTimer <= 0 && !player.spectating){
           e.shootTimer = 150;
@@ -288,6 +305,11 @@
         }
         if(e.charging){
           e.x += e.vx * ENEMY_SPEED_K;
+          const hit = enemySolidHit(e);
+          if(hit){
+            e.x = e.vx > 0 ? hit.x - e.w : hit.x + hit.w;
+            e.charging = false; e.vx = 0;
+          }
           if(e.x <= e.minX || e.x + e.w >= e.maxX){
             e.x = Math.max(e.minX, Math.min(e.maxX - e.w, e.x));
             e.charging = false; e.vx = 0;
@@ -297,6 +319,7 @@
         e.x += e.vx * ENEMY_SPEED_K;
         if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
         if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
+        applyEnemyWallBlock(e);
       }
 
       if(e.type === 'boss'){
@@ -503,6 +526,7 @@
           e.x += e.vx * ENEMY_SPEED_K;
           if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
           if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
+          applyEnemyWallBlock(e);
         }
       });
       const aliveRemote = Object.values(remotePlayers).find(rp => !rp.dead && rp.data);
