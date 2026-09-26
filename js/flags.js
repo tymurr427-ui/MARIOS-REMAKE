@@ -12,6 +12,10 @@
     switch(id){
       case 'ukraine':
       case 'poland':
+      case 'belarus':
+      case 'monaco':
+      case 'sanmarino':
+      case 'liechtenstein':
         g.fillStyle = c[0]; g.fillRect(x0, y0, w, h/2);
         g.fillStyle = c[1]; g.fillRect(x0, y0+h/2, w, h/2);
         break;
@@ -22,6 +26,11 @@
       case 'hungary':
       case 'bulgaria':
       case 'estonia':
+      case 'croatia':
+      case 'slovakia':
+      case 'slovenia':
+      case 'serbia':
+      case 'luxembourg':
         g.fillStyle = c[0]; g.fillRect(x0, y0, w, h/3);
         g.fillStyle = c[1]; g.fillRect(x0, y0+h/3, w, h/3);
         g.fillStyle = c[2]; g.fillRect(x0, y0+2*h/3, w, h/3);
