@@ -186,7 +186,10 @@
 
   async function renderStats(){
     const panel = document.getElementById('statsPanel');
+    const unlockedAch = Object.keys(state.quests.ach).length;
     panel.innerHTML = `
+      <div class="stats-row"><span>⭐ Poziom gracza</span><b>${playerLevel()}</b></div>
+      <div class="stats-row"><span>🏆 Osiągnięcia</span><b>${unlockedAch} / ${ACHIEVEMENTS.length}</b></div>
       <div class="stats-row"><span>🪙 Aktualne monety</span><b>${state.wallet}</b></div>
       <div class="stats-row"><span>💰 Łącznie zarobione monety</span><b>${state.totalCoinsEarned}</b></div>
       <div class="stats-row"><span>🛒 Wydane monety</span><b>${state.totalSpent}</b></div>
