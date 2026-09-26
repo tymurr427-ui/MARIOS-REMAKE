@@ -513,6 +513,10 @@
         ? {flat:'#3d8fd6', light:'#a8d4f7', mid:'#4f9fe0', dark:'#1e5a99', stroke:'#123a66', spike:'#1e5a99', leg:'#123a66'}
         : e.type==='jumper'
         ? {flat:'#3fae52', light:'#c8f0c8', mid:'#4fc463', dark:'#1e7a2e', stroke:'#124a1a', spike:'#1e7a2e', leg:'#124a1a'}
+        : e.type==='shooter'
+        ? {flat:'#d6791f', light:'#ffd9a8', mid:'#e08a2f', dark:'#8a4a12', stroke:'#5c2f0a', spike:'#8a4a12', leg:'#5c2f0a'}
+        : e.type==='charger'
+        ? {flat:'#b5262f', light:'#ff9a9a', mid:'#c73b3b', dark:'#6e1414', stroke:'#420b0b', spike:'#6e1414', leg:'#420b0b'}
         : {flat:'#8a4bc7', light:'#d69bf0', mid:'#a655d6', dark:'#5e2680', stroke:'#3a1554', spike:'#4a1f66', leg:'#2c1140'};
 
       // cien pod nim

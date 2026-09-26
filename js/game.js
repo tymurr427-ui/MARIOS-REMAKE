@@ -103,6 +103,8 @@
     const enemies = (data.enemies||[]).map(e => {
       if(e.enemyType==='flyer') return {x:e.x, y:e.y, w:32, h:32, alive:true, type:'flyer', vx:0.5, minX:Math.max(0,e.x-100), maxX:e.x+100, baseY:e.y, amp:35};
       if(e.enemyType==='jumper') return {x:e.x, y:e.y, w:34, h:34, alive:true, type:'jumper', jumpHeight:70, baseY:e.y};
+      if(e.enemyType==='shooter') return {x:e.x, y:e.y, w:34, h:34, alive:true, type:'shooter', vx:0.45, minX:Math.max(0,e.x-90), maxX:e.x+90, shootTimer:100+Math.floor(Math.random()*60)};
+      if(e.enemyType==='charger') return {x:e.x, y:e.y, w:36, h:32, alive:true, type:'charger', vx:0, minX:Math.max(0,e.x-140), maxX:e.x+140, charging:false};
       return {x:e.x, y:e.y, w:34, h:34, alive:true, vx:0.55, minX:Math.max(0,e.x-90), maxX:e.x+90};
     });
     if(data.boss){
@@ -268,6 +270,29 @@
         if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
         e.y = e.baseY + Math.sin(e.animT*0.8) * 12;
         if(e.hitTimer > 0) e.hitTimer--;
+      } else if(e.type === 'shooter'){
+        e.x += e.vx * ENEMY_SPEED_K;
+        if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
+        if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
+        e.shootTimer = (e.shootTimer||0) - 1;
+        if(e.shootTimer <= 0 && !player.spectating){
+          e.shootTimer = 150;
+          if(!level.projectiles) level.projectiles = [];
+          const dir = player.x < e.x ? -1 : 1;
+          level.projectiles.push({x:e.x+e.w/2, y:e.y+e.h/2-8, vx:dir*1.5, w:14, h:14, life:200, fromEnemy:true});
+        }
+      } else if(e.type === 'charger'){
+        if(!e.charging && !player.spectating && Math.abs(player.x - e.x) < 260 && Math.abs(player.y - e.y) < 90){
+          e.charging = true;
+          e.vx = (player.x < e.x ? -1 : 1) * 3.3;
+        }
+        if(e.charging){
+          e.x += e.vx * ENEMY_SPEED_K;
+          if(e.x <= e.minX || e.x + e.w >= e.maxX){
+            e.x = Math.max(e.minX, Math.min(e.maxX - e.w, e.x));
+            e.charging = false; e.vx = 0;
+          }
+        }
       } else {
         e.x += e.vx * ENEMY_SPEED_K;
         if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }

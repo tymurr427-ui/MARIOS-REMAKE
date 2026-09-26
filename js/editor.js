@@ -142,7 +142,8 @@
         editorCtx.fillStyle = '#ffd23f';
         editorCtx.beginPath(); editorCtx.arc(ex, ey, 5, 0, Math.PI*2); editorCtx.fill();
       } else if(el.kind==='enemy'){
-        editorCtx.fillStyle = el.enemyType==='flyer' ? '#4f9fe0' : el.enemyType==='jumper' ? '#4fc463' : '#a655d6';
+        function enemyColor(t){ return t==='flyer' ? '#4f9fe0' : t==='jumper' ? '#4fc463' : t==='shooter' ? '#e08a2f' : t==='charger' ? '#c73b3b' : '#a655d6'; }
+        editorCtx.fillStyle = enemyColor(el.enemyType);
         const rangeCol = 'rgba(255,110,110,.55)';
         editorCtx.strokeStyle = rangeCol;
         editorCtx.lineWidth = 2;
@@ -157,6 +158,12 @@
           editorCtx.moveTo(ex, ey);
           editorCtx.lineTo(ex, ey - 70*editorScale);
           editorCtx.stroke();
+        } else if(el.enemyType === 'charger'){
+          const rx = 140*editorScale;
+          editorCtx.beginPath();
+          editorCtx.moveTo(ex-rx, ey);
+          editorCtx.lineTo(ex+rx, ey);
+          editorCtx.stroke();
         } else {
           const rx = 90*editorScale;
           editorCtx.beginPath();
@@ -165,7 +172,7 @@
           editorCtx.stroke();
         }
         editorCtx.setLineDash([]);
-        editorCtx.fillStyle = el.enemyType==='flyer' ? '#4f9fe0' : el.enemyType==='jumper' ? '#4fc463' : '#a655d6';
+        editorCtx.fillStyle = enemyColor(el.enemyType);
         editorCtx.beginPath(); editorCtx.arc(ex, ey, 7, 0, Math.PI*2); editorCtx.fill();
       } else if(el.kind==='hazard'){
         editorCtx.fillStyle = '#c0c5cb';
@@ -394,6 +401,8 @@
       case 'walker': return editorElements.filter(e=>e.kind==='enemy' && e.enemyType==='walker').length;
       case 'flyer': return editorElements.filter(e=>e.kind==='enemy' && e.enemyType==='flyer').length;
       case 'jumper': return editorElements.filter(e=>e.kind==='enemy' && e.enemyType==='jumper').length;
+      case 'shooter': return editorElements.filter(e=>e.kind==='enemy' && e.enemyType==='shooter').length;
+      case 'charger': return editorElements.filter(e=>e.kind==='enemy' && e.enemyType==='charger').length;
       case 'hazard': return editorElements.filter(e=>e.kind==='hazard').length;
       case 'mover': return editorElements.filter(e=>e.kind==='mover' && e.axis==='x').length;
       case 'mover_y': return editorElements.filter(e=>e.kind==='mover' && e.axis==='y').length;
@@ -459,7 +468,7 @@
   }
 
   function editorPlaceAt(levelX, levelY){
-    if(['ground','platform','trampoline','crumbler','pipe','walker','flyer','jumper','hazard','mover','mover_y','crusher','turret'].includes(editorTool)){
+    if(['ground','platform','trampoline','crumbler','pipe','walker','flyer','jumper','shooter','charger','hazard','mover','mover_y','crusher','turret'].includes(editorTool)){
       if(editorCountByTool(editorTool) >= EDITOR_BLOCK_MAX){
         editorFlashLimitWarning('Maksymalnie ' + EDITOR_BLOCK_MAX + ' na poziom dla tego typu elementu!');
         return;
@@ -496,6 +505,8 @@
     else if(editorTool === 'walker'){ editorElements.push({kind:'enemy', enemyType:'walker', x:levelX, y:levelY}); }
     else if(editorTool === 'flyer'){ editorElements.push({kind:'enemy', enemyType:'flyer', x:levelX, y:levelY}); }
     else if(editorTool === 'jumper'){ editorElements.push({kind:'enemy', enemyType:'jumper', x:levelX, y:levelY}); }
+    else if(editorTool === 'shooter'){ editorElements.push({kind:'enemy', enemyType:'shooter', x:levelX, y:levelY}); }
+    else if(editorTool === 'charger'){ editorElements.push({kind:'enemy', enemyType:'charger', x:levelX, y:levelY}); }
     else if(editorTool === 'hazard'){ editorElements.push({kind:'hazard', x:levelX, w:40}); }
     else if(editorTool === 'mover'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'x', range:60}); }
     else if(editorTool === 'mover_y'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'y', range:110}); }
