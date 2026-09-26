@@ -159,9 +159,10 @@
     display:flex;
     gap:18px;
     align-items:flex-start;
-    justify-content:center;
+    justify-content:flex-start;
     flex-wrap:nowrap;               /* lista po lewej, podglad zawsze po prawej */
     width:100%;
+    padding-left:16px;
   }
   @media (max-width: 1000px){ .customize-layout { flex-wrap:wrap; } }
   .customize-col { display:flex; flex-direction:column; }
