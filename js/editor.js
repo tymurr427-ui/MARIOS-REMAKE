@@ -344,6 +344,15 @@
     editorUndo();
   });
 
+  window.addEventListener('keydown', (e) => {
+    if(!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey || (e.code !== 'KeyC' && e.code !== 'KeyV')) return;
+    if(editorScreen.classList.contains('hidden')) return;
+    const t = e.target && e.target.tagName;
+    if(t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return;
+    e.preventDefault();
+    if(e.code === 'KeyC') editorCopyAtCursor(); else editorPasteClipboard();
+  });
+
   let editorLimitWarnTimeout = null;
   function editorFlashLimitWarning(msg){
     const el = document.getElementById('editorSaveResult');
@@ -362,6 +371,8 @@
   }
 
   let editorShiftHeld = false;   // ustawiane przy kliknieciu (Shift + klik = dlugi odcinek gruntu)
+  let editorMouseLevelPos = {levelX:0, levelY:0}; // ostatnia pozycja kursora nad canvasem (do Ctrl+C/Ctrl+V)
+  let editorClipboard = null;    // skopiowany element (Ctrl+C), wklejany przez Ctrl+V pod kursorem
   // odleglosc punktu od elementu; dla elementow o szerokosci liczymy do najblizszego punktu na ich dlugosci
   function editorEraseDist(el, levelX, levelY){
     const ey = el.y!==undefined ? el.y : (el.kind==='crusher' ? el.topY : levelY);
@@ -390,6 +401,61 @@
       case 'turret': return editorElements.filter(e=>e.kind==='turret').length;
       default: return 0;
     }
+  }
+
+  // ---------- KOPIUJ / WKLEJ (Ctrl+C nad elementem, Ctrl+V pod kursorem) ----------
+  function editorFindElementAt(levelX, levelY){
+    let bestIdx = -1, bestDist = 9999;
+    editorElements.forEach((el,i) => {
+      const d = editorEraseDist(el, levelX, levelY);
+      if(d < bestDist){ bestDist = d; bestIdx = i; }
+    });
+    return (bestIdx >= 0 && bestDist < 120) ? editorElements[bestIdx] : null;
+  }
+  function editorToolForElement(el){
+    switch(el.kind){
+      case 'ground': return 'ground';
+      case 'platform': return el.isTrampoline ? 'trampoline' : (el.isCrumbler ? 'crumbler' : 'platform');
+      case 'pipe': return 'pipe';
+      case 'coin': return 'coin';
+      case 'enemy': return el.enemyType;
+      case 'hazard': return 'hazard';
+      case 'mover': return el.axis === 'y' ? 'mover_y' : 'mover';
+      case 'crusher': return 'crusher';
+      case 'turret': return 'turret';
+      case 'boss': return 'boss';
+      default: return null;
+    }
+  }
+  function editorCopyAtCursor(){
+    const el = editorFindElementAt(editorMouseLevelPos.levelX, editorMouseLevelPos.levelY);
+    if(!el){ editorFlashLimitWarning('Najedź kursorem na element i wciśnij Ctrl+C'); return; }
+    editorClipboard = JSON.parse(JSON.stringify(el));
+    editorFlashLimitWarning('Skopiowano — Ctrl+V żeby wkleić pod kursorem');
+  }
+  function editorPasteClipboard(){
+    if(!editorClipboard){ editorFlashLimitWarning('Najpierw skopiuj element (Ctrl+C)'); return; }
+    const tool = editorToolForElement(editorClipboard);
+    if(tool === 'boss'){ editorFlashLimitWarning('Boss może być tylko jeden na poziom!'); return; }
+    if(tool === 'coin'){
+      if(editorElements.filter(e=>e.kind==='coin').length >= 40){ editorFlashLimitWarning('Maksymalnie 40 monet na poziom!'); return; }
+    } else if(tool && editorCountByTool(tool) >= EDITOR_BLOCK_MAX){
+      editorFlashLimitWarning('Maksymalnie ' + EDITOR_BLOCK_MAX + ' na poziom dla tego typu elementu!');
+      return;
+    }
+    const before = editorSnapshotJSON();
+    const clone = JSON.parse(JSON.stringify(editorClipboard));
+    clone.x = Math.max(0, editorSnap(editorMouseLevelPos.levelX, 20));
+    if(clone.kind === 'crusher'){
+      const range = clone.bottomY - clone.topY;
+      clone.topY = Math.max(20, editorSnap(editorMouseLevelPos.levelY, 20));
+      clone.bottomY = clone.topY + range;
+    } else if(clone.y !== undefined){
+      clone.y = editorSnap(editorMouseLevelPos.levelY, 20);
+    }
+    editorElements.push(clone);
+    editorPushUndo(before);
+    redrawEditor();
   }
 
   function editorPlaceAt(levelX, levelY){
@@ -477,6 +543,10 @@
   let editorDrag = null;
   let editorDragMoved = false;
   let editorSuppressClick = false;
+
+  editorCanvas.addEventListener('mousemove', (e) => {
+    editorMouseLevelPos = editorPointFromEvent(e);
+  });
 
   let editorDragBefore = null;
   editorCanvas.addEventListener('mousedown', (e) => {
