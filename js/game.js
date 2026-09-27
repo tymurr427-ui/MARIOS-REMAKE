@@ -82,12 +82,16 @@
     const platforms = [];
     (data.grounds||[]).forEach(g => {
       const gy = g.y!==undefined ? g.y : GROUND_Y;
-      platforms.push({x:g.x, y:gy, w:g.w, h:(GROUND_Y+200)-gy, isGround:true});
+      platforms.push({x:g.x, y:gy, w:g.w, h:(GROUND_Y+200)-gy, isGround:true, isIce: !!g.isIce});
     });
     (data.platforms||[]).forEach(p => platforms.push({
       x:p.x, y:p.y, w:p.w, h:p.h,
       isTrampoline: !!p.isTrampoline, bounceAnim:0,
       isCrumbler: !!p.isCrumbler, state: p.isCrumbler ? 'idle' : undefined, timer:0,
+    }));
+    const blinkers = (data.blinkers||[]).map(b => ({
+      x:b.x, y:b.y, w:b.w||90, h:b.h||20, isBlinker:true, solid:true,
+      t: Math.abs(Math.round(b.x||0)) % 240   // przesuniecie fazy wg pozycji - nie wszystkie migaja rownoczesnie
     }));
     const pipes = (data.pipes||[]).map(p => ({x:p.x, y:GROUND_Y-p.h, w:p.w, h:p.h}));
     const coins = (data.coins||[]).map(c => ({x:c.x, y:c.y, taken:false, t:Math.random()*10}));
@@ -117,7 +121,7 @@
     const flag = data.flag ? {x:data.flag.x, y:data.flag.y, w:14, h:220} : {x:(data.width||2000)-150, y:GROUND_Y-220, w:14, h:220};
     return {
       name: data.name || 'Poziom własny',
-      platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, flag,
+      platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers, flag,
       checkpoint: data.checkpoint ? {x:data.checkpoint.x, y:data.checkpoint.y} : null,
       width: data.width || 2000,
       bg: data.bg || 'day'
@@ -252,9 +256,9 @@
   }
 
   function enemySolidHit(e){
-    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...(level.movers||[])]);
+    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...(level.movers||[]), ...(level.blinkers||[])]);
     for(const p of solids){
-      if(p.isCrumbler && p.state === 'gone') continue;
+      if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid)) continue;
       if(rectsOverlap(e, p)) return p;
     }
     return null;
@@ -406,6 +410,15 @@
     }
   }
 
+  const BLINK_CYCLE = 240, BLINK_WARN_AT = 160, BLINK_GONE_AT = 190; // ~2.7s widoczna, ~0.5s miganie, ~0.8s zniknieta (60fps)
+  function updateBlinkers(){
+    if(!level.blinkers) return;
+    for(const b of level.blinkers){
+      b.t = (b.t + 1) % BLINK_CYCLE;
+      b.solid = b.t < BLINK_GONE_AT;
+      b.warning = b.t >= BLINK_WARN_AT && b.t < BLINK_GONE_AT;
+    }
+  }
   function updateCrushers(){
     if(!level.crushers) return;
     for(const c of level.crushers){
@@ -468,6 +481,7 @@
   const RUN_MAX = 4.5 * PLAYER_SPEED_K; // 5.0 * 0.9 (bieg o 10% wolniejszy)
   const ACCEL = 0.32 * PLAYER_SPEED_K;
   const DECEL_GROUND = 0.36 * PLAYER_SPEED_K;
+  const DECEL_ICE = 0.06 * PLAYER_SPEED_K;   // zimowy grunt - dużo mniejsze tarcie, gracz sie slizga
   const DECEL_AIR = 0.16 * PLAYER_SPEED_K;
   const JUMP_VELOCITY = -13.9 * JUMP_TIME_K;
   const TRAMPOLINE_VELOCITY = -21.5 * JUMP_TIME_K; // mocne odbicie - nowa przeszkoda
@@ -529,6 +543,7 @@
           applyEnemyWallBlock(e);
         }
       });
+      updateBlinkers();
       const aliveRemote = Object.values(remotePlayers).find(rp => !rp.dead && rp.data);
       const followX = aliveRemote ? aliveRemote.data.x : player.x;
       camera.x = Math.max(0, Math.min(followX - W/2, level.width - W));
@@ -549,7 +564,7 @@
       if(player.vx > maxSpeed) player.vx = maxSpeed;
       player.facing = 1;
     } else {
-      const dec = player.onGround ? DECEL_GROUND : DECEL_AIR;
+      const dec = player.onGround ? (player.onIce ? DECEL_ICE : DECEL_GROUND) : DECEL_AIR;
       if(player.vx > 0){ player.vx -= dec; if(player.vx < 0) player.vx = 0; }
       else if(player.vx < 0){ player.vx += dec; if(player.vx > 0) player.vx = 0; }
     }
@@ -573,7 +588,7 @@
 
     updateMovers();
     const movers = level.movers || [];
-    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...movers]);
+    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...movers, ...(level.blinkers||[])]);
 
     // jesli w poprzedniej klatce gracz stal na ruchomej platformie, przenosimy go
     // razem z nia (w X i Y) ZANIM policzymy jego wlasny ruch/kolizje - inaczej przy
@@ -587,7 +602,7 @@
     // ruch poziomy + kolizje
     player.x += player.vx;
     for(const p of solids){
-      if(p.isCrumbler && p.state === 'gone') continue;
+      if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid)) continue;
       if(rectsOverlap(player,p)){
         if(player.vx > 0){ player.x = p.x - player.w; player.vx = 0; }
         else if(player.vx < 0){ player.x = p.x + p.w; player.vx = 0; }
@@ -599,6 +614,7 @@
     // predkosci spadania gracz nie "przeskakiwal" (tunelowal) przez cienkie platformy
     // w jednej klatce zamiast na nich wyladowac
     player.onGround = false;
+    player.onIce = false;
     let standingOnMover = null;
     const vyDir = player.vy > 0 ? 1 : (player.vy < 0 ? -1 : 0);
     let vyLeft = Math.abs(player.vy);
@@ -608,7 +624,7 @@
       player.y += vyDir * step;
       vyLeft -= step;
       for(const p of solids){
-        if(p.isCrumbler && p.state === 'gone') continue;
+        if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid)) continue;
         if(rectsOverlap(player,p)){
           if(vyDir > 0){
             player.y = p.y - player.h;
@@ -621,6 +637,7 @@
             } else {
               player.onGround = true;
               player.vy = 0;
+              if(p.isIce) player.onIce = true;
               if(p.isMover) standingOnMover = p;
               if(p.isCrumbler && p.state === 'idle'){ p.state = 'shaking'; p.timer = 75; }
             }
@@ -657,6 +674,7 @@
     updateHazards();
     updateCrushers();
     updateShooters();
+    updateBlinkers();
     if(levelDone) return;
 
     level.coins.forEach((c, idx) => {

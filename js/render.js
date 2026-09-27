@@ -170,7 +170,18 @@
         ctx.restore();
         continue;
       }
-      if(p.isGround){
+      if(p.isGround && p.isIce){
+        ctx.fillStyle = '#7fc4dd';
+        ctx.fillRect(x, p.y, p.w, H-p.y+10);
+        ctx.fillStyle = '#eaf9ff';
+        ctx.fillRect(x, p.y, p.w, 10);
+        if(gfxQuality >= 2){
+          ctx.fillStyle = 'rgba(255,255,255,.5)';
+          ctx.fillRect(x, p.y, p.w, 2);
+          ctx.fillStyle = 'rgba(255,255,255,.25)';
+          for(let cx=14; cx<p.w; cx+=34) ctx.fillRect(x+cx, p.y+10, 2, 10);
+        }
+      } else if(p.isGround){
         ctx.fillStyle = '#8a5a2b';
         ctx.fillRect(x, p.y, p.w, H-p.y+10);
         ctx.fillStyle = '#3fae4a';
@@ -196,6 +207,29 @@
           ctx.fillRect(x, p.y, p.w, 2);
         }
       }
+    }
+    for(const b of (level.blinkers||[])){
+      const x = b.x - camera.x;
+      if(x+b.w < 0 || x > W) continue;
+      if(!b.solid){
+        ctx.save();
+        ctx.globalAlpha = 0.18;
+        ctx.strokeStyle = '#5fd0ff'; ctx.lineWidth = 2; ctx.setLineDash([6,5]);
+        ctx.strokeRect(x, b.y, b.w, b.h);
+        ctx.restore();
+        continue;
+      }
+      ctx.save();
+      if(b.warning) ctx.globalAlpha = 0.45 + Math.sin(Date.now()*0.025) * 0.35;
+      ctx.fillStyle = '#7fd8ff';
+      ctx.fillRect(x, b.y, b.w, b.h);
+      ctx.fillStyle = 'rgba(255,255,255,.5)';
+      ctx.fillRect(x, b.y, b.w, 3);
+      if(gfxQuality >= 1 && !b.warning){
+        ctx.strokeStyle = '#2a90c2'; ctx.lineWidth = 1.5;
+        for(let bx=0; bx<b.w; bx+=16) ctx.strokeRect(x+bx, b.y, Math.min(16,b.w-bx), b.h);
+      }
+      ctx.restore();
     }
     for(const p of level.pipes){
       const x = p.x - camera.x;
