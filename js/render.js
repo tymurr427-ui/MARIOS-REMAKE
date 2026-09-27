@@ -431,6 +431,34 @@
     }
   }
 
+  function drawHammers(){
+    if(!level.hammers) return;
+    for(const h of level.hammers){
+      const x = h.x - camera.x;
+      if(x+h.radius < 0 || x-h.radius > W) continue;
+      const hx = x + Math.cos(h.angle||0)*h.radius;
+      const hy = h.y + Math.sin(h.angle||0)*h.radius;
+      ctx.strokeStyle = '#4a4e54';
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(x, h.y); ctx.lineTo(hx, hy); ctx.stroke();
+      ctx.fillStyle = '#333';
+      ctx.beginPath(); ctx.arc(x, h.y, 7, 0, Math.PI*2); ctx.fill();
+      const grad = gfxQuality===0 ? null : ctx.createRadialGradient(hx-6,hy-6,2,hx,hy,20);
+      if(grad){ grad.addColorStop(0,'#c0c5cb'); grad.addColorStop(1,'#5a5f66'); ctx.fillStyle = grad; }
+      else ctx.fillStyle = '#8a8f96';
+      ctx.beginPath(); ctx.arc(hx, hy, 20, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#3a3e44';
+      for(let i=0;i<8;i++){
+        const a = i*(Math.PI/4) + (h.angle||0)*0.3;
+        ctx.beginPath();
+        ctx.moveTo(hx+Math.cos(a)*20, hy+Math.sin(a)*20);
+        ctx.lineTo(hx+Math.cos(a)*28, hy+Math.sin(a)*28);
+        ctx.lineTo(hx+Math.cos(a+0.25)*20, hy+Math.sin(a+0.25)*20);
+        ctx.fill();
+      }
+    }
+  }
+
   function drawTurrets(){
     if(!level.shooters) return;
     for(const s of level.shooters){

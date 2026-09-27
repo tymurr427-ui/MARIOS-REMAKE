@@ -130,6 +130,15 @@
         editorCtx.strokeStyle = '#5fd0ff'; editorCtx.lineWidth = 2; editorCtx.setLineDash([5,4]);
         editorCtx.strokeRect(ex, ey, pw, ph);
         editorCtx.setLineDash([]);
+      } else if(el.kind==='hammer'){
+        const r = el.radius*editorScale;
+        editorCtx.strokeStyle = 'rgba(255,140,80,.6)'; editorCtx.lineWidth = 2; editorCtx.setLineDash([5,4]);
+        editorCtx.beginPath(); editorCtx.arc(ex, ey, r, 0, Math.PI*2); editorCtx.stroke();
+        editorCtx.setLineDash([]);
+        editorCtx.strokeStyle = '#4a4e54'; editorCtx.lineWidth = 4;
+        editorCtx.beginPath(); editorCtx.moveTo(ex, ey); editorCtx.lineTo(ex+r, ey); editorCtx.stroke();
+        editorCtx.fillStyle = '#333'; editorCtx.beginPath(); editorCtx.arc(ex, ey, 6, 0, Math.PI*2); editorCtx.fill();
+        editorCtx.fillStyle = '#8a8f96'; editorCtx.beginPath(); editorCtx.arc(ex+r, ey, 12, 0, Math.PI*2); editorCtx.fill();
       } else if(el.kind==='platform' && el.isTrampoline){
         const pw = el.w*editorScale;
         editorCtx.fillStyle = '#7a4a1e';
@@ -408,6 +417,7 @@
       case 'ground': return editorElements.filter(e=>e.kind==='ground' && !e.isIce).length;
       case 'iceground': return editorElements.filter(e=>e.kind==='ground' && e.isIce).length;
       case 'blinker': return editorElements.filter(e=>e.kind==='blinker').length;
+      case 'hammer': return editorElements.filter(e=>e.kind==='hammer').length;
       case 'platform': return editorElements.filter(e=>e.kind==='platform' && !e.isTrampoline && !e.isCrumbler).length;
       case 'trampoline': return editorElements.filter(e=>e.kind==='platform' && e.isTrampoline).length;
       case 'crumbler': return editorElements.filter(e=>e.kind==='platform' && e.isCrumbler).length;
@@ -439,6 +449,7 @@
     switch(el.kind){
       case 'ground': return el.isIce ? 'iceground' : 'ground';
       case 'blinker': return 'blinker';
+      case 'hammer': return 'hammer';
       case 'platform': return el.isTrampoline ? 'trampoline' : (el.isCrumbler ? 'crumbler' : 'platform');
       case 'pipe': return 'pipe';
       case 'coin': return 'coin';
@@ -483,7 +494,7 @@
   }
 
   function editorPlaceAt(levelX, levelY){
-    if(['ground','iceground','blinker','platform','trampoline','crumbler','pipe','walker','flyer','jumper','shooter','charger','hazard','mover','mover_y','crusher','turret'].includes(editorTool)){
+    if(['ground','iceground','blinker','hammer','platform','trampoline','crumbler','pipe','walker','flyer','jumper','shooter','charger','hazard','mover','mover_y','crusher','turret'].includes(editorTool)){
       if(editorCountByTool(editorTool) >= EDITOR_BLOCK_MAX){
         editorFlashLimitWarning('Maksymalnie ' + EDITOR_BLOCK_MAX + ' na poziom dla tego typu elementu!');
         return;
@@ -507,6 +518,7 @@
     if(editorTool === 'ground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w: editorShiftHeld ? 1000 : 200}); }
     else if(editorTool === 'iceground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w: editorShiftHeld ? 1000 : 200, isIce:true}); }
     else if(editorTool === 'blinker'){ editorElements.push({kind:'blinker', x:levelX, y:levelY, w:90, h:20}); }
+    else if(editorTool === 'hammer'){ editorElements.push({kind:'hammer', x:levelX, y:levelY, radius:70, speed:0.045}); }
     else if(editorTool === 'platform'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:22}); }
     else if(editorTool === 'trampoline'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:20, isTrampoline:true}); }
     else if(editorTool === 'crumbler'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:20, isCrumbler:true}); }
@@ -814,6 +826,7 @@
     editorApplyLength((loadedW >= EDITOR_LENGTH_MIN && loadedW <= EDITOR_LENGTH_MAX) ? loadedW : EDITOR_LENGTH_DEFAULT);
     (data.grounds||[]).forEach(g => editorElements.push({kind:'ground', x:g.x, y: g.y!==undefined ? g.y : EDITOR_GROUND_Y, w:g.w, isIce:!!g.isIce}));
     (data.blinkers||[]).forEach(b => editorElements.push({kind:'blinker', x:b.x, y:b.y, w:b.w||90, h:b.h||20}));
+    (data.hammers||[]).forEach(h => editorElements.push({kind:'hammer', x:h.x, y:h.y, radius:h.radius||70, speed:h.speed||0.045}));
     const isBuiltinLoad = String(code).startsWith('BUILTIN:');
     (data.platforms||[]).forEach(p => {
       let px = p.x, pw = p.w;
@@ -937,6 +950,7 @@
   function collectEditorData(){
     const grounds = editorElements.filter(e=>e.kind==='ground').map(e=>({x:e.x,y:e.y,w:e.w,isIce:e.isIce}));
     const blinkers = editorElements.filter(e=>e.kind==='blinker').map(e=>({x:e.x,y:e.y,w:e.w,h:e.h}));
+    const hammers = editorElements.filter(e=>e.kind==='hammer').map(e=>({x:e.x,y:e.y,radius:e.radius,speed:e.speed}));
     const platforms = editorElements.filter(e=>e.kind==='platform').map(e=>({x:e.x,y:e.y,w:e.w,h:e.h,isTrampoline:e.isTrampoline,isCrumbler:e.isCrumbler}));
     const pipes = editorElements.filter(e=>e.kind==='pipe').map(e=>({x:e.x,w:e.w,h:e.h}));
     const coins = editorElements.filter(e=>e.kind==='coin').map(e=>({x:e.x,y:e.y}));
@@ -950,7 +964,7 @@
       name: document.getElementById('editorLevelName').value.trim() || 'Poziom bez nazwy',
       bg: document.getElementById('editorBgSelect').value,
       width: editorLevelW,
-      grounds, platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers,
+      grounds, platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers, hammers,
       boss: bossEl ? {x:bossEl.x, y:bossEl.y} : null,
       flag: editorFlag, spawn: editorSpawn, checkpoint: editorCheckpoint,
     };

@@ -11,6 +11,7 @@
     drawMovers();
     drawHazards();
     drawCrushers();
+    drawHammers();
     drawCoins();
     drawTurrets();
     drawProjectiles();

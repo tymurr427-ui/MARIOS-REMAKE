@@ -104,6 +104,7 @@
       x:c.x, w:c.w||50, h:c.h||50, topY:c.topY||80, bottomY:c.bottomY||GROUND_Y-55, speed:c.speed||1.0, t:c.t||0
     }));
     const shooters = (data.shooters||[]).map(s => ({ x:s.x, y:s.y, dir:s.dir||1, interval:Math.round((s.interval||245)*0.72) }));
+    const hammers = (data.hammers||[]).map(h => ({ x:h.x, y:h.y, radius:h.radius||70, speed:h.speed||0.045, angle:h.angle||0 }));
     const enemies = (data.enemies||[]).map(e => {
       if(e.enemyType==='flyer') return {x:e.x, y:e.y, w:32, h:32, alive:true, type:'flyer', vx:0.5, minX:Math.max(0,e.x-100), maxX:e.x+100, baseY:e.y, amp:35};
       if(e.enemyType==='jumper') return {x:e.x, y:e.y, w:34, h:34, alive:true, type:'jumper', jumpHeight:70, baseY:e.y};
@@ -121,7 +122,7 @@
     const flag = data.flag ? {x:data.flag.x, y:data.flag.y, w:14, h:220} : {x:(data.width||2000)-150, y:GROUND_Y-220, w:14, h:220};
     return {
       name: data.name || 'Poziom własny',
-      platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers, flag,
+      platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers, hammers, flag,
       checkpoint: data.checkpoint ? {x:data.checkpoint.x, y:data.checkpoint.y} : null,
       width: data.width || 2000,
       bg: data.bg || 'day'
@@ -419,6 +420,17 @@
       b.warning = b.t >= BLINK_WARN_AT && b.t < BLINK_GONE_AT;
     }
   }
+  function updateHammers(){
+    if(!level.hammers) return;
+    for(const h of level.hammers){
+      h.angle = (h.angle||0) + (h.speed||0.045);
+      if(player.invuln > 0 || player.spectating) continue;
+      const hx = h.x + Math.cos(h.angle)*h.radius;
+      const hy = h.y + Math.sin(h.angle)*h.radius;
+      const headRect = {x:hx-14, y:hy-14, w:28, h:28};
+      if(rectsOverlap(player, headRect)) takeDamage();
+    }
+  }
   function updateCrushers(){
     if(!level.crushers) return;
     for(const c of level.crushers){
@@ -544,6 +556,7 @@
         }
       });
       updateBlinkers();
+      updateHammers();
       const aliveRemote = Object.values(remotePlayers).find(rp => !rp.dead && rp.data);
       const followX = aliveRemote ? aliveRemote.data.x : player.x;
       camera.x = Math.max(0, Math.min(followX - W/2, level.width - W));
@@ -675,6 +688,7 @@
     updateCrushers();
     updateShooters();
     updateBlinkers();
+    updateHammers();
     if(levelDone) return;
 
     level.coins.forEach((c, idx) => {
