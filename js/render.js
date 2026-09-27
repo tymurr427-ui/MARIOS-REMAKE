@@ -181,6 +181,19 @@
           ctx.fillStyle = 'rgba(255,255,255,.25)';
           for(let cx=14; cx<p.w; cx+=34) ctx.fillRect(x+cx, p.y+10, 2, 10);
         }
+      } else if(p.isGround && p.isSand){
+        ctx.fillStyle = '#d9b26a';
+        ctx.fillRect(x, p.y, p.w, H-p.y+10);
+        ctx.fillStyle = '#e8cd8f';
+        ctx.fillRect(x, p.y, p.w, 10);
+        if(gfxQuality >= 1){
+          ctx.fillStyle = 'rgba(120,85,30,.35)';
+          for(let cx=10; cx<p.w; cx+=22){
+            ctx.beginPath();
+            ctx.ellipse(x+cx, p.y+18+((cx*7)%14), 5, 2, 0, 0, Math.PI*2);
+            ctx.fill();
+          }
+        }
       } else if(p.isGround){
         ctx.fillStyle = '#8a5a2b';
         ctx.fillRect(x, p.y, p.w, H-p.y+10);

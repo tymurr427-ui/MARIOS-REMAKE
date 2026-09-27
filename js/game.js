@@ -82,7 +82,7 @@
     const platforms = [];
     (data.grounds||[]).forEach(g => {
       const gy = g.y!==undefined ? g.y : GROUND_Y;
-      platforms.push({x:g.x, y:gy, w:g.w, h:(GROUND_Y+200)-gy, isGround:true, isIce: !!g.isIce});
+      platforms.push({x:g.x, y:gy, w:g.w, h:(GROUND_Y+200)-gy, isGround:true, isIce: !!g.isIce, isSand: !!g.isSand});
     });
     (data.platforms||[]).forEach(p => platforms.push({
       x:p.x, y:p.y, w:p.w, h:p.h,
@@ -566,14 +566,15 @@
     broadcastOwnState();
 
     const running = keys['ShiftLeft'] || keys['ShiftRight'];
-    const maxSpeed = running ? RUN_MAX : WALK_MAX;
+    const sandMul = player.onSand ? 0.55 : 1;
+    const maxSpeed = (running ? RUN_MAX : WALK_MAX) * sandMul;
 
     if(keys['ArrowLeft']||keys['KeyA']){
-      player.vx -= ACCEL * (running?1.4:1);
+      player.vx -= ACCEL * (running?1.4:1) * sandMul;
       if(player.vx < -maxSpeed) player.vx = -maxSpeed;
       player.facing = -1;
     } else if(keys['ArrowRight']||keys['KeyD']){
-      player.vx += ACCEL * (running?1.4:1);
+      player.vx += ACCEL * (running?1.4:1) * sandMul;
       if(player.vx > maxSpeed) player.vx = maxSpeed;
       player.facing = 1;
     } else {
@@ -628,6 +629,7 @@
     // w jednej klatce zamiast na nich wyladowac
     player.onGround = false;
     player.onIce = false;
+    player.onSand = false;
     let standingOnMover = null;
     const vyDir = player.vy > 0 ? 1 : (player.vy < 0 ? -1 : 0);
     let vyLeft = Math.abs(player.vy);
@@ -651,6 +653,7 @@
               player.onGround = true;
               player.vy = 0;
               if(p.isIce) player.onIce = true;
+              if(p.isSand) player.onSand = true;
               if(p.isMover) standingOnMover = p;
               if(p.isCrumbler && p.state === 'idle'){ p.state = 'shaking'; p.timer = 75; }
             }

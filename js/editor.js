@@ -118,6 +118,11 @@
         editorCtx.fillRect(ex, ey, el.w*editorScale, (editorCanvas.height-ey));
         editorCtx.fillStyle = '#eaf9ff';
         editorCtx.fillRect(ex, ey, el.w*editorScale, 4);
+      } else if(el.kind==='ground' && el.isSand){
+        editorCtx.fillStyle = '#d9b26a';
+        editorCtx.fillRect(ex, ey, el.w*editorScale, (editorCanvas.height-ey));
+        editorCtx.fillStyle = '#e8cd8f';
+        editorCtx.fillRect(ex, ey, el.w*editorScale, 4);
       } else if(el.kind==='ground'){
         editorCtx.fillStyle = '#8a5a2b';
         editorCtx.fillRect(ex, ey, el.w*editorScale, (editorCanvas.height-ey));
@@ -416,6 +421,7 @@
     switch(tool){
       case 'ground': return editorElements.filter(e=>e.kind==='ground' && !e.isIce).length;
       case 'iceground': return editorElements.filter(e=>e.kind==='ground' && e.isIce).length;
+      case 'sandground': return editorElements.filter(e=>e.kind==='ground' && e.isSand).length;
       case 'blinker': return editorElements.filter(e=>e.kind==='blinker').length;
       case 'hammer': return editorElements.filter(e=>e.kind==='hammer').length;
       case 'platform': return editorElements.filter(e=>e.kind==='platform' && !e.isTrampoline && !e.isCrumbler).length;
@@ -447,7 +453,7 @@
   }
   function editorToolForElement(el){
     switch(el.kind){
-      case 'ground': return el.isIce ? 'iceground' : 'ground';
+      case 'ground': return el.isIce ? 'iceground' : (el.isSand ? 'sandground' : 'ground');
       case 'blinker': return 'blinker';
       case 'hammer': return 'hammer';
       case 'platform': return el.isTrampoline ? 'trampoline' : (el.isCrumbler ? 'crumbler' : 'platform');
@@ -494,7 +500,7 @@
   }
 
   function editorPlaceAt(levelX, levelY){
-    if(['ground','iceground','blinker','hammer','platform','trampoline','crumbler','pipe','walker','flyer','jumper','shooter','charger','hazard','mover','mover_y','crusher','turret'].includes(editorTool)){
+    if(['ground','iceground','sandground','blinker','hammer','platform','trampoline','crumbler','pipe','walker','flyer','jumper','shooter','charger','hazard','mover','mover_y','crusher','turret'].includes(editorTool)){
       if(editorCountByTool(editorTool) >= EDITOR_BLOCK_MAX){
         editorFlashLimitWarning('Maksymalnie ' + EDITOR_BLOCK_MAX + ' na poziom dla tego typu elementu!');
         return;
@@ -517,6 +523,7 @@
     if(editorTool === 'checkpoint'){ editorCheckpoint = {x:levelX, y:levelY}; redrawEditor(); return; }
     if(editorTool === 'ground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w: editorShiftHeld ? 1000 : 200}); }
     else if(editorTool === 'iceground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w: editorShiftHeld ? 1000 : 200, isIce:true}); }
+    else if(editorTool === 'sandground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w: editorShiftHeld ? 1000 : 200, isSand:true}); }
     else if(editorTool === 'blinker'){ editorElements.push({kind:'blinker', x:levelX, y:levelY, w:90, h:20}); }
     else if(editorTool === 'hammer'){ editorElements.push({kind:'hammer', x:levelX, y:levelY, radius:70, speed:0.045}); }
     else if(editorTool === 'platform'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:22}); }
@@ -798,7 +805,7 @@
     if(builtInOverrides[index]) return JSON.parse(JSON.stringify(builtInOverrides[index]));
 
     const raw = (LEVELS[index])();
-    const grounds = (raw.platforms||[]).filter(p=>p.isGround).map(p=>({x:p.x, y:p.y, w:p.w, isIce:p.isIce}));
+    const grounds = (raw.platforms||[]).filter(p=>p.isGround).map(p=>({x:p.x, y:p.y, w:p.w, isIce:p.isIce, isSand:p.isSand}));
     const plats = (raw.platforms||[]).filter(p=>!p.isGround).map(p=>({x:p.x, y:p.y, w:p.w, h:p.h, isTrampoline:p.isTrampoline, isCrumbler:p.isCrumbler}));
     const pipes = (raw.pipes||[]).map(p=>({x:p.x, w:p.w, h:p.h}));
     const coins = (raw.coins||[]).map(c=>({x:c.x, y:c.y}));
@@ -824,7 +831,7 @@
     editorElements = [];
     const loadedW = Math.round(Number(data.width));
     editorApplyLength((loadedW >= EDITOR_LENGTH_MIN && loadedW <= EDITOR_LENGTH_MAX) ? loadedW : EDITOR_LENGTH_DEFAULT);
-    (data.grounds||[]).forEach(g => editorElements.push({kind:'ground', x:g.x, y: g.y!==undefined ? g.y : EDITOR_GROUND_Y, w:g.w, isIce:!!g.isIce}));
+    (data.grounds||[]).forEach(g => editorElements.push({kind:'ground', x:g.x, y: g.y!==undefined ? g.y : EDITOR_GROUND_Y, w:g.w, isIce:!!g.isIce, isSand:!!g.isSand}));
     (data.blinkers||[]).forEach(b => editorElements.push({kind:'blinker', x:b.x, y:b.y, w:b.w||90, h:b.h||20}));
     (data.hammers||[]).forEach(h => editorElements.push({kind:'hammer', x:h.x, y:h.y, radius:h.radius||70, speed:h.speed||0.045}));
     const isBuiltinLoad = String(code).startsWith('BUILTIN:');
@@ -948,7 +955,7 @@
   }
 
   function collectEditorData(){
-    const grounds = editorElements.filter(e=>e.kind==='ground').map(e=>({x:e.x,y:e.y,w:e.w,isIce:e.isIce}));
+    const grounds = editorElements.filter(e=>e.kind==='ground').map(e=>({x:e.x,y:e.y,w:e.w,isIce:e.isIce,isSand:e.isSand}));
     const blinkers = editorElements.filter(e=>e.kind==='blinker').map(e=>({x:e.x,y:e.y,w:e.w,h:e.h}));
     const hammers = editorElements.filter(e=>e.kind==='hammer').map(e=>({x:e.x,y:e.y,radius:e.radius,speed:e.speed}));
     const platforms = editorElements.filter(e=>e.kind==='platform').map(e=>({x:e.x,y:e.y,w:e.w,h:e.h,isTrampoline:e.isTrampoline,isCrumbler:e.isCrumbler}));
