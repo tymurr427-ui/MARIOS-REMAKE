@@ -103,7 +103,7 @@
     const crushers = (data.crushers||[]).map(c => ({
       x:c.x, w:c.w||50, h:c.h||50, topY:c.topY||80, bottomY:c.bottomY||GROUND_Y-55, speed:c.speed||1.0, t:c.t||0
     }));
-    const shooters = (data.shooters||[]).map(s => ({ x:s.x, y:s.y, dir:s.dir||1, interval:Math.round((s.interval||245)*0.9) }));
+    const shooters = (data.shooters||[]).map(s => ({ x:s.x, y:s.y, dir:s.dir||1, interval:Math.round((s.interval||245)*0.72) }));
     const enemies = (data.enemies||[]).map(e => {
       if(e.enemyType==='flyer') return {x:e.x, y:e.y, w:32, h:32, alive:true, type:'flyer', vx:0.5, minX:Math.max(0,e.x-100), maxX:e.x+100, baseY:e.y, amp:35};
       if(e.enemyType==='jumper') return {x:e.x, y:e.y, w:34, h:34, alive:true, type:'jumper', jumpHeight:70, baseY:e.y};
@@ -436,7 +436,7 @@
       s.timer = (s.timer===undefined ? s.interval : s.timer) - 1;
       if(s.timer <= 0){
         s.timer = s.interval;
-        level.projectiles.push({x:s.x, y:s.y, vx:(s.dir||1)*1.65, w:16, h:16, life:220});
+        level.projectiles.push({x:s.x, y:s.y, vx:(s.dir||1)*2.0, w:16, h:16, life:220});
       }
     }
     for(let i=level.projectiles.length-1;i>=0;i--){
@@ -481,7 +481,7 @@
   const RUN_MAX = 4.5 * PLAYER_SPEED_K; // 5.0 * 0.9 (bieg o 10% wolniejszy)
   const ACCEL = 0.32 * PLAYER_SPEED_K;
   const DECEL_GROUND = 0.36 * PLAYER_SPEED_K;
-  const DECEL_ICE = 0.06 * PLAYER_SPEED_K;   // zimowy grunt - dużo mniejsze tarcie, gracz sie slizga
+  const DECEL_ICE = 0.015 * PLAYER_SPEED_K;   // zimowy grunt - bardzo male tarcie, dlugi poslizg
   const DECEL_AIR = 0.16 * PLAYER_SPEED_K;
   const JUMP_VELOCITY = -13.9 * JUMP_TIME_K;
   const TRAMPOLINE_VELOCITY = -21.5 * JUMP_TIME_K; // mocne odbicie - nowa przeszkoda
@@ -516,7 +516,7 @@
         if(!level.projectiles) level.projectiles = [];
         level.shooters.forEach(s => {
           s.timer = (s.timer===undefined ? s.interval : s.timer) - 1;
-          if(s.timer <= 0){ s.timer = s.interval; level.projectiles.push({x:s.x,y:s.y,vx:(s.dir||1)*1.65,w:16,h:16,life:220}); }
+          if(s.timer <= 0){ s.timer = s.interval; level.projectiles.push({x:s.x,y:s.y,vx:(s.dir||1)*2.0,w:16,h:16,life:220}); }
         });
         for(let i=level.projectiles.length-1;i>=0;i--){
           const p = level.projectiles[i];
