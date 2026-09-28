@@ -88,10 +88,14 @@
       x:p.x, y:p.y, w:p.w, h:p.h,
       isTrampoline: !!p.isTrampoline, bounceAnim:0,
       isCrumbler: !!p.isCrumbler, state: p.isCrumbler ? 'idle' : undefined, timer:0,
+      isOneWay: !!p.isOneWay, isIce: !!p.isIce,
     }));
     const blinkers = (data.blinkers||[]).map(b => ({
       x:b.x, y:b.y, w:b.w||90, h:b.h||20, isBlinker:true, solid:true,
       t: Math.abs(Math.round(b.x||0)) % 240   // przesuniecie fazy wg pozycji - nie wszystkie migaja rownoczesnie
+    }));
+    const teleporters = (data.teleporters||[]).map((t,i) => ({
+      x:t.x, y:t.y, w:34, h:44, pair: i % 2 === 0 ? i+1 : i-1, cooldown:0
     }));
     const pipes = (data.pipes||[]).map(p => ({x:p.x, y:GROUND_Y-p.h, w:p.w, h:p.h}));
     const coins = (data.coins||[]).map(c => ({x:c.x, y:c.y, taken:false, t:Math.random()*10}));
@@ -122,7 +126,7 @@
     const flag = data.flag ? {x:data.flag.x, y:data.flag.y, w:14, h:220} : {x:(data.width||2000)-150, y:GROUND_Y-220, w:14, h:220};
     return {
       name: data.name || 'Poziom własny',
-      platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers, hammers, flag,
+      platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers, hammers, teleporters, flag,
       checkpoint: data.checkpoint ? {x:data.checkpoint.x, y:data.checkpoint.y} : null,
       width: data.width || 2000,
       bg: data.bg || 'day'
@@ -420,6 +424,26 @@
       b.warning = b.t >= BLINK_WARN_AT && b.t < BLINK_GONE_AT;
     }
   }
+  function updateTeleporters(){
+    if(!level.teleporters) return;
+    for(const t of level.teleporters){
+      if(t.cooldown > 0) t.cooldown--;
+    }
+    if(player.spectating) return;
+    for(const t of level.teleporters){
+      if(t.cooldown > 0) continue;
+      const other = level.teleporters[t.pair];
+      if(!other) continue;
+      if(rectsOverlap(player, t)){
+        player.x = other.x + other.w/2 - player.w/2;
+        player.y = other.y + other.h - player.h;
+        t.cooldown = 40;
+        other.cooldown = 40;
+        AudioEngine.sfxJump();
+        break;
+      }
+    }
+  }
   function updateHammers(){
     if(!level.hammers) return;
     for(const h of level.hammers){
@@ -557,6 +581,7 @@
       });
       updateBlinkers();
       updateHammers();
+      updateTeleporters();
       const aliveRemote = Object.values(remotePlayers).find(rp => !rp.dead && rp.data);
       const followX = aliveRemote ? aliveRemote.data.x : player.x;
       camera.x = Math.max(0, Math.min(followX - W/2, level.width - W));
@@ -616,7 +641,7 @@
     // ruch poziomy + kolizje
     player.x += player.vx;
     for(const p of solids){
-      if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid)) continue;
+      if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid) || p.isOneWay) continue;
       if(rectsOverlap(player,p)){
         if(player.vx > 0){ player.x = p.x - player.w; player.vx = 0; }
         else if(player.vx < 0){ player.x = p.x + p.w; player.vx = 0; }
@@ -640,6 +665,11 @@
       vyLeft -= step;
       for(const p of solids){
         if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid)) continue;
+        if(p.isOneWay){
+          if(vyDir <= 0) continue;                              // nigdy nie blokuje ruchu w gore
+          const prevBottom = player.y - vyDir*step + player.h;
+          if(prevBottom > p.y + 4) continue;                    // gracz juz byl w/pod platforma - przepuszczamy
+        }
         if(rectsOverlap(player,p)){
           if(vyDir > 0){
             player.y = p.y - player.h;
@@ -692,6 +722,7 @@
     updateShooters();
     updateBlinkers();
     updateHammers();
+    updateTeleporters();
     if(levelDone) return;
 
     level.coins.forEach((c, idx) => {

@@ -208,18 +208,51 @@
           ctx.fillStyle = 'rgba(0,0,0,.2)';
           ctx.beginPath(); ctx.ellipse(x+p.w/2, p.y+p.h+5, p.w/2.2, 4, 0, 0, Math.PI*2); ctx.fill();
         }
-        ctx.fillStyle = '#c96a2e';
-        ctx.fillRect(x, p.y, p.w, p.h);
-        if(gfxQuality >= 1){
-          ctx.strokeStyle = '#7a3d15';
-          ctx.lineWidth = 2;
-          for(let bx=0; bx<p.w; bx+=22) ctx.strokeRect(x+bx, p.y, Math.min(22, p.w-bx), p.h);
-        }
-        if(gfxQuality >= 2){
-          ctx.fillStyle = 'rgba(255,255,255,.2)';
-          ctx.fillRect(x, p.y, p.w, 2);
+        if(p.isOneWay){
+          ctx.fillStyle = '#c9a25a';
+          ctx.fillRect(x, p.y, p.w, p.h);
+          ctx.fillStyle = '#e8cf95';
+          ctx.fillRect(x, p.y, p.w, 4);
+          if(gfxQuality >= 1){
+            ctx.strokeStyle = '#8a6a2e';
+            ctx.lineWidth = 2;
+            for(let bx=6; bx<p.w; bx+=16) { ctx.beginPath(); ctx.moveTo(x+bx, p.y+4); ctx.lineTo(x+bx, p.y+p.h-2); ctx.stroke(); }
+          }
+        } else if(p.isIce){
+          ctx.fillStyle = '#bfe6f2';
+          ctx.fillRect(x, p.y, p.w, p.h);
+          ctx.fillStyle = 'rgba(255,255,255,.6)';
+          ctx.fillRect(x, p.y, p.w, 3);
+          if(gfxQuality >= 1){
+            ctx.strokeStyle = 'rgba(90,170,200,.6)';
+            ctx.lineWidth = 1.5;
+            for(let bx=8; bx<p.w; bx+=20) { ctx.beginPath(); ctx.moveTo(x+bx, p.y+3); ctx.lineTo(x+bx-5, p.y+p.h); ctx.stroke(); }
+          }
+        } else {
+          ctx.fillStyle = '#c96a2e';
+          ctx.fillRect(x, p.y, p.w, p.h);
+          if(gfxQuality >= 1){
+            ctx.strokeStyle = '#7a3d15';
+            ctx.lineWidth = 2;
+            for(let bx=0; bx<p.w; bx+=22) ctx.strokeRect(x+bx, p.y, Math.min(22, p.w-bx), p.h);
+          }
+          if(gfxQuality >= 2){
+            ctx.fillStyle = 'rgba(255,255,255,.2)';
+            ctx.fillRect(x, p.y, p.w, 2);
+          }
         }
       }
+    }
+    for(const tp of (level.teleporters||[])){
+      const x = tp.x - camera.x;
+      if(x+tp.w < 0 || x > W) continue;
+      const pulse = 0.5 + Math.sin(Date.now()*0.006 + tp.x*0.05) * 0.3;
+      ctx.save();
+      ctx.fillStyle = `rgba(160,90,255,${0.55+pulse*0.2})`;
+      ctx.beginPath(); ctx.ellipse(x+tp.w/2, tp.y+tp.h/2, tp.w/2, tp.h/2, 0, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#c9a8ff'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(x+tp.w/2, tp.y+tp.h/2, tp.w/2-4, tp.h/2-4, 0, 0, Math.PI*2); ctx.stroke();
+      ctx.restore();
     }
     for(const b of (level.blinkers||[])){
       const x = b.x - camera.x;
