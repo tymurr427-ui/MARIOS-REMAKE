@@ -52,7 +52,7 @@
     if(name==='mpLobby') mpLobbyScreen.classList.remove('hidden');
     document.getElementById('menuCoins').textContent = state.wallet;
     document.getElementById('shopCoins').textContent = state.wallet;
-    document.getElementById('globalAuthBadge').style.display = (name==='game') ? 'none' : 'block';
+    document.getElementById('globalAuthBadge').style.display = (name==='game' || name==='editor' || name==='shop') ? 'none' : 'block';
     document.getElementById('createLevelCorner').style.display = (name==='menu') ? 'block' : 'none';   // skroty tylko w menu glownym
     document.getElementById('myLevelsCorner').style.display = (name==='menu') ? 'block' : 'none';   // skroty tylko w menu glownym
     document.getElementById('workshopCorner').style.display = (name==='menu') ? 'block' : 'none';   // skroty tylko w menu glownym
