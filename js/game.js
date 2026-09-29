@@ -292,8 +292,14 @@
         e.x += e.vx * ENEMY_SPEED_K;
         if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
         if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
-        applyEnemyWallBlock(e);
         e.y = e.baseY + Math.sin(e.animT*0.8) * 12;
+        // kolizja tylko ze scianami: bez dolnych 16px, zeby grunt pod bossem nie teleportowal go
+        {
+          const full = e.h;
+          e.h = full - 16;
+          applyEnemyWallBlock(e);
+          e.h = full;
+        }
         if(e.hitTimer > 0) e.hitTimer--;
       } else if(e.type === 'shooter'){
         e.x += e.vx * ENEMY_SPEED_K;
