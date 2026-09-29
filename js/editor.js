@@ -223,9 +223,10 @@
       } else if(el.kind==='hazard'){
         editorCtx.fillStyle = '#c0c5cb';
         editorCtx.beginPath();
-        editorCtx.moveTo(ex, EDITOR_GROUND_Y*editorScale);
-        editorCtx.lineTo(ex+el.w*editorScale/2, EDITOR_GROUND_Y*editorScale-14);
-        editorCtx.lineTo(ex+el.w*editorScale, EDITOR_GROUND_Y*editorScale);
+        const hzY = (el.y!==undefined ? el.y : EDITOR_GROUND_Y)*editorScale;
+        editorCtx.moveTo(ex, hzY);
+        editorCtx.lineTo(ex+el.w*editorScale/2, hzY-14);
+        editorCtx.lineTo(ex+el.w*editorScale, hzY);
         editorCtx.fill();
       } else if(el.kind==='mover'){
         const range = (el.range||60) * editorScale;
@@ -570,7 +571,7 @@
     else if(editorTool === 'jumper'){ editorElements.push({kind:'enemy', enemyType:'jumper', x:levelX, y:levelY}); }
     else if(editorTool === 'shooter'){ editorElements.push({kind:'enemy', enemyType:'shooter', x:levelX, y:levelY}); }
     else if(editorTool === 'charger'){ editorElements.push({kind:'enemy', enemyType:'charger', x:levelX, y:levelY}); }
-    else if(editorTool === 'hazard'){ editorElements.push({kind:'hazard', x:levelX, w:40}); }
+    else if(editorTool === 'hazard'){ editorElements.push({kind:'hazard', x:levelX, y:EDITOR_GROUND_Y, w:40}); }
     else if(editorTool === 'mover'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'x', range:60}); }
     else if(editorTool === 'mover_y'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'y', range:110}); }
     else if(editorTool === 'crusher'){ editorElements.push({kind:'crusher', x:levelX, w:50, h:50, topY:80, bottomY:EDITOR_GROUND_Y-55, speed:1.0, t:0}); }
@@ -838,7 +839,7 @@
     const coins = (raw.coins||[]).map(c=>({x:c.x, y:c.y}));
     const bossEnemy = (raw.enemies||[]).find(e=>e.type==='boss');
     const enemies = (raw.enemies||[]).filter(e=>e.type!=='boss').map(e=>({x:e.x, y:e.y, enemyType: e.type || 'walker'}));
-    const hazards = (raw.hazards||[]).map(h=>({x:h.x, w:h.w}));
+    const hazards = (raw.hazards||[]).map(h=>({x:h.x, y:h.y, w:h.w}));
     const movers = (raw.movers||[]).map(m=>({x:m.baseX!==undefined?m.baseX:m.x, y:m.baseY!==undefined?m.baseY:m.y, axis:m.axis, range:m.range}));
     const crushers = (raw.crushers||[]).map(c=>({x:c.x, w:c.w, h:c.h, topY:c.topY, bottomY:c.bottomY, speed:c.speed, t:c.t}));
     const shooters = (raw.shooters||[]).map(s=>({x:s.x, y:s.y, dir:s.dir, interval:s.interval}));
@@ -872,7 +873,7 @@
     (data.pipes||[]).forEach(p => editorElements.push({kind:'pipe', x:p.x, w:p.w, h:p.h}));
     (data.coins||[]).forEach(c => editorElements.push({kind:'coin', x:c.x, y:c.y}));
     (data.enemies||[]).forEach(e => editorElements.push({kind:'enemy', x:e.x, y:e.y, enemyType:e.enemyType}));
-    (data.hazards||[]).forEach(h => editorElements.push({kind:'hazard', x:h.x, w:h.w}));
+    (data.hazards||[]).forEach(h => editorElements.push({kind:'hazard', x:h.x, y:(h.y!==undefined ? h.y : EDITOR_GROUND_Y), w:h.w}));
     (data.movers||[]).forEach(m => editorElements.push({kind:'mover', x:m.x, y:m.y, axis:m.axis||'x', range:m.range || (m.axis==='y' ? 110 : 60)}));
     (data.crushers||[]).forEach(c => editorElements.push({kind:'crusher', x:c.x, w:c.w, h:c.h, topY:c.topY, bottomY:c.bottomY, speed:c.speed, t:c.t}));
     (data.shooters||[]).forEach(s => editorElements.push({kind:'turret', x:s.x, y:s.y, dir:s.dir, interval:s.interval}));
@@ -991,7 +992,7 @@
     const pipes = editorElements.filter(e=>e.kind==='pipe').map(e=>({x:e.x,w:e.w,h:e.h}));
     const coins = editorElements.filter(e=>e.kind==='coin').map(e=>({x:e.x,y:e.y}));
     const enemies = editorElements.filter(e=>e.kind==='enemy').map(e=>({x:e.x,y:e.y,enemyType:e.enemyType}));
-    const hazards = editorElements.filter(e=>e.kind==='hazard').map(e=>({x:e.x,w:e.w}));
+    const hazards = editorElements.filter(e=>e.kind==='hazard').map(e=>({x:e.x,y:e.y,w:e.w}));
     const movers = editorElements.filter(e=>e.kind==='mover').map(e=>({x:e.x,y:e.y,axis:e.axis,range:e.range}));
     const crushers = editorElements.filter(e=>e.kind==='crusher').map(e=>({x:e.x,w:e.w,h:e.h,topY:e.topY,bottomY:e.bottomY,speed:e.speed,t:e.t}));
     const shooters = editorElements.filter(e=>e.kind==='turret').map(e=>({x:e.x,y:e.y,dir:e.dir,interval:e.interval}));

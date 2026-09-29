@@ -99,7 +99,7 @@
     }));
     const pipes = (data.pipes||[]).map(p => ({x:p.x, y:GROUND_Y-p.h, w:p.w, h:p.h}));
     const coins = (data.coins||[]).map(c => ({x:c.x, y:c.y, taken:false, t:Math.random()*10}));
-    const hazards = (data.hazards||[]).map(h => ({x:h.x, y:GROUND_Y-18, w:h.w, h:18}));
+    const hazards = (data.hazards||[]).map(h => ({x:h.x, y:(h.y!==undefined ? h.y : GROUND_Y)-18, w:h.w, h:18}));
     const movers = (data.movers||[]).map(m => ({
       baseX:m.x, baseY:m.y, x:m.x, y:m.y, w:90, h:20,
       axis:m.axis||'x', range: m.range || (m.axis==='y' ? 110 : 60), speed: m.axis==='y' ? 0.8 : 1.0, isMover:true
@@ -137,7 +137,7 @@
     currentLevelIndex = index;
     customLevelActive = !!customData;
     const override = (!customData && builtInOverrides[index]) ? builtInOverrides[index] : null;
-    level = customData ? buildLevelFromCustomData(customData) : (override ? widenPlatforms(buildLevelFromCustomData(override)) : LEVELS[index]());
+    level = customData ? widenPlatforms(buildLevelFromCustomData(customData)) : (override ? widenPlatforms(buildLevelFromCustomData(override)) : LEVELS[index]());
     // popraw isGround po ewentualnym resize
     level.platforms.forEach(p => { if(p.y === undefined) p.y = GROUND_Y; });
     // kruszarki (crushers) dostaja swoje 'y' dopiero z fizyki (updateCrushers) - bez tego pierwsza
