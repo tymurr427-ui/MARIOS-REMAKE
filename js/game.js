@@ -42,6 +42,7 @@
     state.shields--;
     player.shieldActive = true;
     player.shieldTimer = 15;
+    questEvent('shield');
     saveProfile();
     AudioEngine.sfxWin();
   }
@@ -134,6 +135,7 @@
   }
 
   function startLevel(index, customData){
+    questEvent('attempt');
     currentLevelIndex = index;
     customLevelActive = !!customData;
     const override = (!customData && builtInOverrides[index]) ? builtInOverrides[index] : null;
@@ -223,6 +225,7 @@
     AudioEngine.sfxHurt();
     if(lives <= 0){
       state.deathCount++;
+      questEvent('death');
       saveProfile();
       if(mpChannel && !player.spectating){
         player.spectating = true;
@@ -355,6 +358,7 @@
               state.bossesKilled++;
               questEvent('kill');
               questEvent('boss');
+              if(!hitThisRun) questEvent('bossNoHit');
               runCoins += 20;
               document.getElementById('hudCoins').textContent = runCoins;
               for(let i=0;i<10;i++) spawnCoinPop();
@@ -446,6 +450,7 @@
         t.cooldown = 40;
         other.cooldown = 40;
         AudioEngine.sfxJump();
+        questEvent('teleport');
         break;
       }
     }
@@ -685,6 +690,7 @@
               player.jumping = true;
               AudioEngine.sfxJump();
               p.bounceAnim = 10;
+              questEvent('bounce');
             } else {
               player.onGround = true;
               player.vy = 0;
@@ -762,6 +768,7 @@
         levelCheckpointReached = true;
         AudioEngine.sfxCoin();
         spawnCoinPop();
+        questEvent('checkpoint');
       }
     }
 
@@ -783,6 +790,7 @@
     if(won && !editorTesting){
       questEvent('win');
       if(!hitThisRun) questEvent('noHit');
+      if(runElapsedMs > 0 && runElapsedMs < 20000) questEvent('fastFinish');
       if(!customLevelActive && currentLevelIndex === LEVELS.length - 1) state.quests.c.beatGame++;
     }
     saveProfile();

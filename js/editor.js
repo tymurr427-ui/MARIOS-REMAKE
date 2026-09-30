@@ -1074,6 +1074,7 @@
       return;
     }
     editorEditingCode = code;
+    questEvent('createLevel');
     resultEl.innerHTML = `✅ Zapisano! Kod poziomu: <b style="font-size:20px;letter-spacing:4px;">${code}</b> — podaj go znajomemu, żeby zagrał na tym samym poziomie (też w multiplayer). Znajdziesz go też w "MOJE POZIOMY".`;
   };
 

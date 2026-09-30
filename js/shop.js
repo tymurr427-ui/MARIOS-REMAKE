@@ -98,6 +98,7 @@
     } else if(!sk.lvl && state.wallet >= sk.price){
       state.wallet -= sk.price;
       state.totalSpent += sk.price;
+      questEvent('buy');
       state.ownedSkins.push(sk.id);
       state.equippedSkin = sk.id;
       renderShop();
@@ -118,6 +119,7 @@
     } else if(state.wallet >= 100){
       state.wallet -= 100;
       state.totalSpent += 100;
+      questEvent('buy');
       state.extraLives += 1;
       renderShop();
       saveProfile();
@@ -134,6 +136,7 @@
     } else if(state.wallet >= 150){
       state.wallet -= 150;
       state.totalSpent += 150;
+      questEvent('buy');
       state.shields += 1;
       renderShop();
       saveProfile();
@@ -223,6 +226,7 @@
           if(!isTester()){
             state.wallet -= tr.price;
             state.totalSpent += tr.price;
+            questEvent('buy');
           }
           state.ownedTrails.push(tr.id);
           state.equippedTrail = tr.id;
@@ -259,7 +263,7 @@
           renderCustomize();
           saveProfile();
         } else if(afford){
-          if(!isTester()){ state.wallet -= it.price; state.totalSpent += it.price; }
+          if(!isTester()){ state.wallet -= it.price; state.totalSpent += it.price; questEvent('buy'); }
           state[ownedArrName].push(it.id);
           state[equippedFieldName] = it.id;
           renderCustomize();

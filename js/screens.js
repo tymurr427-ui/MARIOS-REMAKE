@@ -18,8 +18,10 @@
   const mpChoiceScreen = document.getElementById('mpChoiceScreen');
   const mpLobbyScreen = document.getElementById('mpLobbyScreen');
 
+  const VISIT_QUEST_MAP = { shop:'visitShop', ranking:'visitRanking', stats:'visitStats', editor:'visitEditor', myLevels:'visitMyLevels' };
   function showScreen(name){
     if(name !== 'shop') stopPreviewLoop();
+    if(VISIT_QUEST_MAP[name] && typeof questEvent === 'function') questEvent(VISIT_QUEST_MAP[name]);
     menuScreen.classList.add('hidden');
     shopScreen.classList.add('hidden');
     gameScreen.classList.add('hidden');
