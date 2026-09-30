@@ -407,6 +407,24 @@
     if(e.code === 'KeyC') editorCopyAtCursor(); else editorPasteClipboard();
   });
 
+  window.addEventListener('keydown', (e) => {
+    if(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.code !== 'KeyR') return;
+    if(editorScreen.classList.contains('hidden')) return;
+    const t = e.target && e.target.tagName;
+    if(t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return;
+    e.preventDefault();
+    editorRotateTurretAtCursor();
+  });
+  function editorRotateTurretAtCursor(){
+    const el = editorFindElementAt(editorMouseLevelPos.levelX, editorMouseLevelPos.levelY);
+    if(!el || el.kind !== 'turret'){ editorFlashLimitWarning('Najedź kursorem na wieżyczkę i wciśnij R, żeby ją obrócić'); return; }
+    const before = editorSnapshotJSON();
+    el.dir = -el.dir;
+    editorPushUndo(before);
+    redrawEditor();
+    editorFlashLimitWarning('Obrócono wieżyczkę — strzela w ' + (el.dir === 1 ? 'prawo' : 'lewo'));
+  }
+
   let editorLimitWarnTimeout = null;
   function editorFlashLimitWarning(msg){
     const el = document.getElementById('editorSaveResult');
