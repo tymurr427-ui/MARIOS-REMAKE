@@ -358,7 +358,7 @@
   }
 
   // ---------- COFANIE (Ctrl+Z, maks. 3 kroki) ----------
-  const EDITOR_UNDO_MAX = 3;
+  const EDITOR_UNDO_MAX = 10;
   let editorUndoStack = [];   // zserializowane stany "przed zmiana"
   function editorSnapshotJSON(){
     return JSON.stringify({ els: editorElements, spawn: editorSpawn, flag: editorFlag, cp: editorCheckpoint });
@@ -377,7 +377,7 @@
   }
   function editorUndo(){
     if(editorUndoStack.length === 0){
-      editorUndoFlash('↩ Nie ma czego cofać (maks. 3 cofnięcia)', '#ffd23f');
+      editorUndoFlash('↩ Nie ma czego cofać (maks. ' + EDITOR_UNDO_MAX + ' cofnięć)', '#ffd23f');
       return;
     }
     const st = JSON.parse(editorUndoStack.pop());
