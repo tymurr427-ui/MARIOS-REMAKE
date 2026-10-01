@@ -18,6 +18,13 @@
     if(level.bg==='ice') return {sky1:'#bfe9ff', sky2:'#eaf7ff', hill:'#6fb8d8', sun:'#ffffff'};
     if(level.bg==='desert') return {sky1:'#ffdca0', sky2:'#ffb877', hill:'#c9862f', sun:'#fff2c9'};
     if(level.bg==='aurora') return {sky1:'#0a1a2e', sky2:'#123d3a', hill:'#0a2e28', sun:'#9dffcf'};
+    if(level.bg==='forest') return {sky1:'#bfe3c9', sky2:'#eaffe0', hill:'#2f7d32', sun:'#fff7c2'};
+    if(level.bg==='cave') return {sky1:'#1a1522', sky2:'#2e2438', hill:'#120d18', sun:'#b98cff'};
+    if(level.bg==='beach') return {sky1:'#7fd8ff', sky2:'#ffe9b3', hill:'#e8c07d', sun:'#fff7c2'};
+    if(level.bg==='candy') return {sky1:'#ffb3e6', sky2:'#fff0fa', hill:'#ff6fae', sun:'#fff7c2'};
+    if(level.bg==='space') return {sky1:'#05030f', sky2:'#16103a', hill:'#0a0620', sun:'#9dd1ff'};
+    if(level.bg==='autumn') return {sky1:'#ffcf8c', sky2:'#ffe9c2', hill:'#b5651d', sun:'#fff2c9'};
+    if(level.bg==='underwater') return {sky1:'#013a63', sky2:'#2a6f97', hill:'#012a4a', sun:'#8ecae6'};
     return {sky1:'#5c94fc', sky2:'#a8d8ff', hill:'#3fae4a', sun:'#fff7c2'};
   }
 
@@ -45,7 +52,7 @@
     ctx.fillRect(0,0,W,H);
 
     // HIGH+: gwiazdki na niebie nocnym
-    if(gfxQuality >= 2 && (level.bg==='night' || level.bg==='volcano' || level.bg==='aurora')){
+    if(gfxQuality >= 2 && (level.bg==='night' || level.bg==='volcano' || level.bg==='aurora' || level.bg==='cave' || level.bg==='space')){
       for(let i=0;i<40;i++){
         const sx = (i*137) % W;
         const sy = (i*71) % (H*0.5);

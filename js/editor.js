@@ -81,6 +81,13 @@
     if(bg==='ice') return {sky1:'#bfe9ff', sky2:'#eaf7ff', hill:'#6fb8d8'};
     if(bg==='desert') return {sky1:'#ffdca0', sky2:'#ffb877', hill:'#c9862f'};
     if(bg==='aurora') return {sky1:'#0a1a2e', sky2:'#123d3a', hill:'#0a2e28'};
+    if(bg==='forest') return {sky1:'#bfe3c9', sky2:'#eaffe0', hill:'#2f7d32'};
+    if(bg==='cave') return {sky1:'#1a1522', sky2:'#2e2438', hill:'#120d18'};
+    if(bg==='beach') return {sky1:'#7fd8ff', sky2:'#ffe9b3', hill:'#e8c07d'};
+    if(bg==='candy') return {sky1:'#ffb3e6', sky2:'#fff0fa', hill:'#ff6fae'};
+    if(bg==='space') return {sky1:'#05030f', sky2:'#16103a', hill:'#0a0620'};
+    if(bg==='autumn') return {sky1:'#ffcf8c', sky2:'#ffe9c2', hill:'#b5651d'};
+    if(bg==='underwater') return {sky1:'#013a63', sky2:'#2a6f97', hill:'#012a4a'};
     return {sky1:'#5c94fc', sky2:'#a8d8ff', hill:'#3fae4a'};
   }
 

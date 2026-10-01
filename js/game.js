@@ -447,8 +447,8 @@
       if(rectsOverlap(player, t)){
         player.x = other.x + other.w/2 - player.w/2;
         player.y = other.y + other.h - player.h;
-        t.cooldown = 40;
-        other.cooldown = 40;
+        t.cooldown = 180;
+        other.cooldown = 180;
         AudioEngine.sfxJump();
         questEvent('teleport');
         break;
