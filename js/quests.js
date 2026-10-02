@@ -136,11 +136,35 @@
   ach('plv_100',     '👑', 'Maksymalny poziom','Max Level',     'Osiągnij maksymalny poziom gracza (100)','Reach the maximum player level (100)', 100, () => playerLevel(), 400);
   ach('daily_all',   '📅', 'Perfekcjonista',   'Perfectionist', 'Wykonaj wszystkie 5 zadań dziennych jednego dnia', 'Complete all 5 daily quests in one day', 1, () => state.quests.c.dailyAllDone, 50);
   ach('quests_25',   '📋', 'Zadaniowiec',      'Taskmaster',    'Odbierz nagrodę za 25 zadań',            'Claim the reward for 25 quests',   25,    () => state.quests.c.questsClaimed, 70);
+  ach('bounce_50',    '🔵', 'Trampolinowy mistrz', 'Trampoline Master', 'Odbij się na trampolinie 50 razy', 'Bounce on a trampoline 50 times', 50,  () => state.quests.c.bounces, 40);
+  ach('teleport_20',  '🌀', 'Mistrz teleportacji', 'Teleport Master',   'Użyj teleportu 20 razy',           'Use a teleporter 20 times',       20,  () => state.quests.c.teleports, 40);
+  ach('checkpoint_20','📍', 'Checkpointowicz',     'Checkpoint Hunter','Dotrzyj do checkpointu 20 razy',   'Reach a checkpoint 20 times',     20,  () => state.quests.c.checkpoints, 40);
+  ach('buy_10',        '🛒', 'Stały klient',       'Regular Customer', 'Kup 10 przedmiotów w sklepie',     'Buy 10 items in the shop',        10,  () => state.quests.c.buys, 40);
+  ach('buy_30',        '💳', 'Hazardzista zakupowy','Shopaholic',       'Kup 30 przedmiotów w sklepie',     'Buy 30 items in the shop',        30,  () => state.quests.c.buys, 100);
+  ach('shield_10',     '🔷', 'Obrońca',            'Defender',          'Użyj tarczy (Q) 10 razy',          'Use the shield (Q) 10 times',     10,  () => state.quests.c.shieldUses, 40);
+  ach('attempts_100',  '🔁', 'Wytrwały',           'Persistent',        'Rozegraj 100 podejść do poziomu',  'Play 100 level attempts',         100, () => state.quests.c.attempts, 70);
+  ach('attempts_500',  '🔂', 'Niezłomny',          'Unyielding',        'Rozegraj 500 podejść do poziomu',  'Play 500 level attempts',         500, () => state.quests.c.attempts, 180);
+  ach('createLevel_1', '🛠️', 'Twórca',             'Creator',           'Stwórz i zapisz własny poziom',    'Create and save a custom level',  1,   () => state.quests.c.levelsCreated, 35);
+  ach('createLevel_10','🏗️', 'Architekt poziomów', 'Level Architect',   'Stwórz i zapisz 10 własnych poziomów', 'Create and save 10 custom levels', 10, () => state.quests.c.levelsCreated, 150);
+  ach('bossNoHit_1',   '🐲', 'Czysta walka',       'Flawless Fight',    'Pokonaj bossa bez obrażeń',        'Defeat a boss without damage',    1,   () => state.quests.c.bossNoHitWins, 60);
+  ach('bossNoHit_5',   '🥇', 'Perfekcyjny pogromca','Flawless Slayer',  'Pokonaj 5 bossów bez obrażeń',     'Defeat 5 bosses without damage',  5,   () => state.quests.c.bossNoHitWins, 170);
+  ach('fastFinish_10', '⚡', 'Błyskawica',         'Lightning Fast',    'Ukończ 10 poziomów w mniej niż 20 s każdy', 'Finish 10 levels in under 20s each', 10, () => state.quests.c.fastFinishes, 90);
+  ach('flags_10',      '🚩', 'Kolekcjoner flag',   'Flag Collector',    'Posiadaj 10 flag',                 'Own 10 flags',                    10,  () => state.ownedTrails.length, 60);
+  ach('flags_all',     '🌍', 'Globtroter',         'Globetrotter',      'Zdobądź wszystkie flagi',          'Get every flag',                  TRAILS.length, () => state.ownedTrails.length, 180);
+  ach('hats_all',      '🎩', 'Fryzjer',            'Hatter',            'Zdobądź wszystkie kolory czapki',  'Get every hat color',             HATS.length, () => state.ownedHats.length, 150);
+  ach('facial_all',    '🧔', 'Brodacz',            'Bearded',           'Zdobądź wszystkie rodzaje zarostu','Get every facial hair style',     FACIAL_HAIR.length, () => state.ownedFacialHair.length, 150);
+  ach('explorer',      '🧭', 'Odkrywca menu',      'Menu Explorer',     'Odwiedź sklep, ranking, statystyki, edytor i moje poziomy', 'Visit the shop, ranking, stats, editor and my levels', 5,
+      () => (state.quests.c.visitShop>0?1:0) + (state.quests.c.visitRanking>0?1:0) + (state.quests.c.visitStats>0?1:0) + (state.quests.c.visitEditor>0?1:0) + (state.quests.c.visitMyLevels>0?1:0), 40);
+  ach('coins_50000',   '💎', 'Milioner w drodze',  'On the Way to Millions', 'Zarób łącznie 50000 monet',   'Earn 50000 coins in total',       50000, () => state.totalCoinsEarned, 350);
+  ach('kills_2000',    '🗡️', 'Legenda rzezi',      'Legend of Slaughter','Pokonaj 2000 wrogów',             'Defeat 2000 enemies',             2000, () => state.enemiesKilled, 350);
+  ach('deaths_200',    '♻️', 'Reinkarnacja',       'Reincarnation',     'Zgiń 200 razy',                    'Die 200 times',                   200, () => state.deathCount, 60);
 
   // ---------- DANE ----------
   function defaultQuests(){
     return { xp:0, day:'', daily:{ prog:{}, claimed:{}, bonus:false }, permClaimed:{}, lvlClaimed:{}, ach:{}, achXp:{},
-             c:{ levelsCompleted:0, beatGame:0, jumps:0, runSec:0, dailyAllDone:0, dailyClaimed:0, questsClaimed:0, noHitWins:0 } };
+             c:{ levelsCompleted:0, beatGame:0, jumps:0, runSec:0, dailyAllDone:0, dailyClaimed:0, questsClaimed:0, noHitWins:0,
+                 bounces:0, teleports:0, checkpoints:0, buys:0, shieldUses:0, attempts:0, levelsCreated:0, bossNoHitWins:0, fastFinishes:0,
+                 visitShop:0, visitRanking:0, visitStats:0, visitEditor:0, visitMyLevels:0 } };
   }
   function normalizeQuests(raw){
     const d = defaultQuests();
@@ -189,6 +213,20 @@
     else if(ev === 'runSec') q.c.runSec += n;
     else if(ev === 'win') q.c.levelsCompleted += n;
     else if(ev === 'noHit') q.c.noHitWins += n;
+    else if(ev === 'bounce') q.c.bounces += n;
+    else if(ev === 'teleport') q.c.teleports += n;
+    else if(ev === 'checkpoint') q.c.checkpoints += n;
+    else if(ev === 'buy') q.c.buys += n;
+    else if(ev === 'shield') q.c.shieldUses += n;
+    else if(ev === 'attempt') q.c.attempts += n;
+    else if(ev === 'createLevel') q.c.levelsCreated += n;
+    else if(ev === 'bossNoHit') q.c.bossNoHitWins += n;
+    else if(ev === 'fastFinish') q.c.fastFinishes += n;
+    else if(ev === 'visitShop') q.c.visitShop += n;
+    else if(ev === 'visitRanking') q.c.visitRanking += n;
+    else if(ev === 'visitStats') q.c.visitStats += n;
+    else if(ev === 'visitEditor') q.c.visitEditor += n;
+    else if(ev === 'visitMyLevels') q.c.visitMyLevels += n;
     dailySet().forEach(d => {
       if(d.ev === ev) q.daily.prog[d.id] = Math.min(d.target, (q.daily.prog[d.id] || 0) + n);
     });
