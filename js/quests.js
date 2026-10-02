@@ -105,37 +105,37 @@
 
   // ---------- OSIAGNIECIA (odblokowuja sie same) ----------
   const ACHIEVEMENTS = [];
-  function ach(id, icon, pl, en, dpl, den, t, get){ ACHIEVEMENTS.push({ id, icon, pl, en, dpl, den, t, get }); }
+  function ach(id, icon, pl, en, dpl, den, t, get, xp){ ACHIEVEMENTS.push({ id, icon, pl, en, dpl, den, t, get, xp: xp || 20 }); }
   const lvlReached = () => Math.min(LEVELS.length, state.unlockedLevel + 1);
-  ach('first_win',   '🏁', 'Pierwsze kroki',   'First Steps',   'Ukończ swój pierwszy poziom',            'Complete your first level',        1,     () => Math.max(state.unlockedLevel, state.quests.c.levelsCompleted));
-  ach('coins_100',   '🪙', 'Kieszonkowe',      'Pocket Money',  'Zarób łącznie 100 monet',                'Earn 100 coins in total',          100,   () => state.totalCoinsEarned);
-  ach('coins_1000',  '💰', 'Skarbnik',         'Treasurer',     'Zarób łącznie 1000 monet',               'Earn 1000 coins in total',         1000,  () => state.totalCoinsEarned);
-  ach('coins_10000', '🏦', 'Bogacz',           'Tycoon',        'Zarób łącznie 10000 monet',              'Earn 10000 coins in total',        10000, () => state.totalCoinsEarned);
-  ach('kill_1',      '👟', 'Pierwsze zdeptanie','First Stomp',  'Pokonaj pierwszego wroga',               'Defeat your first enemy',          1,     () => state.enemiesKilled);
-  ach('kill_100',    '⚔️', 'Pogromca',         'Slayer',        'Pokonaj 100 wrogów',                     'Defeat 100 enemies',               100,   () => state.enemiesKilled);
-  ach('kill_500',    '☠️', 'Postrach królestwa','Terror of the Kingdom', 'Pokonaj 500 wrogów',           'Defeat 500 enemies',               500,   () => state.enemiesKilled);
-  ach('boss_1',      '👹', 'Pogromca bossa',   'Boss Slayer',   'Pokonaj pierwszego bossa',               'Defeat your first boss',           1,     () => state.bossesKilled);
-  ach('boss_10',     '🐉', 'Łowca tytanów',    'Titan Hunter',  'Pokonaj 10 bossów',                      'Defeat 10 bosses',                 10,    () => state.bossesKilled);
-  ach('reach_10',    '🗺️', 'Podróżnik',        'Traveler',      'Dotrzyj do poziomu 10',                  'Reach level 10',                   10,    lvlReached);
-  ach('beat_game',   '🏆', 'Mistrz Plumber',   'Plumber Master','Ukończ wszystkie poziomy',               'Finish all levels',                1,     () => state.quests.c.beatGame);
-  ach('shop_first',  '🛍️', 'Pierwsze zakupy',  'First Purchase','Wydaj monety w sklepie',                 'Spend coins in the shop',          1,     () => state.totalSpent);
-  ach('skins_5',     '👕', 'Modniś',           'Fashionista',   'Posiadaj 5 skinów',                      'Own 5 skins',                      5,     () => state.ownedSkins.length);
-  ach('skins_all',   '👑', 'Kolekcjoner',      'Collector',     'Zdobądź wszystkie skiny',                'Get every skin',                   SKINS.length, () => state.ownedSkins.length);
+  ach('first_win',   '🏁', 'Pierwsze kroki',   'First Steps',   'Ukończ swój pierwszy poziom',            'Complete your first level',        1,     () => Math.max(state.unlockedLevel, state.quests.c.levelsCompleted), 20);
+  ach('coins_100',   '🪙', 'Kieszonkowe',      'Pocket Money',  'Zarób łącznie 100 monet',                'Earn 100 coins in total',          100,   () => state.totalCoinsEarned, 20);
+  ach('coins_1000',  '💰', 'Skarbnik',         'Treasurer',     'Zarób łącznie 1000 monet',               'Earn 1000 coins in total',         1000,  () => state.totalCoinsEarned, 60);
+  ach('coins_10000', '🏦', 'Bogacz',           'Tycoon',        'Zarób łącznie 10000 monet',              'Earn 10000 coins in total',        10000, () => state.totalCoinsEarned, 150);
+  ach('kill_1',      '👟', 'Pierwsze zdeptanie','First Stomp',  'Pokonaj pierwszego wroga',               'Defeat your first enemy',          1,     () => state.enemiesKilled, 20);
+  ach('kill_100',    '⚔️', 'Pogromca',         'Slayer',        'Pokonaj 100 wrogów',                     'Defeat 100 enemies',               100,   () => state.enemiesKilled, 50);
+  ach('kill_500',    '☠️', 'Postrach królestwa','Terror of the Kingdom', 'Pokonaj 500 wrogów',           'Defeat 500 enemies',               500,   () => state.enemiesKilled, 130);
+  ach('boss_1',      '👹', 'Pogromca bossa',   'Boss Slayer',   'Pokonaj pierwszego bossa',               'Defeat your first boss',           1,     () => state.bossesKilled, 35);
+  ach('boss_10',     '🐉', 'Łowca tytanów',    'Titan Hunter',  'Pokonaj 10 bossów',                      'Defeat 10 bosses',                 10,    () => state.bossesKilled, 120);
+  ach('reach_10',    '🗺️', 'Podróżnik',        'Traveler',      'Dotrzyj do poziomu 10',                  'Reach level 10',                   10,    lvlReached, 50);
+  ach('beat_game',   '🏆', 'Mistrz Plumber',   'Plumber Master','Ukończ wszystkie poziomy',               'Finish all levels',                1,     () => state.quests.c.beatGame, 300);
+  ach('shop_first',  '🛍️', 'Pierwsze zakupy',  'First Purchase','Wydaj monety w sklepie',                 'Spend coins in the shop',          1,     () => state.totalSpent, 15);
+  ach('skins_5',     '👕', 'Modniś',           'Fashionista',   'Posiadaj 5 skinów',                      'Own 5 skins',                      5,     () => state.ownedSkins.length, 25);
+  ach('skins_all',   '👑', 'Kolekcjoner',      'Collector',     'Zdobądź wszystkie skiny',                'Get every skin',                   SKINS.length, () => state.ownedSkins.length, 150);
   ach('stylist',     '🎩', 'Stylista',         'Stylist',       'Kup fason czapki, zarost i trail',       'Buy a hat style, facial hair and a trail', 3,
-      () => (state.ownedHatStyles.length > 1 ? 1 : 0) + (state.ownedFacialHair.length > 1 ? 1 : 0) + (state.ownedTrails.length > 1 ? 1 : 0));
-  ach('deaths_10',   '💀', 'Upór',             'Persistence',   'Zgiń 10 razy',                           'Die 10 times',                     10,    () => state.deathCount);
-  ach('deaths_50',   '🪦', 'Nie poddaję się',  'Never Give Up', 'Zgiń 50 razy',                           'Die 50 times',                     50,    () => state.deathCount);
-  ach('time_1h',     '⏰', 'Wciągnęło',        'Hooked',        'Graj łącznie 1 godzinę',                 'Play for 1 hour in total',         3600,  () => state.playtimeSeconds);
-  ach('time_10h',    '🕰️', 'Bez reszty',       'All In',        'Graj łącznie 10 godzin',                 'Play for 10 hours in total',       36000, () => state.playtimeSeconds);
-  ach('jumps_1000',  '🦘', 'Skoczek',          'Jumper',        'Skocz 1000 razy',                        'Jump 1000 times',                  1000,  () => state.quests.c.jumps);
-  ach('run_600',     '💨', 'Sprinter',         'Sprinter',      'Biegaj łącznie 10 minut',                'Run for 10 minutes in total',      600,   () => state.quests.c.runSec);
-  ach('plv_5',       '⭐', 'Pnący się',        'Climber',       'Osiągnij 5. poziom gracza',              'Reach player level 5',             5,     () => playerLevel());
-  ach('plv_15',      '🌟', 'Doświadczony',     'Experienced',   'Osiągnij 15. poziom gracza',             'Reach player level 15',            15,    () => playerLevel());
-  ach('plv_30',      '🔱', 'Ekspert',          'Expert',        'Osiągnij 30. poziom gracza',             'Reach player level 30',            30,    () => playerLevel());
-  ach('plv_50',      '🎖️', 'Mistrz poziomów',  'Level Master',  'Osiągnij 50. poziom gracza',             'Reach player level 50',            50,    () => playerLevel());
-  ach('plv_100',     '👑', 'Maksymalny poziom','Max Level',     'Osiągnij maksymalny poziom gracza (100)','Reach the maximum player level (100)', 100, () => playerLevel());
-  ach('daily_all',   '📅', 'Perfekcjonista',   'Perfectionist', 'Wykonaj wszystkie 5 zadań dziennych jednego dnia', 'Complete all 5 daily quests in one day', 1, () => state.quests.c.dailyAllDone);
-  ach('quests_25',   '📋', 'Zadaniowiec',      'Taskmaster',    'Odbierz nagrodę za 25 zadań',            'Claim the reward for 25 quests',   25,    () => state.quests.c.questsClaimed);
+      () => (state.ownedHatStyles.length > 1 ? 1 : 0) + (state.ownedFacialHair.length > 1 ? 1 : 0) + (state.ownedTrails.length > 1 ? 1 : 0), 45);
+  ach('deaths_10',   '💀', 'Upór',             'Persistence',   'Zgiń 10 razy',                           'Die 10 times',                     10,    () => state.deathCount, 15);
+  ach('deaths_50',   '🪦', 'Nie poddaję się',  'Never Give Up', 'Zgiń 50 razy',                           'Die 50 times',                     50,    () => state.deathCount, 30);
+  ach('time_1h',     '⏰', 'Wciągnęło',        'Hooked',        'Graj łącznie 1 godzinę',                 'Play for 1 hour in total',         3600,  () => state.playtimeSeconds, 60);
+  ach('time_10h',    '🕰️', 'Bez reszty',       'All In',        'Graj łącznie 10 godzin',                 'Play for 10 hours in total',       36000, () => state.playtimeSeconds, 200);
+  ach('jumps_1000',  '🦘', 'Skoczek',          'Jumper',        'Skocz 1000 razy',                        'Jump 1000 times',                  1000,  () => state.quests.c.jumps, 50);
+  ach('run_600',     '💨', 'Sprinter',         'Sprinter',      'Biegaj łącznie 10 minut',                'Run for 10 minutes in total',      600,   () => state.quests.c.runSec, 45);
+  ach('plv_5',       '⭐', 'Pnący się',        'Climber',       'Osiągnij 5. poziom gracza',              'Reach player level 5',             5,     () => playerLevel(), 25);
+  ach('plv_15',      '🌟', 'Doświadczony',     'Experienced',   'Osiągnij 15. poziom gracza',             'Reach player level 15',            15,    () => playerLevel(), 60);
+  ach('plv_30',      '🔱', 'Ekspert',          'Expert',        'Osiągnij 30. poziom gracza',             'Reach player level 30',            30,    () => playerLevel(), 120);
+  ach('plv_50',      '🎖️', 'Mistrz poziomów',  'Level Master',  'Osiągnij 50. poziom gracza',             'Reach player level 50',            50,    () => playerLevel(), 200);
+  ach('plv_100',     '👑', 'Maksymalny poziom','Max Level',     'Osiągnij maksymalny poziom gracza (100)','Reach the maximum player level (100)', 100, () => playerLevel(), 400);
+  ach('daily_all',   '📅', 'Perfekcjonista',   'Perfectionist', 'Wykonaj wszystkie 5 zadań dziennych jednego dnia', 'Complete all 5 daily quests in one day', 1, () => state.quests.c.dailyAllDone, 50);
+  ach('quests_25',   '📋', 'Zadaniowiec',      'Taskmaster',    'Odbierz nagrodę za 25 zadań',            'Claim the reward for 25 quests',   25,    () => state.quests.c.questsClaimed, 70);
 
   // ---------- DANE ----------
   function defaultQuests(){
@@ -213,7 +213,10 @@
       if(!q.ach[a.id] && achValue(a) >= a.t){
         q.ach[a.id] = Date.now();
         changed = true;
-        if(!silent) questToast(a.icon, 'Osiągnięcie odblokowane!', a.pl);
+        if(!silent){
+          addXp(a.xp);
+          questToast(a.icon, 'Osiągnięcie odblokowane! (+' + a.xp + ' XP)', a.pl);
+        }
       }
     });
     if(changed) saveProfile();
@@ -435,6 +438,7 @@
         <div class="ach-ico">${a.icon}</div>
         <div class="ach-name">${escapeHtml(a.pl)}</div>
         <div class="ach-desc">${escapeHtml(a.dpl)}</div>
+        <div class="ach-xp">+${a.xp} XP</div>
         ${on ? '<div class="ach-badge">ODBLOKOWANE</div>'
              : `<div class="q-bar"><i style="width:${pct}%"></i></div><div class="ach-prog">${cur} / ${a.t}</div>`}
       </div>`;
