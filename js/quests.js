@@ -139,7 +139,7 @@
 
   // ---------- DANE ----------
   function defaultQuests(){
-    return { xp:0, day:'', daily:{ prog:{}, claimed:{}, bonus:false }, permClaimed:{}, lvlClaimed:{}, ach:{},
+    return { xp:0, day:'', daily:{ prog:{}, claimed:{}, bonus:false }, permClaimed:{}, lvlClaimed:{}, ach:{}, achXp:{},
              c:{ levelsCompleted:0, beatGame:0, jumps:0, runSec:0, dailyAllDone:0, dailyClaimed:0, questsClaimed:0, noHitWins:0 } };
   }
   function normalizeQuests(raw){
@@ -152,7 +152,7 @@
       d.daily.claimed = Object.assign({}, raw.daily.claimed);
       d.daily.bonus = !!raw.daily.bonus;
     }
-    ['permClaimed', 'lvlClaimed', 'ach'].forEach(k => { if(raw[k] && typeof raw[k] === 'object') d[k] = Object.assign({}, raw[k]); });
+    ['permClaimed', 'lvlClaimed', 'ach', 'achXp'].forEach(k => { if(raw[k] && typeof raw[k] === 'object') d[k] = Object.assign({}, raw[k]); });
     if(raw.c && typeof raw.c === 'object') Object.keys(d.c).forEach(k => { d.c[k] = Math.max(0, Math.floor(Number(raw.c[k]) || 0)); });
     return d;
   }
@@ -209,16 +209,22 @@
   function checkAchievements(silent){
     const q = state.quests;
     let changed = false;
+    const toToast = [];
     ACHIEVEMENTS.forEach(a => {
       if(!q.ach[a.id] && achValue(a) >= a.t){
         q.ach[a.id] = Date.now();
         changed = true;
-        if(!silent){
-          addXp(a.xp);
-          questToast(a.icon, 'Osiągnięcie odblokowane! (+' + a.xp + ' XP)', a.pl);
-        }
+        if(!silent) toToast.push(a);
+      }
+      // wyplaca XP za kazde odblokowane osiagniecie, ktore go jeszcze nie dostalo
+      // (obejmuje tez stare osiagniecia zdobyte przed wprowadzeniem XP za osiagniecia)
+      if(q.ach[a.id] && !q.achXp[a.id]){
+        q.achXp[a.id] = true;
+        addXp(a.xp);
+        changed = true;
       }
     });
+    toToast.forEach(a => questToast(a.icon, 'Osiągnięcie odblokowane! (+' + a.xp + ' XP)', a.pl));
     if(changed) saveProfile();
     return changed;
   }
