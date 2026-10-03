@@ -114,6 +114,21 @@
     editorCtx.fill();
     editorCtx.restore();
 
+    // chmury (statyczne, rozlozone wg scrolla — tak jak w grze, tylko bez animacji bujania)
+    editorCtx.fillStyle = 'rgba(255,255,255,.9)';
+    const cloudW = 300*editorScale;
+    const cloudOffset = ((editorScrollX*0.3*editorScale) % cloudW + cloudW) % cloudW;
+    let cloudI = 0;
+    for(let cx = -cloudOffset - cloudW; cx < editorCanvas.width + cloudW; cx += cloudW){
+      const cy = editorCanvas.height*0.15 + (cloudI % 2) * 30*editorScale;
+      editorCtx.beginPath();
+      editorCtx.arc(cx, cy, 18*editorScale, 0, Math.PI*2);
+      editorCtx.arc(cx+20*editorScale, cy-8*editorScale, 14*editorScale, 0, Math.PI*2);
+      editorCtx.arc(cx+36*editorScale, cy, 18*editorScale, 0, Math.PI*2);
+      editorCtx.fill();
+      cloudI++;
+    }
+
     // dekoracyjne pagórki w tle (tak jak w grze — nie mają związku z realnym gruntem)
     const hillW = 420*editorScale;
     const hillOffset = ((editorScrollX*0.5*editorScale) % hillW + hillW) % hillW;
@@ -813,8 +828,11 @@
 
   function ensureSpeedrunSelectOptions(){
     const sel = document.getElementById('speedrunLevelSelect');
-    if(sel.options.length === LEVELS.length) return;
-    sel.innerHTML = LEVELS.map((_,i) => `<option value="${i}">Poziom ${i+1}</option>`).join('');
+    const n = totalLevels();
+    if(sel.options.length === n) return;
+    let opts = '';
+    for(let i=0;i<n;i++) opts += `<option value="${i}">Poziom ${i+1}</option>`;
+    sel.innerHTML = opts;
   }
 
   async function renderSpeedrunBoard(){
@@ -945,20 +963,24 @@
   function renderAdminBuiltInLevels(){
     const panel = document.getElementById('adminLevelsPanel');
     if(!isTester()){ panel.innerHTML = ''; return; }
-    panel.innerHTML = `<div class="my-levels-empty" style="padding:6px 20px;color:#ffd23f;font-weight:bold;">🛠️ ADMIN: EDYCJA WBUDOWANYCH POZIOMÓW</div>` +
-      LEVELS.map((lvlFn, i) => {
-        const overridden = !!builtInOverrides[i];
-        const name = (builtInOverrides[i] ? builtInOverrides[i].name : lvlFn().name) || ('Poziom ' + (i+1));
-        return `
+    const n = totalLevels();
+    let rows = '';
+    for(let i=0;i<n;i++){
+      const isExtra = i >= LEVELS.length;
+      const overridden = !isExtra && !!builtInOverrides[i];
+      const name = (builtInOverrides[i] ? builtInOverrides[i].name : LEVELS[i]().name) || ('Poziom ' + (i+1));
+      const tag = isExtra ? ' <span style="color:#ffd23f;">(dodany jako oficjalny)</span>' : (overridden ? ' <span style="color:#2ecc71;">(poprawiony)</span>' : '');
+      rows += `
         <div class="my-level-row">
           <div class="my-level-info">
-            <div class="my-level-name">${i+1}. ${escapeHtml(name)}${overridden ? ' <span style="color:#2ecc71;">(poprawiony)</span>' : ''}</div>
+            <div class="my-level-name">${i+1}. ${escapeHtml(name)}${tag}</div>
           </div>
           <div class="my-level-actions">
             <button class="my-level-btn edit" data-idx="${i}">✏️ EDYTUJ</button>
           </div>
         </div>`;
-      }).join('');
+    }
+    panel.innerHTML = `<div class="my-levels-empty" style="padding:6px 20px;color:#ffd23f;font-weight:bold;">🛠️ ADMIN: EDYCJA WBUDOWANYCH POZIOMÓW</div>` + rows;
     panel.querySelectorAll('.my-level-btn.edit').forEach(btn => {
       btn.onclick = () => {
         const idx = Number(btn.dataset.idx);
@@ -1004,6 +1026,7 @@
           <button class="my-level-btn play" data-code="${row.code}">▶ GRAJ</button>
           <button class="my-level-btn edit" data-code="${row.code}">✏️ EDYTUJ</button>
           <button class="my-level-btn delete" data-code="${row.code}">🗑 USUŃ</button>
+          ${isTester() ? `<button class="my-level-btn official" data-code="${row.code}" style="background:linear-gradient(#ffd23f,#c8860a);color:#3a2600;">⭐ DODAJ JAKO OFICJALNY</button>` : ''}
         </div>
       </div>
     `;
@@ -1031,6 +1054,23 @@
         const { error } = await sb.from('custom_levels').delete().eq('code', btn.dataset.code).eq('creator_id', currentUser.id);
         if(error){ alert('Błąd usuwania: ' + error.message); return; }
         renderMyLevels();
+      };
+    });
+    panel.querySelectorAll('.my-level-btn.official').forEach(btn => {
+      btn.onclick = async () => {
+        const row = data.find(r => r.code === btn.dataset.code);
+        if(!row) return;
+        const nextIndex = totalLevels();
+        if(!confirm(`Dodać "${row.level_data.name || 'ten poziom'}" jako oficjalny poziom ${nextIndex+1}? Będzie widoczny dla wszystkich graczy od razu.`)) return;
+        btn.disabled = true; btn.textContent = 'Dodawanie...';
+        const { error } = await sb.from('level_overrides').upsert({
+          level_index: nextIndex, level_data: row.level_data, updated_by: currentUser.id,
+        }, { onConflict: 'level_index' });
+        if(error){ alert('Błąd dodawania: ' + error.message); btn.disabled = false; btn.textContent = '⭐ DODAJ JAKO OFICJALNY'; return; }
+        builtInOverrides[nextIndex] = row.level_data;
+        alert(`Gotowe! To teraz oficjalny poziom ${nextIndex+1}.`);
+        renderMyLevels();
+        renderAdminBuiltInLevels();
       };
     });
   }

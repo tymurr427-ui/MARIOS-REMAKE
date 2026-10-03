@@ -90,7 +90,7 @@
   permDef('coins',  '🪙', '',  [[100,30],[500,60],[2000,120],[10000,250]], () => state.totalCoinsEarned, n=>`Zarób łącznie ${n} monet`, n=>`Earn ${n} coins in total`);
   permDef('kills',  '👾', '',  [[10,30],[50,60],[200,120],[1000,250]],     () => state.enemiesKilled,   n=>`Pokonaj łącznie ${n} wrogów`, n=>`Defeat ${n} enemies in total`);
   permDef('bosses', '👹', '',  [[1,50],[5,120],[15,250]],                  () => state.bossesKilled,    n=>n===1?'Pokonaj bossa':`Pokonaj ${n} bossów`, n=>n===1?'Defeat a boss':`Defeat ${n} bosses`);
-  permDef('reach',  '🗺️', '',  [[5,40],[10,80],[15,150],[19,300]],         () => Math.min(LEVELS.length, state.unlockedLevel + 1), n=>`Dotrzyj do poziomu ${n}`, n=>`Reach level ${n}`);
+  permDef('reach',  '🗺️', '',  [[5,40],[10,80],[15,150],[19,300]],         () => Math.min(totalLevels(), state.unlockedLevel + 1), n=>`Dotrzyj do poziomu ${n}`, n=>`Reach level ${n}`);
   permDef('beat',   '🏆', '',  [[1,400]],                                  () => state.quests.c.beatGame, () => 'Ukończ wszystkie poziomy', () => 'Finish all levels');
   permDef('time',   '⏳', 'h', [[3600,60],[18000,150],[72000,300]],        () => state.playtimeSeconds, n=>`Graj łącznie ${n/3600} h`, n=>`Play for ${n/3600} h in total`);
   permDef('spent',  '🛒', '',  [[100,30],[500,80],[2000,200]],             () => state.totalSpent,      n=>`Wydaj ${n} monet w sklepie`, n=>`Spend ${n} coins in the shop`);
@@ -106,7 +106,7 @@
   // ---------- OSIAGNIECIA (odblokowuja sie same) ----------
   const ACHIEVEMENTS = [];
   function ach(id, icon, pl, en, dpl, den, t, get, xp){ ACHIEVEMENTS.push({ id, icon, pl, en, dpl, den, t, get, xp: xp || 20 }); }
-  const lvlReached = () => Math.min(LEVELS.length, state.unlockedLevel + 1);
+  const lvlReached = () => Math.min(totalLevels(), state.unlockedLevel + 1);
   ach('first_win',   '🏁', 'Pierwsze kroki',   'First Steps',   'Ukończ swój pierwszy poziom',            'Complete your first level',        1,     () => Math.max(state.unlockedLevel, state.quests.c.levelsCompleted), 20);
   ach('coins_100',   '🪙', 'Kieszonkowe',      'Pocket Money',  'Zarób łącznie 100 monet',                'Earn 100 coins in total',          100,   () => state.totalCoinsEarned, 20);
   ach('coins_1000',  '💰', 'Skarbnik',         'Treasurer',     'Zarób łącznie 1000 monet',               'Earn 1000 coins in total',         1000,  () => state.totalCoinsEarned, 60);

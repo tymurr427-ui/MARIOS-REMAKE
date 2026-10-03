@@ -781,7 +781,7 @@
     state.totalCoinsEarned += runCoins;
     const timeStr = formatRunTime(runElapsedMs);
     if(won) AudioEngine.sfxWin(); else AudioEngine.sfxLose();
-    if(!customLevelActive && won && currentLevelIndex === state.unlockedLevel && currentLevelIndex < LEVELS.length-1){
+    if(!customLevelActive && won && currentLevelIndex === state.unlockedLevel && currentLevelIndex < totalLevels()-1){
       state.unlockedLevel = currentLevelIndex + 1;
     }
     if(!customLevelActive && won && !mpChannel){
@@ -791,7 +791,7 @@
       questEvent('win');
       if(!hitThisRun) questEvent('noHit');
       if(runElapsedMs > 0 && runElapsedMs < 20000) questEvent('fastFinish');
-      if(!customLevelActive && currentLevelIndex === LEVELS.length - 1) state.quests.c.beatGame++;
+      if(!customLevelActive && currentLevelIndex === totalLevels() - 1) state.quests.c.beatGame++;
     }
     saveProfile();
     setTimeout(() => {
@@ -811,7 +811,7 @@
       }
       if(mpChannel){
         if(won){
-          if(currentLevelIndex < LEVELS.length-1){
+          if(currentLevelIndex < totalLevels()-1){
             const nextIdx = currentLevelIndex + 1;
             broadcastEvent('level_advance', { idx: nextIdx });
             showBanner('POZIOM UKOŃCZONY!\n+' + runCoins + ' monet', () => startLevel(nextIdx));
@@ -827,7 +827,7 @@
         return;
       }
       if(won){
-        if(currentLevelIndex < LEVELS.length-1){
+        if(currentLevelIndex < totalLevels()-1){
           showBanner('POZIOM UKOŃCZONY!\n+' + runCoins + ' monet\n⏱ Czas: ' + timeStr, () => startLevel(currentLevelIndex+1));
         } else {
           showBanner('UKOŃCZYŁEŚ WSZYSTKIE POZIOMY!\n+' + runCoins + ' monet\n⏱ Czas: ' + timeStr, () => showScreen('menu'));

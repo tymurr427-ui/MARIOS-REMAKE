@@ -75,7 +75,13 @@
   const supabaseReady = SUPABASE_URL.startsWith('http') && SUPABASE_ANON_KEY.length > 20;
   const sb = supabaseReady ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   let currentUser = null;
-  let builtInOverrides = {}; // level_index -> level_data (poprawki admina do wbudowanych poziomow)
+  let builtInOverrides = {}; // level_index -> level_data (poprawki admina do wbudowanych poziomow, a takze dodatkowe oficjalne poziomy o indeksie >= LEVELS.length)
+  function totalLevels(){
+    // ile jest oficjalnych poziomow: wbudowane + te dodane przez admina jako kolejne (level_index >= LEVELS.length)
+    let extra = 0;
+    while(builtInOverrides[LEVELS.length + extra]) extra++;
+    return LEVELS.length + extra;
+  }
 
   async function loadBuiltInOverrides(){
     if(!sb) return;

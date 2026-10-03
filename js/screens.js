@@ -140,7 +140,7 @@
       total_coins_earned: v => fmtNum(v),
       enemies_killed:     v => fmtNum(v),
       bosses_killed:      v => fmtNum(v),
-      unlocked_level:     v => (Math.min((v || 0) + 1, LEVELS.length)) + '/' + LEVELS.length,
+      unlocked_level:     v => (Math.min((v || 0) + 1, totalLevels())) + '/' + totalLevels(),
       xp:                 v => 'LV ' + levelInfo(v || 0).lvl,
     };
     const fmt = fmts[rankingSort];
@@ -318,14 +318,16 @@
   function renderLevels(){
     const grid = document.getElementById('levelGrid');
     grid.innerHTML = '';
-    LEVELS.forEach((lvl, i) => {
+    const n = totalLevels();
+    for(let i=0;i<n;i++){
       const locked = i > state.unlockedLevel;
+      const name = builtInOverrides[i] ? builtInOverrides[i].name : (i < LEVELS.length ? LEVELS[i]().name : 'Poziom ' + (i+1));
       const card = document.createElement('div');
       card.className = 'level-card' + (locked ? ' locked':'');
-      card.innerHTML = `<span class="num">${i+1}</span><span class="lbl">${locked ? '🔒 zablokowany' : escapeHtml(lvl().name)}</span>`;
+      card.innerHTML = `<span class="num">${i+1}</span><span class="lbl">${locked ? '🔒 zablokowany' : escapeHtml(name)}</span>`;
       if(!locked){
         card.onclick = () => { showScreen('game'); startLevel(i); };
       }
       grid.appendChild(card);
-    });
+    }
   }
