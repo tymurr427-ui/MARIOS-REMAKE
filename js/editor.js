@@ -75,20 +75,20 @@
   function editorSnap(v, grid){ return Math.round(v/grid)*grid; }
 
   function editorBgPreviewColors(bg){
-    if(bg==='night') return {sky1:'#0b1233', sky2:'#1c2a5e', hill:'#152a4a'};
-    if(bg==='dusk') return {sky1:'#8a4a8f', sky2:'#e0764f', hill:'#3d2352'};
-    if(bg==='volcano') return {sky1:'#3a0e0e', sky2:'#b8451c', hill:'#2a0a0a'};
-    if(bg==='ice') return {sky1:'#bfe9ff', sky2:'#eaf7ff', hill:'#6fb8d8'};
-    if(bg==='desert') return {sky1:'#ffdca0', sky2:'#ffb877', hill:'#c9862f'};
-    if(bg==='aurora') return {sky1:'#0a1a2e', sky2:'#123d3a', hill:'#0a2e28'};
-    if(bg==='forest') return {sky1:'#bfe3c9', sky2:'#eaffe0', hill:'#2f7d32'};
-    if(bg==='cave') return {sky1:'#1a1522', sky2:'#2e2438', hill:'#120d18'};
-    if(bg==='beach') return {sky1:'#7fd8ff', sky2:'#ffe9b3', hill:'#e8c07d'};
-    if(bg==='candy') return {sky1:'#ffb3e6', sky2:'#fff0fa', hill:'#ff6fae'};
-    if(bg==='space') return {sky1:'#05030f', sky2:'#16103a', hill:'#0a0620'};
-    if(bg==='autumn') return {sky1:'#ffcf8c', sky2:'#ffe9c2', hill:'#b5651d'};
-    if(bg==='underwater') return {sky1:'#013a63', sky2:'#2a6f97', hill:'#012a4a'};
-    return {sky1:'#5c94fc', sky2:'#a8d8ff', hill:'#3fae4a'};
+    if(bg==='night') return {sky1:'#0b1233', sky2:'#1c2a5e', hill:'#152a4a', sun:'#dfe7ff'};
+    if(bg==='dusk') return {sky1:'#8a4a8f', sky2:'#e0764f', hill:'#3d2352', sun:'#ffdca0'};
+    if(bg==='volcano') return {sky1:'#3a0e0e', sky2:'#b8451c', hill:'#2a0a0a', sun:'#ff8a3d'};
+    if(bg==='ice') return {sky1:'#bfe9ff', sky2:'#eaf7ff', hill:'#6fb8d8', sun:'#ffffff'};
+    if(bg==='desert') return {sky1:'#ffdca0', sky2:'#ffb877', hill:'#c9862f', sun:'#fff2c9'};
+    if(bg==='aurora') return {sky1:'#0a1a2e', sky2:'#123d3a', hill:'#0a2e28', sun:'#9dffcf'};
+    if(bg==='forest') return {sky1:'#bfe3c9', sky2:'#eaffe0', hill:'#2f7d32', sun:'#fff7c2'};
+    if(bg==='cave') return {sky1:'#1a1522', sky2:'#2e2438', hill:'#120d18', sun:'#b98cff'};
+    if(bg==='beach') return {sky1:'#7fd8ff', sky2:'#ffe9b3', hill:'#e8c07d', sun:'#fff7c2'};
+    if(bg==='candy') return {sky1:'#ffb3e6', sky2:'#fff0fa', hill:'#ff6fae', sun:'#fff7c2'};
+    if(bg==='space') return {sky1:'#05030f', sky2:'#16103a', hill:'#0a0620', sun:'#9dd1ff'};
+    if(bg==='autumn') return {sky1:'#ffcf8c', sky2:'#ffe9c2', hill:'#b5651d', sun:'#fff2c9'};
+    if(bg==='underwater') return {sky1:'#013a63', sky2:'#2a6f97', hill:'#012a4a', sun:'#8ecae6'};
+    return {sky1:'#5c94fc', sky2:'#a8d8ff', hill:'#3fae4a', sun:'#fff7c2'};
   }
 
   function redrawEditor(){
@@ -104,6 +104,25 @@
     grad.addColorStop(0, c.sky1); grad.addColorStop(1, c.sky2);
     editorCtx.fillStyle = grad;
     editorCtx.fillRect(0,0,editorCanvas.width, editorCanvas.height);
+
+    // słońce (odpowiednik aureoli w grze, tylko dla orientacji wizualnej)
+    editorCtx.save();
+    editorCtx.globalAlpha = 0.5;
+    editorCtx.fillStyle = c.sun || '#fff7c2';
+    editorCtx.beginPath();
+    editorCtx.arc(editorCanvas.width*0.86, editorCanvas.height*0.13, 36, 0, Math.PI*2);
+    editorCtx.fill();
+    editorCtx.restore();
+
+    // dekoracyjne pagórki w tle (tak jak w grze — nie mają związku z realnym gruntem)
+    const hillW = 420*editorScale;
+    const hillOffset = ((editorScrollX*0.5*editorScale) % hillW + hillW) % hillW;
+    editorCtx.fillStyle = c.hill;
+    for(let hx = -hillOffset - hillW; hx < editorCanvas.width + hillW; hx += hillW){
+      editorCtx.beginPath();
+      editorCtx.arc(hx + hillW/2, EDITOR_GROUND_Y*editorScale + 30*editorScale, 90*editorScale, Math.PI, 0);
+      editorCtx.fill();
+    }
 
     // linia gruntu (poziom, na ktorym stoja bloki ziemi)
     editorCtx.strokeStyle = 'rgba(255,255,255,.3)';
@@ -313,22 +332,26 @@
         editorCtx.fillStyle = '#ffcc4d';
         editorCtx.fillRect(el.dir>=0 ? ex : ex-16, ey-3, 16, 6);
       } else if(el.kind==='boss'){
+        // el.x/el.y to lewy-gorny rog 90x90 hitboxa (dokladnie jak w grze) — tu liczymy
+        // wizualny SRODEK (bcx,bcy), zeby podglad pokrywal sie z tym co bedzie widac w tescie.
+        const half = 45*editorScale;
+        const bcx = ex + half, bcy = ey + half;
         const rx = 200*editorScale;
         editorCtx.strokeStyle = 'rgba(192,57,43,.6)';
         editorCtx.lineWidth = 2;
         editorCtx.setLineDash([4,3]);
         editorCtx.beginPath();
-        editorCtx.moveTo(ex-rx, ey);
-        editorCtx.lineTo(ex+rx, ey);
+        editorCtx.moveTo(bcx-rx, bcy);
+        editorCtx.lineTo(bcx+rx, bcy);
         editorCtx.stroke();
         editorCtx.setLineDash([]);
         editorCtx.fillStyle = 'rgba(192,57,43,.3)';
-        editorCtx.fillRect(ex-rx-16, ey-16, 32, 32);
-        editorCtx.fillRect(ex+rx-16, ey-16, 32, 32);
+        editorCtx.fillRect(bcx-rx-16, bcy-16, 32, 32);
+        editorCtx.fillRect(bcx+rx-16, bcy-16, 32, 32);
         editorCtx.fillStyle = '#c0392b';
-        editorCtx.beginPath(); editorCtx.arc(ex, ey, 16, 0, Math.PI*2); editorCtx.fill();
+        editorCtx.beginPath(); editorCtx.arc(bcx, bcy, 16, 0, Math.PI*2); editorCtx.fill();
         editorCtx.font = 'bold 14px sans-serif'; editorCtx.textAlign='center';
-        editorCtx.fillText('👹', ex, ey+5);
+        editorCtx.fillText('👹', bcx, bcy+5);
         editorCtx.textAlign='left';
       }
       editorCtx.restore();
@@ -454,6 +477,10 @@
   let editorClipboard = null;    // skopiowany element (Ctrl+C), wklejany przez Ctrl+V pod kursorem
   // odleglosc punktu od elementu; dla elementow o szerokosci liczymy do najblizszego punktu na ich dlugosci
   function editorEraseDist(el, levelX, levelY){
+    if(el.kind==='boss'){
+      // el.x/el.y to lewy-gorny rog hitboxa 90x90 — mierzymy od wizualnego srodka, tak jak jest rysowany
+      return Math.hypot((el.x+45) - levelX, (el.y+45) - levelY);
+    }
     const ey = el.y!==undefined ? el.y : (el.kind==='crusher' ? el.topY : levelY);
     let dx = el.x - levelX;
     if(el.w !== undefined && (el.kind==='ground' || el.kind==='platform' || el.kind==='pipe' || el.kind==='hazard' || el.kind==='blinker')){
