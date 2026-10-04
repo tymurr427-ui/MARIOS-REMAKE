@@ -261,6 +261,15 @@
         <span>Licznik FPS</span>
         <button class="menu-btn small" id="btnFpsCounter">📊 WŁĄCZONY</button>
       </div>
+      <div class="settings-row">
+        <span>Twój zapis gry</span>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="menu-btn small" id="btnDownloadSave">💾 POBIERZ SAVE</button>
+          <button class="menu-btn small" id="btnUploadSave">📂 WCZYTAJ SAVE</button>
+          <input type="file" id="saveFileInput" accept="application/json,.json" style="display:none;">
+        </div>
+      </div>
+      <div class="settings-note">"Wczytaj save" nadpisuje cały postęp na koncie, na którym jesteś obecnie zalogowany, plikiem wyeksportowanym wcześniej przyciskiem "Pobierz save" (np. po utracie dostępu do starego konta Google).</div>
       <div class="settings-row" style="align-items:flex-start;">
         <span>Język</span>
         <div class="quality-buttons" id="langButtons">
@@ -371,7 +380,7 @@
 <script src="js/levels.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/net.js?v=4"></script>
-<script src="js/profile.js?v=5"></script>
+<script src="js/profile.js?v=7"></script>
 <script src="js/screens.js?v=9"></script>
 <script src="js/shop.js?v=5"></script>
 <script src="js/audio.js?v=2"></script>
