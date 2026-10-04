@@ -197,32 +197,33 @@
         tctx.fillStyle = 'rgba(255,255,255,.35)';
         tctx.beginPath(); tctx.ellipse(gx1-1, gy-0.8, 1, 0.6, -0.4, 0, Math.PI*2); tctx.fill();
       } else if(gl === 'star'){
-        tctx.fillStyle = '#ffd23f'; tctx.strokeStyle = '#c8860a'; tctx.lineWidth = 0.8;
+        // oprawki w ksztalcie gwiazdki - cienki zarys + jasny wypelniacz, tak jak reszta okularow
+        tctx.fillStyle = 'rgba(255,210,63,.35)'; tctx.strokeStyle = '#c8860a'; tctx.lineWidth = 1;
         function star(cx,cy,r){
           tctx.beginPath();
           for(let i=0;i<10;i++){
-            const rad = i%2===0 ? r : r*0.45;
+            const rad = i%2===0 ? r : r*0.5;
             const a = -Math.PI/2 + i*Math.PI/5;
-            const px = cx+Math.cos(a)*rad, py = cy+Math.sin(a)*rad;
+            const px = cx+Math.cos(a)*rad, py = cy+Math.sin(a)*rad*0.85;
             i===0 ? tctx.moveTo(px,py) : tctx.lineTo(px,py);
           }
           tctx.closePath(); tctx.fill(); tctx.stroke();
         }
-        star(gx1, gy, 3.2); star(gx2, gy, 2.9);
-        tctx.strokeStyle = '#c8860a'; tctx.lineWidth = 1;
-        tctx.beginPath(); tctx.moveTo(gx1+3.2, gy); tctx.lineTo(gx2-2.9, gy); tctx.stroke();
+        star(gx1, gy, 2.7); star(gx2, gy, 2.5);
+        tctx.beginPath(); tctx.moveTo(gx1+2.7, gy); tctx.lineTo(gx2-2.5, gy); tctx.stroke();
       } else if(gl === 'heart'){
-        tctx.fillStyle = '#e05a7a'; tctx.strokeStyle = '#a53a56'; tctx.lineWidth = 0.8;
+        // oprawki w ksztalcie serduszka - cienki zarys + jasny wypelniacz
+        tctx.fillStyle = 'rgba(224,90,122,.35)'; tctx.strokeStyle = '#a53a56'; tctx.lineWidth = 1;
         function heart(cx,cy,r){
+          const topY = cy - r*0.55;
           tctx.beginPath();
-          tctx.moveTo(cx, cy+r*0.9);
-          tctx.bezierCurveTo(cx-r*1.4, cy-r*0.4, cx-r*0.5, cy-r*1.3, cx, cy-r*0.4);
-          tctx.bezierCurveTo(cx+r*0.5, cy-r*1.3, cx+r*1.4, cy-r*0.4, cx, cy+r*0.9);
+          tctx.moveTo(cx, cy+r*0.75);
+          tctx.bezierCurveTo(cx-r*1.3, topY+r*0.6, cx-r*0.5, topY-r*0.5, cx, topY);
+          tctx.bezierCurveTo(cx+r*0.5, topY-r*0.5, cx+r*1.3, topY+r*0.6, cx, cy+r*0.75);
           tctx.closePath(); tctx.fill(); tctx.stroke();
         }
         heart(gx1, gy, 2.6); heart(gx2, gy, 2.4);
-        tctx.strokeStyle = '#a53a56'; tctx.lineWidth = 1;
-        tctx.beginPath(); tctx.moveTo(gx1+2.6, gy); tctx.lineTo(gx2-2.4, gy); tctx.stroke();
+        tctx.beginPath(); tctx.moveTo(gx1+2.6, gy-0.5); tctx.lineTo(gx2-2.4, gy-0.5); tctx.stroke();
       }
     }
 
