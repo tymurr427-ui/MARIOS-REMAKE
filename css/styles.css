@@ -131,6 +131,31 @@
     border-color:#8a5a00;
     color:#3a2600;
   }
+  .customize-subtabs {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:10px;
+  }
+  .customize-subtab {
+    background:rgba(255,255,255,.1);
+    border:2px solid rgba(255,255,255,.25);
+    color:#fff;
+    font-weight:bold;
+    font-size:12px;
+    padding:7px 14px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .customize-subtab.active {
+    background:linear-gradient(#ffd23f,#c8860a);
+    border-color:#8a5a00;
+    color:#3a2600;
+  }
+  .customize-col-single {
+    flex:1;
+    min-width:260px;
+  }
   .trails-grid {
     grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
   }
@@ -181,7 +206,7 @@
   }
   #hatStylesGrid::-webkit-scrollbar { width:6px; }
   #hatStylesGrid::-webkit-scrollbar-thumb { background:rgba(255,255,255,.35); border-radius:3px; }
-  .customize-col-a .shop-grid.customize-grid.compact { grid-template-columns:repeat(5, 1fr); }
+  .customize-col-single .shop-grid.customize-grid.compact { grid-template-columns:repeat(6, 1fr); }
   .trail-card.compact { padding:6px 2px; gap:3px; min-width:0; }
   .trail-card.compact .trail-name { display:none; }          /* nazwa koloru w dymku (title) */
   .trail-card.compact .customize-swatch { width:32px; height:32px; border-width:2px; }
@@ -412,7 +437,7 @@
   }
   .boss-hud-pill {
     position:absolute;
-    top:14px;
+    top:64px;
     left:50%;
     transform:translateX(-50%);
     z-index:6;
@@ -952,6 +977,7 @@
   .ach-desc { font-size:11px; color:#cfe3ff; min-height:28px; }
   .ach-card .q-bar { width:100%; }
   .ach-prog { font-size:10px; color:#cfe3ff; }
+  .ach-xp { font-size:10px; font-weight:bold; color:#ffd23f; margin-bottom:2px; }
   .ach-badge { font-size:10px; font-weight:bold; letter-spacing:1px; color:#3a2600; background:linear-gradient(#ffd23f,#c8860a); padding:3px 8px; border-radius:8px; }
 
   .toast-stack { position:absolute; bottom:22px; left:50%; transform:translateX(-50%); z-index:80; display:flex; flex-direction:column-reverse; gap:8px; pointer-events:none; align-items:center; }
