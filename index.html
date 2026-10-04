@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Super Plumber Bros</title>
-<link rel="stylesheet" href="css/styles.css?v=9">
+<link rel="stylesheet" href="css/styles.css?v=10">
 </head>
 <body>
 <div id="wrap">
@@ -303,18 +303,20 @@
       <div class="shop-grid trails-grid" id="trailsGrid"></div>
     </div>
     <div id="customizeSection" class="hidden">
+      <div class="customize-subtabs">
+        <button class="customize-subtab active" id="custTabHats">🎩 CZAPKI</button>
+        <button class="customize-subtab" id="custTabHatColor">🧢 KOLOR CZAPKI</button>
+        <button class="customize-subtab" id="custTabSkin">🎨 KOLOR SKÓRY</button>
+        <button class="customize-subtab" id="custTabFacial">🧔 ZAROST</button>
+        <button class="customize-subtab" id="custTabGlasses">👓 OKULARY</button>
+      </div>
       <div class="customize-layout">
-        <div class="customize-col customize-col-a">
-          <div class="customize-group-label">🎩 Fason czapki</div>
+        <div class="customize-col customize-col-single">
           <div class="shop-grid customize-grid" id="hatStylesGrid"></div>
-          <div class="customize-group-label">🧔 Zarost</div>
-          <div class="shop-grid customize-grid" id="facialHairGrid"></div>
-        </div>
-        <div class="customize-col customize-col-b">
-          <div class="customize-group-label">🧢 Kolor czapki</div>
-          <div class="shop-grid customize-grid" id="hatsGrid"></div>
-          <div class="customize-group-label">🎨 Kolor skóry</div>
-          <div class="shop-grid customize-grid" id="skinTonesGrid"></div>
+          <div class="shop-grid customize-grid hidden" id="hatsGrid"></div>
+          <div class="shop-grid customize-grid hidden" id="skinTonesGrid"></div>
+          <div class="shop-grid customize-grid hidden" id="facialHairGrid"></div>
+          <div class="shop-grid customize-grid hidden" id="glassesGrid"></div>
         </div>
         <div class="shop-preview customize-preview">
           <canvas id="customPreviewCanvas" width="260" height="380"></canvas>
@@ -365,18 +367,18 @@
 
 <script src="js/i18n.js?v=7"></script>
 
-<script src="js/data.js?v=6"></script>
+<script src="js/data.js?v=7"></script>
 <script src="js/levels.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/net.js?v=3"></script>
-<script src="js/profile.js?v=4"></script>
+<script src="js/net.js?v=4"></script>
+<script src="js/profile.js?v=5"></script>
 <script src="js/screens.js?v=9"></script>
-<script src="js/shop.js?v=4"></script>
+<script src="js/shop.js?v=5"></script>
 <script src="js/audio.js?v=2"></script>
 <script src="js/quests.js?v=10"></script>
-<script src="js/editor.js?v=19"></script>
-<script src="js/game.js?v=22"></script>
-<script src="js/character.js?v=4"></script>
+<script src="js/editor.js?v=20"></script>
+<script src="js/game.js?v=23"></script>
+<script src="js/character.js?v=5"></script>
 <script src="js/render.js?v=8"></script>
 <script src="js/flags.js?v=7"></script>
 <script src="js/loop.js?v=3"></script>
