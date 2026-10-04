@@ -28,6 +28,8 @@
     equippedSkinTone: 'default',
     ownedFacialHair: ['mustache'],
     equippedFacialHair: 'mustache',
+    ownedGlasses: ['none'],
+    equippedGlasses: 'none',
     quests: null,   // zadania/XP/osiagniecia (quests.js), zapis w kolumnie quest_data
   };
 
@@ -74,6 +76,8 @@
       state.equippedSkinTone = data.equipped_skin_tone ?? 'default';
       state.ownedFacialHair = data.owned_facial_hair ?? ['mustache'];
       state.equippedFacialHair = data.equipped_facial_hair ?? 'mustache';
+      state.ownedGlasses = data.owned_glasses ?? ['none'];
+      state.equippedGlasses = data.equipped_glasses ?? 'none';
       state.quests = normalizeQuests(data.quest_data);
       if(data.display_name) state.displayName = data.display_name;
       else await sb.from('profiles').update({ display_name: state.displayName }).eq('id', user.id);
@@ -130,6 +134,8 @@
         equipped_skin_tone: state.equippedSkinTone,
         owned_facial_hair: state.ownedFacialHair,
         equipped_facial_hair: state.equippedFacialHair,
+        owned_glasses: state.ownedGlasses,
+        equipped_glasses: state.equippedGlasses,
         quest_data: state.quests,
         xp: state.quests.xp,   // kolumna-lustrzanka quest_data.xp, zeby ranking mogl sortowac po niej wprost (order() nie lubi jsonb)
         updated_at: new Date().toISOString(),

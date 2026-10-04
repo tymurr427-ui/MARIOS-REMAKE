@@ -215,6 +215,15 @@ const SKIN_TONES = [
   { id:'magenta',   name:'Magenta',     price:30, color:'#e070c0' },
 ];
 
+const GLASSES = [
+  { id:'none',       name:'Brak',               price:0 },
+  { id:'round',      name:'Okrągłe',            price:20 },
+  { id:'square',     name:'Kwadratowe',         price:20 },
+  { id:'sunglasses', name:'Przeciwsłoneczne',   price:25 },
+  { id:'star',       name:'Gwiazdki',           price:30 },
+  { id:'heart',      name:'Serduszka',          price:30 },
+];
+
 const FACIAL_HAIR = [
   { id:'mustache', name:'Wąsy (domyślne)', price:0 },
   { id:'none',     name:'Gładko ogolony', price:10 },

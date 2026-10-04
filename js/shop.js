@@ -30,7 +30,7 @@
     pctx.translate(canvas.width/2, 72);
     pctx.scale(previewFacing*scale, scale);
     pctx.translate(-20, 0);
-    drawCharacterSprite(pctx, getEffectiveColors(sk.colors, state.equippedHat, state.equippedSkinTone), bob, false, false, true, true, state.equippedFacialHair, state.equippedHatStyle);
+    drawCharacterSprite(pctx, getEffectiveColors(sk.colors, state.equippedHat, state.equippedSkinTone), bob, false, false, true, true, state.equippedFacialHair, state.equippedHatStyle, state.equippedGlasses);
     pctx.restore();
     const cc = document.getElementById('customPreviewCanvas');
     const cSec = document.getElementById('customizeSection');
@@ -43,7 +43,7 @@
       cctx.translate(cc.width/2, 108);
       cctx.scale(previewFacing*cs, cs);
       cctx.translate(-20, 0);
-      drawCharacterSprite(cctx, getEffectiveColors(csk.colors, state.equippedHat, state.equippedSkinTone), bob, false, false, true, true, state.equippedFacialHair, state.equippedHatStyle);
+      drawCharacterSprite(cctx, getEffectiveColors(csk.colors, state.equippedHat, state.equippedSkinTone), bob, false, false, true, true, state.equippedFacialHair, state.equippedHatStyle, state.equippedGlasses);
       cctx.restore();
     }
     previewRaf = requestAnimationFrame(renderPreviewFrame);
@@ -276,6 +276,7 @@
     document.getElementById('shopCoins').textContent = state.wallet;
   }
 
+  let customizeSubtab = 'hats';
   function renderCustomize(){
     renderCustomizeGrid('hatStylesGrid', HAT_STYLES, 'ownedHatStyles', 'equippedHatStyle',
       (it) => `<canvas class="facial-thumb" data-hat="${it.id}" width="96" height="96"></canvas>`, true);
@@ -287,7 +288,26 @@
     renderCustomizeGrid('facialHairGrid', FACIAL_HAIR, 'ownedFacialHair', 'equippedFacialHair',
       (it) => `<canvas class="facial-thumb" data-fh="${it.id}" width="96" height="96"></canvas>`, true);
     document.querySelectorAll('#facialHairGrid canvas.facial-thumb').forEach(cv => drawFacialThumb(cv, cv.dataset.fh));
+    renderCustomizeGrid('glassesGrid', GLASSES, 'ownedGlasses', 'equippedGlasses',
+      (it) => `<canvas class="facial-thumb" data-gl="${it.id}" width="96" height="96"></canvas>`, true);
+    document.querySelectorAll('#glassesGrid canvas.facial-thumb').forEach(cv => drawGlassesThumb(cv, cv.dataset.gl));
+    showCustomizeSubtab(customizeSubtab);
   }
+
+  function showCustomizeSubtab(tab){
+    customizeSubtab = tab;
+    const grids = { hats:'hatStylesGrid', hatcolor:'hatsGrid', skin:'skinTonesGrid', facial:'facialHairGrid', glasses:'glassesGrid' };
+    const btns  = { hats:'custTabHats', hatcolor:'custTabHatColor', skin:'custTabSkin', facial:'custTabFacial', glasses:'custTabGlasses' };
+    Object.keys(grids).forEach(k => {
+      document.getElementById(grids[k]).classList.toggle('hidden', k !== tab);
+      document.getElementById(btns[k]).classList.toggle('active', k === tab);
+    });
+  }
+  document.getElementById('custTabHats').onclick = () => showCustomizeSubtab('hats');
+  document.getElementById('custTabHatColor').onclick = () => showCustomizeSubtab('hatcolor');
+  document.getElementById('custTabSkin').onclick = () => showCustomizeSubtab('skin');
+  document.getElementById('custTabFacial').onclick = () => showCustomizeSubtab('facial');
+  document.getElementById('custTabGlasses').onclick = () => showCustomizeSubtab('glasses');
 
   // miniaturka czapki: wycinek postaci z glowa (ten sam rysunek co w grze)
   function drawHatThumb(canvas, styleId){
@@ -300,7 +320,7 @@
     c.translate(canvas.width/2, canvas.height/2);
     c.scale(sc, sc);
     c.translate(-20, 7);
-    drawCharacterSprite(c, colors, 0, false, true, false, false, state.equippedFacialHair, styleId);
+    drawCharacterSprite(c, colors, 0, false, true, false, false, state.equippedFacialHair, styleId, state.equippedGlasses);
     c.restore();
   }
 
@@ -315,7 +335,22 @@
     c.translate(canvas.width/2, canvas.height/2);
     c.scale(sc, sc);
     c.translate(-21, -17);
-    drawCharacterSprite(c, colors, 0, false, true, false, false, fh, state.equippedHatStyle);
+    drawCharacterSprite(c, colors, 0, false, true, false, false, fh, state.equippedHatStyle, state.equippedGlasses);
+    c.restore();
+  }
+
+  // miniaturka okularow (ten sam rysunek co w grze)
+  function drawGlassesThumb(canvas, gl){
+    const c = canvas.getContext('2d');
+    c.clearRect(0,0,canvas.width,canvas.height);
+    const sk = SKINS.find(s => s.id === state.equippedSkin) || SKINS[0];
+    const colors = getEffectiveColors(sk.colors, state.equippedHat, state.equippedSkinTone);
+    const sc = canvas.width / 34;
+    c.save();
+    c.translate(canvas.width/2, canvas.height/2);
+    c.scale(sc, sc);
+    c.translate(-21, -17);
+    drawCharacterSprite(c, colors, 0, false, true, false, false, state.equippedFacialHair, state.equippedHatStyle, gl);
     c.restore();
   }
 

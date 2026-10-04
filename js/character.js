@@ -16,7 +16,7 @@
     };
   }
 
-  function drawCharacterSprite(targetCtx, c, bob, airborne, flat, shine, sparkle, facialHair, hatStyle){
+  function drawCharacterSprite(targetCtx, c, bob, airborne, flat, shine, sparkle, facialHair, hatStyle, glasses){
     const tctx = targetCtx;
     // ---- cien pod stopami ----
     if(!flat){
@@ -173,6 +173,58 @@
     tctx.beginPath(); tctx.arc(29.0, eyeY + 0.3, 1.3, 0, Math.PI*2); tctx.fill();
     tctx.fillStyle = '#111';
     tctx.beginPath(); tctx.arc(29.4, eyeY + 0.3, 0.7, 0, Math.PI*2); tctx.fill();
+
+    // ---- okulary (rysowane nad oczami, pod wlosami/czapka) ----
+    const gl = glasses || 'none';
+    if(gl !== 'none'){
+      const gx1 = 21.8, gx2 = 28.4, gy = eyeY; // srodki oczu
+      if(gl === 'round'){
+        tctx.strokeStyle = '#2b2b33'; tctx.lineWidth = 1.1; tctx.fillStyle = 'rgba(255,255,255,.12)';
+        tctx.beginPath(); tctx.arc(gx1, gy, 3.3, 0, Math.PI*2); tctx.fill(); tctx.stroke();
+        tctx.beginPath(); tctx.arc(gx2, gy, 3.0, 0, Math.PI*2); tctx.fill(); tctx.stroke();
+        tctx.beginPath(); tctx.moveTo(gx1+3.3, gy); tctx.lineTo(gx2-3.0, gy); tctx.stroke();
+      } else if(gl === 'square'){
+        tctx.strokeStyle = '#2b2b33'; tctx.lineWidth = 1.1; tctx.fillStyle = 'rgba(255,255,255,.12)';
+        tctx.fillRect(gx1-3.2, gy-2.6, 6.2, 5.2); tctx.strokeRect(gx1-3.2, gy-2.6, 6.2, 5.2);
+        tctx.fillRect(gx2-2.9, gy-2.4, 5.6, 4.8); tctx.strokeRect(gx2-2.9, gy-2.4, 5.6, 4.8);
+        tctx.beginPath(); tctx.moveTo(gx1+3.0, gy); tctx.lineTo(gx2-2.9, gy); tctx.stroke();
+      } else if(gl === 'sunglasses'){
+        tctx.fillStyle = '#1a1a1f';
+        tctx.beginPath(); tctx.ellipse(gx1, gy, 3.5, 3.0, 0, 0, Math.PI*2); tctx.fill();
+        tctx.beginPath(); tctx.ellipse(gx2, gy, 3.2, 2.8, 0, 0, Math.PI*2); tctx.fill();
+        tctx.strokeStyle = '#1a1a1f'; tctx.lineWidth = 1.2;
+        tctx.beginPath(); tctx.moveTo(gx1+3.5, gy-0.8); tctx.lineTo(gx2-3.2, gy-0.8); tctx.stroke();
+        tctx.fillStyle = 'rgba(255,255,255,.35)';
+        tctx.beginPath(); tctx.ellipse(gx1-1, gy-0.8, 1, 0.6, -0.4, 0, Math.PI*2); tctx.fill();
+      } else if(gl === 'star'){
+        tctx.fillStyle = '#ffd23f'; tctx.strokeStyle = '#c8860a'; tctx.lineWidth = 0.8;
+        function star(cx,cy,r){
+          tctx.beginPath();
+          for(let i=0;i<10;i++){
+            const rad = i%2===0 ? r : r*0.45;
+            const a = -Math.PI/2 + i*Math.PI/5;
+            const px = cx+Math.cos(a)*rad, py = cy+Math.sin(a)*rad;
+            i===0 ? tctx.moveTo(px,py) : tctx.lineTo(px,py);
+          }
+          tctx.closePath(); tctx.fill(); tctx.stroke();
+        }
+        star(gx1, gy, 3.2); star(gx2, gy, 2.9);
+        tctx.strokeStyle = '#c8860a'; tctx.lineWidth = 1;
+        tctx.beginPath(); tctx.moveTo(gx1+3.2, gy); tctx.lineTo(gx2-2.9, gy); tctx.stroke();
+      } else if(gl === 'heart'){
+        tctx.fillStyle = '#e05a7a'; tctx.strokeStyle = '#a53a56'; tctx.lineWidth = 0.8;
+        function heart(cx,cy,r){
+          tctx.beginPath();
+          tctx.moveTo(cx, cy+r*0.9);
+          tctx.bezierCurveTo(cx-r*1.4, cy-r*0.4, cx-r*0.5, cy-r*1.3, cx, cy-r*0.4);
+          tctx.bezierCurveTo(cx+r*0.5, cy-r*1.3, cx+r*1.4, cy-r*0.4, cx, cy+r*0.9);
+          tctx.closePath(); tctx.fill(); tctx.stroke();
+        }
+        heart(gx1, gy, 2.6); heart(gx2, gy, 2.4);
+        tctx.strokeStyle = '#a53a56'; tctx.lineWidth = 1;
+        tctx.beginPath(); tctx.moveTo(gx1+2.6, gy); tctx.lineTo(gx2-2.4, gy); tctx.stroke();
+      }
+    }
 
     // nos: maly, w kolorze skory, z lekkim cieniem od dolu (bez rozowej poswiaty)
     if(!flat){
@@ -672,6 +724,6 @@
     ctx.translate(px + player.w/2, py + 28*scale);
     ctx.scale(player.facing*scale, scale);
     ctx.translate(-20, -28);
-    drawCharacterSprite(ctx, c, bob, airborne, flat, shine, sparkle, state.equippedFacialHair, state.equippedHatStyle);
+    drawCharacterSprite(ctx, c, bob, airborne, flat, shine, sparkle, state.equippedFacialHair, state.equippedHatStyle, state.equippedGlasses);
     ctx.restore();
   }

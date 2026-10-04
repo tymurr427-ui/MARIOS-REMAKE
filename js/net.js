@@ -365,6 +365,7 @@
         hatStyle: state.equippedHatStyle,
         skinTone: state.equippedSkinTone,
         facialHair: state.equippedFacialHair,
+        glasses: state.equippedGlasses,
         x: player.x, y: player.y,
         facing: player.facing,
         onGround: player.onGround,
@@ -407,7 +408,7 @@
       ctx.translate(rx + 19, ry + 28*scale);
       ctx.scale((rp.data.facing||1)*scale, scale);
       ctx.translate(-20, -28);
-      drawCharacterSprite(ctx, getEffectiveColors(sk.colors, rp.data.hat, rp.data.skinTone), 0, airborne, gfxQuality===0, gfxQuality>=2, false, rp.data.facialHair, rp.data.hatStyle);
+      drawCharacterSprite(ctx, getEffectiveColors(sk.colors, rp.data.hat, rp.data.skinTone), 0, airborne, gfxQuality===0, gfxQuality>=2, false, rp.data.facialHair, rp.data.hatStyle, rp.data.glasses);
       ctx.restore();
 
       // imie nad postacia, rysowane wprost na canvasie (dziala dla dowolnej liczby graczy)
