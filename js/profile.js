@@ -160,12 +160,20 @@
     }, 500);
   }
 
-  function downloadSaveFile(){
-    if(!currentUser){ alert('Zaloguj się, żeby pobrać swój zapis.'); return; }
-    const row = buildProfileRow();
-    row.exported_at = new Date().toISOString();
-    row.email = currentUser.email || null;
-    const blob = new Blob([JSON.stringify(row, null, 2)], { type: 'application/json' });
+  async function downloadSaveFile(){
+    if(!sb || !currentUser){ alert('Zaloguj się, żeby pobrać swój zapis.'); return; }
+    // najpierw dociagnij ewentualne niezapisane jeszcze zmiany (saveProfile() jest debounced)
+    clearTimeout(saveTimer);
+    const flushRow = buildProfileRow();
+    const flushRes = await sb.from('profiles').upsert(flushRow);
+    if(flushRes && flushRes.error && /quest_data/.test(flushRes.error.message || '')){
+      delete flushRow.quest_data;
+      await sb.from('profiles').upsert(flushRow);
+    }
+    // podpisany, server-side ladunek (tego samego uzywa restore_profile_from_export)
+    const { data: payload, error } = await sb.rpc('export_profile_payload');
+    if(error || !payload){ alert('Nie udało się pobrać zapisu: ' + (error ? error.message : 'brak danych')); return; }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     const datePart = new Date().toISOString().slice(0,10);
@@ -179,7 +187,7 @@
   document.getElementById('btnDownloadSave').onclick = downloadSaveFile;
 
   async function importSaveFile(file){
-    if(!currentUser){ alert('Zaloguj się na konto, na które chcesz wczytać zapis.'); return; }
+    if(!sb || !currentUser){ alert('Zaloguj się na konto, na które chcesz wczytać zapis.'); return; }
     let parsed;
     try {
       parsed = JSON.parse(await file.text());
@@ -191,24 +199,22 @@
       alert('To nie wygląda na plik zapisu z tej gry.');
       return;
     }
+    if(!parsed.sig){
+      alert('Ten plik pochodzi ze starszej wersji eksportu i nie ma podpisu bezpieczeństwa - pobierz zapis ponownie przyciskiem "POBIERZ SAVE" (z konta, z którego chcesz go przywrócić) i spróbuj z nowym plikiem.');
+      return;
+    }
     const sure = confirm(
       'To NADPISZE cały obecny postęp na tym koncie (' + (currentUser.email || '') + ') danymi z pliku' +
       (parsed.email ? (' (zapisanego z konta: ' + parsed.email + ')') : '') +
       '.\n\nTej operacji nie da się cofnąć. Kontynuować?'
     );
     if(!sure) return;
-    applyProfileData(parsed);
-    applySettingsFromState();
-    questsAfterLoad();
-    // zapis bezposredni (bez debounce z saveProfile()), zeby na pewno skonczyl sie przed przeladowaniem strony
-    clearTimeout(saveTimer);
-    const row = buildProfileRow();
-    const res = await sb.from('profiles').upsert(row);
-    if(res && res.error && /quest_data/.test(res.error.message || '')){
-      delete row.quest_data;
-      await sb.from('profiles').upsert(row);
-    } else if(res && res.error){
-      alert('Nie udało się zapisać wczytanych danych: ' + res.error.message);
+    // weryfikacja podpisu i zapis dzieja sie w calosci po stronie serwera (RPC) -
+    // klient nigdy nie wysyla "gotowego" wiersza profilu bezposrednio do tabeli
+    const { error } = await sb.rpc('restore_profile_from_export', { payload: parsed });
+    if(error){
+      if(/signature/i.test(error.message || '')) alert('Ten plik został zmodyfikowany albo nie jest prawdziwym eksportem z tej gry - import odrzucony.');
+      else alert('Nie udało się wczytać zapisu: ' + error.message);
       return;
     }
     alert('Wczytano zapis! Strona zaraz się odświeży.');
