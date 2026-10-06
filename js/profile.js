@@ -220,6 +220,24 @@
     alert('Wczytano zapis! Strona zaraz się odświeży.');
     location.reload();
   }
+  async function resetAccount(){
+    if(!sb || !currentUser){ alert('Zaloguj się, żeby zresetować konto.'); return; }
+    const sure1 = confirm(
+      'Zresetować konto (' + (currentUser.email || '') + ')?\n\n' +
+      'Skasujesz CAŁY postęp: monety, skiny, trailsy, czapki, zarost, okulary, odblokowane poziomy, ' +
+      'poziom gracza/XP, zadania i osiągnięcia. Zostanie tylko nazwa gracza i ustawienia.\n\n' +
+      'Zanim potwierdzisz, rozważ pobranie save (przycisk "POBIERZ SAVE") - tej operacji nie da się cofnąć.'
+    );
+    if(!sure1) return;
+    const typed = prompt('Aby potwierdzić, wpisz dokładnie: RESET');
+    if(typed !== 'RESET'){ if(typed !== null) alert('Nie zgadza się - reset anulowany.'); return; }
+    const { error } = await sb.rpc('reset_profile_account');
+    if(error){ alert('Nie udało się zresetować konta: ' + error.message); return; }
+    alert('Konto zresetowane. Strona zaraz się odświeży.');
+    location.reload();
+  }
+  document.getElementById('btnResetAccount').onclick = resetAccount;
+
   const saveFileInput = document.getElementById('saveFileInput');
   document.getElementById('btnUploadSave').onclick = () => saveFileInput.click();
   saveFileInput.onchange = () => {
