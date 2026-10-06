@@ -9,7 +9,7 @@
   const DAILY_COUNT = 5;
   const DAILY_BONUS_XP = 50;
   // UWAGA: krzywa XP jest powielona w SQL (spb_level_from_xp w supabase-anticheat-v3.sql) - zmieniasz tu, zmien tam.
-  const xpNeed = lvl => 100 + 4 * (lvl - 1);                          // XP z poziomu lvl na lvl+1 (do 100 lvl ~29 tys. XP)
+  const xpNeed = lvl => Math.round(95 + 3.2 * (lvl - 1) + 0.055 * (lvl - 1) * (lvl - 1)); // XP z poziomu lvl na lvl+1 (do 100 lvl ~42 tys. XP, start podobny jak dawniej, koniec wyraźnie dłuższy)
   const levelReward = lvl => 20 + 2 * lvl + (lvl % 5 === 0 ? 50 : 0);   // monety za osiagniecie poziomu (maks. 270)
   const PLAYER_TITLES = [   // [od poziomu, PL, EN]
     [1, 'Nowicjusz', 'Novice'], [5, 'Adept', 'Apprentice'], [10, 'Wędrowiec', 'Wanderer'],
