@@ -95,11 +95,11 @@
   permDef('bosses', '👹', '',  [[1,50],[5,120],[15,250]],                  () => state.bossesKilled,    n=>n===1?'Pokonaj bossa':`Pokonaj ${n} bossów`, n=>n===1?'Defeat a boss':`Defeat ${n} bosses`);
   permDef('reach',  '🗺️', '',  [[5,40],[10,80],[15,150],[19,300]],         () => Math.min(totalLevels(), state.unlockedLevel + 1), n=>`Dotrzyj do poziomu ${n}`, n=>`Reach level ${n}`);
   permDef('beat',   '🏆', '',  [[1,400]],                                  () => state.quests.c.beatGame, () => 'Ukończ wszystkie poziomy', () => 'Finish all levels');
-  permDef('time',   '⏳', 'h', [[3600,60],[18000,150],[72000,700]],        () => state.playtimeSeconds, n=>`Graj łącznie ${n/3600} h`, n=>`Play for ${n/3600} h in total`);
+  permDef('time',   '⏳', 'h', [[3600,60],[18000,150],[72000,2000]],        () => state.playtimeSeconds, n=>`Graj łącznie ${n/3600} h`, n=>`Play for ${n/3600} h in total`);
   permDef('spent',  '🛒', '',  [[100,30],[500,80],[2000,200]],             () => state.totalSpent,      n=>`Wydaj ${n} monet w sklepie`, n=>`Spend ${n} coins in the shop`);
   permDef('skins',  '👕', '',  [[5,40],[15,100],[SKINS.length,250]],       () => state.ownedSkins.length, n=>`Posiadaj ${n} skinów`, n=>`Own ${n} skins`);
   permDef('daily',  '📅', '',  [[10,50],[50,150],[100,300]],               () => state.quests.c.dailyClaimed, n=>`Wykonaj ${n} zadań dziennych`, n=>`Complete ${n} daily quests`);
-  permDef('jumps',  '🦘', '',  [[100,20],[1000,60],[5000,350]],            () => state.quests.c.jumps,  n=>`Skocz łącznie ${n} razy`, n=>`Jump ${n} times in total`);
+  permDef('jumps',  '🦘', '',  [[100,20],[1000,60],[5000,600]],            () => state.quests.c.jumps,  n=>`Skocz łącznie ${n} razy`, n=>`Jump ${n} times in total`);
   permDef('run',    '💨', '',  [[60,20],[600,60],[3600,150]],              () => state.quests.c.runSec, n=>`Biegaj łącznie ${n} s`, n=>`Run for ${n} s in total`);
   permDef('nohit',  '🛡',  '',  [[5,50],[20,120],[50,250]],                 () => state.quests.c.noHitWins, n=>`Ukończ ${n} poziomów bez obrażeń`, n=>`Finish ${n} levels without damage`);
   permDef('trails', '🚩', '',  [[5,40],[15,100],[TRAILS.length,250]],      () => state.ownedTrails.length,     n=>`Posiadaj ${n} flag`, n=>`Own ${n} flags`);
@@ -108,7 +108,7 @@
   permDef('glasses',    '👓', '', [[3,30],[GLASSES.length,100]],              () => state.ownedGlasses.length,        n=>`Posiadaj ${n} par okularów`, n=>`Own ${n} pairs of glasses`);
   permDef('bounce',     '🔵', '', [[50,30],[300,80],[1000,450]],              () => state.quests.c.bounces,            n=>`Odbij się na trampolinie ${n} razy łącznie`, n=>`Bounce on a trampoline ${n} times in total`);
   permDef('teleport',   '🌀', '', [[20,30],[100,80],[150,200]],               () => state.quests.c.teleports,          n=>`Użyj teleportu ${n} razy łącznie`, n=>`Use a teleporter ${n} times in total`);
-  permDef('checkpoint', '📍', '', [[20,30],[100,80],[200,400]],               () => state.quests.c.checkpoints,        n=>`Dotrzyj do checkpointu ${n} razy łącznie`, n=>`Reach a checkpoint ${n} times in total`);
+  permDef('checkpoint', '📍', '', [[20,30],[100,150],[200,400]],               () => state.quests.c.checkpoints,        n=>`Dotrzyj do checkpointu ${n} razy łącznie`, n=>`Reach a checkpoint ${n} times in total`);
   permDef('buy',        '🛒', '', [[10,30],[50,100],[150,250]],               () => state.quests.c.buys,               n=>`Kup ${n} przedmiotów w sklepie łącznie`, n=>`Buy ${n} items in the shop in total`);
   permDef('shieldUse',  '🔷', '', [[5,30],[20,120],[40,350]],                 () => state.quests.c.shieldUses,         n=>`Użyj tarczy (Q) ${n} razy łącznie`, n=>`Use the shield (Q) ${n} times in total`);
   permDef('attempts',   '🔁', '', [[100,30],[500,100],[2000,550]],            () => state.quests.c.attempts,           n=>`Rozegraj ${n} podejść do poziomów łącznie`, n=>`Play ${n} level attempts in total`);
@@ -141,7 +141,7 @@
   ach('deaths_10',   '💀', 'Upór',             'Persistence',   'Zgiń 10 razy',                           'Die 10 times',                     10,    () => state.deathCount, 15);
   ach('deaths_50',   '🪦', 'Nie poddaję się',  'Never Give Up', 'Zgiń 50 razy',                           'Die 50 times',                     50,    () => state.deathCount, 30);
   ach('time_1h',     '⏰', 'Wciągnęło',        'Hooked',        'Graj łącznie 1 godzinę',                 'Play for 1 hour in total',         3600,  () => state.playtimeSeconds, 150);
-  ach('time_10h',    '🕰️', 'Bez reszty',       'All In',        'Graj łącznie 10 godzin',                 'Play for 10 hours in total',       36000, () => state.playtimeSeconds, 450);
+  ach('time_10h',    '🕰️', 'Bez reszty',       'All In',        'Graj łącznie 10 godzin',                 'Play for 10 hours in total',       36000, () => state.playtimeSeconds, 900);
   ach('jumps_1000',  '🦘', 'Skoczek',          'Jumper',        'Skocz 1000 razy',                        'Jump 1000 times',                  1000,  () => state.quests.c.jumps, 130);
   ach('run_600',     '💨', 'Sprinter',         'Sprinter',      'Biegaj łącznie 10 minut',                'Run for 10 minutes in total',      600,   () => state.quests.c.runSec, 45);
   ach('plv_5',       '⭐', 'Pnący się',        'Climber',       'Osiągnij 5. poziom gracza',              'Reach player level 5',             5,     () => playerLevel(), 25);
