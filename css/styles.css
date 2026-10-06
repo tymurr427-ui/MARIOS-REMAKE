@@ -89,6 +89,8 @@
   .menu-btn.green:active { box-shadow:0 0 0 #0e4a26; }
   .menu-btn.purple { background:linear-gradient(#9b59b6,#5e3370); border-color:#3a1f47; box-shadow:0 6px 0 #3a1f47,0 8px 10px rgba(0,0,0,.4); }
   .menu-btn.purple:active { box-shadow:0 0 0 #3a1f47; }
+  .menu-btn.red { background:linear-gradient(#e74c3c,#922b21); border-color:#5c160f; box-shadow:0 6px 0 #5c160f,0 8px 10px rgba(0,0,0,.4); }
+  .menu-btn.red:active { box-shadow:0 0 0 #5c160f; }
   .menu-btn.small { width:auto; padding:10px 22px; font-size:15px; }
 
   .coin-tally {
