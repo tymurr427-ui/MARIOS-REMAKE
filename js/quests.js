@@ -107,7 +107,7 @@
   permDef('facial', '🧔', '',  [[3,30],[8,80],[FACIAL_HAIR.length,200]],   () => state.ownedFacialHair.length, n=>`Posiadaj ${n} rodzajów zarostu`, n=>`Own ${n} facial hair styles`);
   permDef('glasses',    '👓', '', [[3,30],[GLASSES.length,100]],              () => state.ownedGlasses.length,        n=>`Posiadaj ${n} par okularów`, n=>`Own ${n} pairs of glasses`);
   permDef('bounce',     '🔵', '', [[50,30],[300,80],[1000,200]],              () => state.quests.c.bounces,            n=>`Odbij się na trampolinie ${n} razy łącznie`, n=>`Bounce on a trampoline ${n} times in total`);
-  permDef('teleport',   '🌀', '', [[20,30],[100,80],[300,200]],               () => state.quests.c.teleports,          n=>`Użyj teleportu ${n} razy łącznie`, n=>`Use a teleporter ${n} times in total`);
+  permDef('teleport',   '🌀', '', [[20,30],[100,80],[150,200]],               () => state.quests.c.teleports,          n=>`Użyj teleportu ${n} razy łącznie`, n=>`Use a teleporter ${n} times in total`);
   permDef('checkpoint', '📍', '', [[20,30],[100,80],[300,200]],               () => state.quests.c.checkpoints,        n=>`Dotrzyj do checkpointu ${n} razy łącznie`, n=>`Reach a checkpoint ${n} times in total`);
   permDef('buy',        '🛒', '', [[10,30],[50,100],[150,250]],               () => state.quests.c.buys,               n=>`Kup ${n} przedmiotów w sklepie łącznie`, n=>`Buy ${n} items in the shop in total`);
   permDef('shieldUse',  '🔷', '', [[10,30],[50,100],[150,250]],               () => state.quests.c.shieldUses,         n=>`Użyj tarczy (Q) ${n} razy łącznie`, n=>`Use the shield (Q) ${n} times in total`);

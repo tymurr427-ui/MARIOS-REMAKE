@@ -141,7 +141,7 @@
       enemies_killed:     v => fmtNum(v),
       bosses_killed:      v => fmtNum(v),
       unlocked_level:     v => (Math.min((v || 0) + 1, totalLevels())) + '/' + totalLevels(),
-      xp:                 v => 'LV ' + levelInfo(v || 0).lvl,
+      xp:                 v => 'LV ' + levelInfo(v || 0).lvl + prestigeBadge(prestigeInfo(v || 0).stars),
     };
     const fmt = fmts[rankingSort];
     const colLabel = (RANK_SORTS.find(o => o.key === rankingSort) || {}).label || '';
@@ -184,13 +184,13 @@
     return `${h}h ${m}m ${s}s`;
   }
 
-  const MAX_CUSTOM_LEVELS = 15;
+  const MAX_CUSTOM_LEVELS = 20;
 
   async function renderStats(){
     const panel = document.getElementById('statsPanel');
     const unlockedAch = Object.keys(state.quests.ach).length;
     panel.innerHTML = `
-      <div class="stats-row"><span>⭐ Poziom gracza</span><b>${playerLevel()}</b></div>
+      <div class="stats-row"><span>⭐ Poziom gracza</span><b>${playerLevel()}${prestigeBadge(playerPrestige())}</b></div>
       <div class="stats-row"><span>🏆 Osiągnięcia</span><b>${unlockedAch} / ${ACHIEVEMENTS.length}</b></div>
       <div class="stats-row"><span>🪙 Aktualne monety</span><b>${state.wallet}</b></div>
       <div class="stats-row"><span>💰 Łącznie zarobione monety</span><b>${state.totalCoinsEarned}</b></div>
