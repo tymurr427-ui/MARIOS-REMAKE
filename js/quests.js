@@ -10,6 +10,9 @@
   const DAILY_BONUS_XP = 50;
   // UWAGA: krzywa XP jest powielona w SQL (spb_level_from_xp w supabase-anticheat-v3.sql) - zmieniasz tu, zmien tam.
   const xpNeed = lvl => Math.round(95 + 3.2 * (lvl - 1) + 0.055 * (lvl - 1) * (lvl - 1)); // XP z poziomu lvl na lvl+1 (do 100 lvl ~42 tys. XP, start podobny jak dawniej, koniec wyraźnie dłuższy)
+  const TOTAL_XP_TO_100 = 42444;              // suma xpNeed(1..99) - staly punkt startowy prestizu (NIE przeliczac dynamicznie, zeby stary postep w prestizu sie nie przesunal przy kolejnej zmianie krzywej)
+  const PRESTIGE_XP = 50000;                   // ile XP (POWYZEJ lvl 100) kosztuje jedna gwiazdka prestizu - celowo duzo, to dlugi cel koncowy
+  // prestiz: NIE resetuje poziomu/xp (zeby nie psuc ekonomii/zapisu) - to czysto pochodna wartosc z xp, wiec zero zmian w Supabase.
   const levelReward = lvl => 20 + 2 * lvl + (lvl % 5 === 0 ? 50 : 0);   // monety za osiagniecie poziomu (maks. 270)
   const PLAYER_TITLES = [   // [od poziomu, PL, EN]
     [1, 'Nowicjusz', 'Novice'], [5, 'Adept', 'Apprentice'], [10, 'Wędrowiec', 'Wanderer'],
@@ -127,18 +130,18 @@
   ach('kill_100',    '⚔️', 'Pogromca',         'Slayer',        'Pokonaj 100 wrogów',                     'Defeat 100 enemies',               100,   () => state.enemiesKilled, 50);
   ach('kill_500',    '☠️', 'Postrach królestwa','Terror of the Kingdom', 'Pokonaj 500 wrogów',           'Defeat 500 enemies',               500,   () => state.enemiesKilled, 130);
   ach('boss_1',      '👹', 'Pogromca bossa',   'Boss Slayer',   'Pokonaj pierwszego bossa',               'Defeat your first boss',           1,     () => state.bossesKilled, 35);
-  ach('boss_10',     '🐉', 'Łowca tytanów',    'Titan Hunter',  'Pokonaj 10 bossów',                      'Defeat 10 bosses',                 10,    () => state.bossesKilled, 120);
+  ach('boss_10',     '🐉', 'Łowca tytanów',    'Titan Hunter',  'Pokonaj 10 bossów',                      'Defeat 10 bosses',                 10,    () => state.bossesKilled, 260);
   ach('reach_10',    '🗺️', 'Podróżnik',        'Traveler',      'Dotrzyj do poziomu 10',                  'Reach level 10',                   10,    lvlReached, 50);
   ach('beat_game',   '🏆', 'Mistrz Plumber',   'Plumber Master','Ukończ wszystkie poziomy',               'Finish all levels',                1,     () => state.quests.c.beatGame, 300);
   ach('shop_first',  '🛍️', 'Pierwsze zakupy',  'First Purchase','Wydaj monety w sklepie',                 'Spend coins in the shop',          1,     () => state.totalSpent, 15);
   ach('skins_5',     '👕', 'Modniś',           'Fashionista',   'Posiadaj 5 skinów',                      'Own 5 skins',                      5,     () => state.ownedSkins.length, 25);
-  ach('skins_all',   '👑', 'Kolekcjoner',      'Collector',     'Zdobądź wszystkie skiny',                'Get every skin',                   SKINS.length, () => state.ownedSkins.length, 150);
+  ach('skins_all',   '👑', 'Kolekcjoner',      'Collector',     'Zdobądź wszystkie skiny',                'Get every skin',                   SKINS.length, () => state.ownedSkins.length, 280);
   ach('stylist',     '🎩', 'Stylista',         'Stylist',       'Kup fason czapki, zarost i trail',       'Buy a hat style, facial hair and a trail', 3,
       () => (state.ownedHatStyles.length > 1 ? 1 : 0) + (state.ownedFacialHair.length > 1 ? 1 : 0) + (state.ownedTrails.length > 1 ? 1 : 0), 45);
   ach('deaths_10',   '💀', 'Upór',             'Persistence',   'Zgiń 10 razy',                           'Die 10 times',                     10,    () => state.deathCount, 15);
   ach('deaths_50',   '🪦', 'Nie poddaję się',  'Never Give Up', 'Zgiń 50 razy',                           'Die 50 times',                     50,    () => state.deathCount, 30);
   ach('time_1h',     '⏰', 'Wciągnęło',        'Hooked',        'Graj łącznie 1 godzinę',                 'Play for 1 hour in total',         3600,  () => state.playtimeSeconds, 60);
-  ach('time_10h',    '🕰️', 'Bez reszty',       'All In',        'Graj łącznie 10 godzin',                 'Play for 10 hours in total',       36000, () => state.playtimeSeconds, 200);
+  ach('time_10h',    '🕰️', 'Bez reszty',       'All In',        'Graj łącznie 10 godzin',                 'Play for 10 hours in total',       36000, () => state.playtimeSeconds, 450);
   ach('jumps_1000',  '🦘', 'Skoczek',          'Jumper',        'Skocz 1000 razy',                        'Jump 1000 times',                  1000,  () => state.quests.c.jumps, 50);
   ach('run_600',     '💨', 'Sprinter',         'Sprinter',      'Biegaj łącznie 10 minut',                'Run for 10 minutes in total',      600,   () => state.quests.c.runSec, 45);
   ach('plv_5',       '⭐', 'Pnący się',        'Climber',       'Osiągnij 5. poziom gracza',              'Reach player level 5',             5,     () => playerLevel(), 25);
@@ -155,20 +158,20 @@
   ach('buy_30',        '💳', 'Hazardzista zakupowy','Shopaholic',       'Kup 30 przedmiotów w sklepie',     'Buy 30 items in the shop',        30,  () => state.quests.c.buys, 100);
   ach('shield_10',     '🔷', 'Obrońca',            'Defender',          'Użyj tarczy (Q) 10 razy',          'Use the shield (Q) 10 times',     10,  () => state.quests.c.shieldUses, 40);
   ach('attempts_100',  '🔁', 'Wytrwały',           'Persistent',        'Rozegraj 100 podejść do poziomu',  'Play 100 level attempts',         100, () => state.quests.c.attempts, 70);
-  ach('attempts_500',  '🔂', 'Niezłomny',          'Unyielding',        'Rozegraj 500 podejść do poziomu',  'Play 500 level attempts',         500, () => state.quests.c.attempts, 180);
+  ach('attempts_500',  '🔂', 'Niezłomny',          'Unyielding',        'Rozegraj 500 podejść do poziomu',  'Play 500 level attempts',         500, () => state.quests.c.attempts, 240);
   ach('createLevel_1', '🛠️', 'Twórca',             'Creator',           'Stwórz i zapisz własny poziom',    'Create and save a custom level',  1,   () => state.quests.c.levelsCreated, 35);
   ach('createLevel_10','🏗️', 'Architekt poziomów', 'Level Architect',   'Stwórz i zapisz 10 własnych poziomów', 'Create and save 10 custom levels', 10, () => state.quests.c.levelsCreated, 150);
   ach('bossNoHit_1',   '🐲', 'Czysta walka',       'Flawless Fight',    'Pokonaj bossa bez obrażeń',        'Defeat a boss without damage',    1,   () => state.quests.c.bossNoHitWins, 60);
-  ach('bossNoHit_5',   '🥇', 'Perfekcyjny pogromca','Flawless Slayer',  'Pokonaj 5 bossów bez obrażeń',     'Defeat 5 bosses without damage',  5,   () => state.quests.c.bossNoHitWins, 170);
+  ach('bossNoHit_5',   '🥇', 'Perfekcyjny pogromca','Flawless Slayer',  'Pokonaj 5 bossów bez obrażeń',     'Defeat 5 bosses without damage',  5,   () => state.quests.c.bossNoHitWins, 300);
   ach('fastFinish_10', '⚡', 'Błyskawica',         'Lightning Fast',    'Ukończ 10 poziomów w mniej niż 20 s każdy', 'Finish 10 levels in under 20s each', 10, () => state.quests.c.fastFinishes, 90);
   ach('flags_10',      '🚩', 'Kolekcjoner flag',   'Flag Collector',    'Posiadaj 10 flag',                 'Own 10 flags',                    10,  () => state.ownedTrails.length, 60);
-  ach('flags_all',     '🌍', 'Globtroter',         'Globetrotter',      'Zdobądź wszystkie flagi',          'Get every flag',                  TRAILS.length, () => state.ownedTrails.length, 180);
-  ach('hats_all',      '🎩', 'Fryzjer',            'Hatter',            'Zdobądź wszystkie kolory czapki',  'Get every hat color',             HATS.length, () => state.ownedHats.length, 150);
+  ach('flags_all',     '🌍', 'Globtroter',         'Globetrotter',      'Zdobądź wszystkie flagi',          'Get every flag',                  TRAILS.length, () => state.ownedTrails.length, 320);
+  ach('hats_all',      '🎩', 'Fryzjer',            'Hatter',            'Zdobądź wszystkie kolory czapki',  'Get every hat color',             HATS.length, () => state.ownedHats.length, 280);
   ach('facial_all',    '🧔', 'Brodacz',            'Bearded',           'Zdobądź wszystkie rodzaje zarostu','Get every facial hair style',     FACIAL_HAIR.length, () => state.ownedFacialHair.length, 150);
   ach('explorer',      '🧭', 'Odkrywca menu',      'Menu Explorer',     'Odwiedź sklep, ranking, statystyki, edytor i moje poziomy', 'Visit the shop, ranking, stats, editor and my levels', 5,
       () => (state.quests.c.visitShop>0?1:0) + (state.quests.c.visitRanking>0?1:0) + (state.quests.c.visitStats>0?1:0) + (state.quests.c.visitEditor>0?1:0) + (state.quests.c.visitMyLevels>0?1:0), 40);
-  ach('coins_50000',   '💎', 'Milioner w drodze',  'On the Way to Millions', 'Zarób łącznie 50000 monet',   'Earn 50000 coins in total',       50000, () => state.totalCoinsEarned, 350);
-  ach('kills_2000',    '🗡️', 'Legenda rzezi',      'Legend of Slaughter','Pokonaj 2000 wrogów',             'Defeat 2000 enemies',             2000, () => state.enemiesKilled, 350);
+  ach('coins_50000',   '💎', 'Milioner w drodze',  'On the Way to Millions', 'Zarób łącznie 50000 monet',   'Earn 50000 coins in total',       50000, () => state.totalCoinsEarned, 420);
+  ach('kills_2000',    '🗡️', 'Legenda rzezi',      'Legend of Slaughter','Pokonaj 2000 wrogów',             'Defeat 2000 enemies',             2000, () => state.enemiesKilled, 480);
   ach('deaths_200',    '♻️', 'Reinkarnacja',       'Reincarnation',     'Zgiń 200 razy',                    'Die 200 times',                   200, () => state.deathCount, 60);
 
   // ---------- DANE ----------
@@ -208,11 +211,21 @@
   }
   function playerLevel(){ return levelInfo(state.quests.xp).lvl; }
 
+  // ---------- PRESTIZ (po lvl 100) ----------
+  function prestigeInfo(xp){
+    const over = Math.max(0, xp - TOTAL_XP_TO_100);
+    const stars = Math.floor(over / PRESTIGE_XP);
+    return { stars, cur: over - stars * PRESTIGE_XP, need: PRESTIGE_XP };
+  }
+  function playerPrestige(){ return prestigeInfo(state.quests.xp).stars; }
+  function prestigeBadge(stars){ return stars > 0 ? ' ' + '★'.repeat(Math.min(stars, 3)) + (stars > 3 ? '×' + stars : '') : ''; }
+
   function addXp(n){
-    const before = playerLevel();
+    const before = playerLevel(), beforeStars = playerPrestige();
     state.quests.xp += n;
-    const after = playerLevel();
+    const after = playerLevel(), afterStars = playerPrestige();
     if(after > before) questToast('⭐', 'Nowy poziom gracza!', 'LV ' + after);
+    if(afterStars > beforeStars) questToast('★', 'Gwiazdka prestiżu!', prestigeBadge(afterStars).trim());
   }
 
   // ---------- ZDARZENIA Z GRY ----------
@@ -413,14 +426,15 @@
   }
   function renderHead(){
     const info = levelInfo(state.quests.xp);
-    const pct = info.max ? 100 : Math.round(info.cur / info.need * 100);
+    const pr = info.max ? prestigeInfo(state.quests.xp) : null;
+    const pct = info.max ? Math.round(pr.cur / pr.need * 100) : Math.round(info.cur / info.need * 100);
     document.getElementById('qHead').innerHTML = `
-      <div class="q-lvl-badge"><span class="q-lvl-label">POZIOM GRACZA</span><b>${info.lvl}</b></div>
+      <div class="q-lvl-badge"><span class="q-lvl-label">POZIOM GRACZA</span><b>${info.lvl}${prestigeBadge(pr ? pr.stars : 0)}</b></div>
       <div class="q-head-mid">
         <div class="q-title-line"><span>Tytuł:</span> <b>${escapeHtml(titleForLevel(info.lvl))}</b></div>
         <div class="q-xpbar"><i style="width:${pct}%"></i></div>
         <div class="q-xp-line">${info.max
-          ? '<span>MAKSYMALNY POZIOM</span>'
+          ? `<span>PRESTIŻ ${pr.stars + 1}:</span> <b>${pr.cur} / ${pr.need}</b> <span class="q-dim">·</span> <span>Do kolejnej gwiazdki:</span> <b>${pr.need - pr.cur} XP</b>`
           : `<span>XP</span> <b>${info.cur} / ${info.need}</b> <span class="q-dim">·</span> <span>Do następnego poziomu:</span> <b>${info.need - info.cur} XP</b>`}</div>
       </div>`;
   }
