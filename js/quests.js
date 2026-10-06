@@ -108,9 +108,9 @@
   permDef('glasses',    '👓', '', [[3,30],[GLASSES.length,100]],              () => state.ownedGlasses.length,        n=>`Posiadaj ${n} par okularów`, n=>`Own ${n} pairs of glasses`);
   permDef('bounce',     '🔵', '', [[50,30],[300,80],[1000,450]],              () => state.quests.c.bounces,            n=>`Odbij się na trampolinie ${n} razy łącznie`, n=>`Bounce on a trampoline ${n} times in total`);
   permDef('teleport',   '🌀', '', [[20,30],[100,80],[150,200]],               () => state.quests.c.teleports,          n=>`Użyj teleportu ${n} razy łącznie`, n=>`Use a teleporter ${n} times in total`);
-  permDef('checkpoint', '📍', '', [[20,30],[100,80],[300,200]],               () => state.quests.c.checkpoints,        n=>`Dotrzyj do checkpointu ${n} razy łącznie`, n=>`Reach a checkpoint ${n} times in total`);
+  permDef('checkpoint', '📍', '', [[20,30],[100,80],[200,400]],               () => state.quests.c.checkpoints,        n=>`Dotrzyj do checkpointu ${n} razy łącznie`, n=>`Reach a checkpoint ${n} times in total`);
   permDef('buy',        '🛒', '', [[10,30],[50,100],[150,250]],               () => state.quests.c.buys,               n=>`Kup ${n} przedmiotów w sklepie łącznie`, n=>`Buy ${n} items in the shop in total`);
-  permDef('shieldUse',  '🔷', '', [[10,30],[50,100],[150,600]],               () => state.quests.c.shieldUses,         n=>`Użyj tarczy (Q) ${n} razy łącznie`, n=>`Use the shield (Q) ${n} times in total`);
+  permDef('shieldUse',  '🔷', '', [[5,30],[20,120],[40,350]],                 () => state.quests.c.shieldUses,         n=>`Użyj tarczy (Q) ${n} razy łącznie`, n=>`Use the shield (Q) ${n} times in total`);
   permDef('attempts',   '🔁', '', [[100,30],[500,100],[2000,550]],            () => state.quests.c.attempts,           n=>`Rozegraj ${n} podejść do poziomów łącznie`, n=>`Play ${n} level attempts in total`);
   permDef('createLvl',  '🛠️', '', [[1,30],[5,100],[20,250]],                  () => state.quests.c.levelsCreated,      n=>n===1?'Stwórz i zapisz własny poziom':`Stwórz i zapisz ${n} własnych poziomów`, n=>n===1?'Create and save a custom level':`Create and save ${n} custom levels`);
   permDef('bossClean',  '🥇', '', [[1,60],[5,170],[15,350]],                  () => state.quests.c.bossNoHitWins,      n=>n===1?'Pokonaj bossa bez obrażeń':`Pokonaj ${n} bossów bez obrażeń`, n=>n===1?'Defeat a boss without damage':`Defeat ${n} bosses without damage`);
@@ -125,7 +125,7 @@
   ach('first_win',   '🏁', 'Pierwsze kroki',   'First Steps',   'Ukończ swój pierwszy poziom',            'Complete your first level',        1,     () => Math.max(state.unlockedLevel, state.quests.c.levelsCompleted), 20);
   ach('coins_100',   '🪙', 'Kieszonkowe',      'Pocket Money',  'Zarób łącznie 100 monet',                'Earn 100 coins in total',          100,   () => state.totalCoinsEarned, 20);
   ach('coins_1000',  '💰', 'Skarbnik',         'Treasurer',     'Zarób łącznie 1000 monet',               'Earn 1000 coins in total',         1000,  () => state.totalCoinsEarned, 60);
-  ach('coins_10000', '🏦', 'Bogacz',           'Tycoon',        'Zarób łącznie 10000 monet',              'Earn 10000 coins in total',        10000, () => state.totalCoinsEarned, 150);
+  ach('coins_10000', '🏦', 'Bogacz',           'Tycoon',        'Zarób łącznie 10000 monet',              'Earn 10000 coins in total',        10000, () => state.totalCoinsEarned, 320);
   ach('kill_1',      '👟', 'Pierwsze zdeptanie','First Stomp',  'Pokonaj pierwszego wroga',               'Defeat your first enemy',          1,     () => state.enemiesKilled, 20);
   ach('kill_100',    '⚔️', 'Pogromca',         'Slayer',        'Pokonaj 100 wrogów',                     'Defeat 100 enemies',               100,   () => state.enemiesKilled, 50);
   ach('kill_500',    '☠️', 'Postrach królestwa','Terror of the Kingdom', 'Pokonaj 500 wrogów',           'Defeat 500 enemies',               500,   () => state.enemiesKilled, 130);
@@ -140,9 +140,9 @@
       () => (state.ownedHatStyles.length > 1 ? 1 : 0) + (state.ownedFacialHair.length > 1 ? 1 : 0) + (state.ownedTrails.length > 1 ? 1 : 0), 45);
   ach('deaths_10',   '💀', 'Upór',             'Persistence',   'Zgiń 10 razy',                           'Die 10 times',                     10,    () => state.deathCount, 15);
   ach('deaths_50',   '🪦', 'Nie poddaję się',  'Never Give Up', 'Zgiń 50 razy',                           'Die 50 times',                     50,    () => state.deathCount, 30);
-  ach('time_1h',     '⏰', 'Wciągnęło',        'Hooked',        'Graj łącznie 1 godzinę',                 'Play for 1 hour in total',         3600,  () => state.playtimeSeconds, 60);
+  ach('time_1h',     '⏰', 'Wciągnęło',        'Hooked',        'Graj łącznie 1 godzinę',                 'Play for 1 hour in total',         3600,  () => state.playtimeSeconds, 150);
   ach('time_10h',    '🕰️', 'Bez reszty',       'All In',        'Graj łącznie 10 godzin',                 'Play for 10 hours in total',       36000, () => state.playtimeSeconds, 450);
-  ach('jumps_1000',  '🦘', 'Skoczek',          'Jumper',        'Skocz 1000 razy',                        'Jump 1000 times',                  1000,  () => state.quests.c.jumps, 50);
+  ach('jumps_1000',  '🦘', 'Skoczek',          'Jumper',        'Skocz 1000 razy',                        'Jump 1000 times',                  1000,  () => state.quests.c.jumps, 130);
   ach('run_600',     '💨', 'Sprinter',         'Sprinter',      'Biegaj łącznie 10 minut',                'Run for 10 minutes in total',      600,   () => state.quests.c.runSec, 45);
   ach('plv_5',       '⭐', 'Pnący się',        'Climber',       'Osiągnij 5. poziom gracza',              'Reach player level 5',             5,     () => playerLevel(), 25);
   ach('plv_15',      '🌟', 'Doświadczony',     'Experienced',   'Osiągnij 15. poziom gracza',             'Reach player level 15',            15,    () => playerLevel(), 60);
@@ -158,7 +158,7 @@
   ach('buy_30',        '💳', 'Hazardzista zakupowy','Shopaholic',       'Kup 30 przedmiotów w sklepie',     'Buy 30 items in the shop',        30,  () => state.quests.c.buys, 100);
   ach('shield_10',     '🔷', 'Obrońca',            'Defender',          'Użyj tarczy (Q) 10 razy',          'Use the shield (Q) 10 times',     10,  () => state.quests.c.shieldUses, 40);
   ach('attempts_100',  '🔁', 'Wytrwały',           'Persistent',        'Rozegraj 100 podejść do poziomu',  'Play 100 level attempts',         100, () => state.quests.c.attempts, 70);
-  ach('attempts_500',  '🔂', 'Niezłomny',          'Unyielding',        'Rozegraj 500 podejść do poziomu',  'Play 500 level attempts',         500, () => state.quests.c.attempts, 240);
+  ach('attempts_500',  '🔂', 'Niezłomny',          'Unyielding',        'Rozegraj 500 podejść do poziomu',  'Play 500 level attempts',         500, () => state.quests.c.attempts, 420);
   ach('createLevel_1', '🛠️', 'Twórca',             'Creator',           'Stwórz i zapisz własny poziom',    'Create and save a custom level',  1,   () => state.quests.c.levelsCreated, 35);
   ach('createLevel_10','🏗️', 'Architekt poziomów', 'Level Architect',   'Stwórz i zapisz 10 własnych poziomów', 'Create and save 10 custom levels', 10, () => state.quests.c.levelsCreated, 150);
   ach('bossNoHit_1',   '🐲', 'Czysta walka',       'Flawless Fight',    'Pokonaj bossa bez obrażeń',        'Defeat a boss without damage',    1,   () => state.quests.c.bossNoHitWins, 60);
@@ -170,7 +170,7 @@
   ach('facial_all',    '🧔', 'Brodacz',            'Bearded',           'Zdobądź wszystkie rodzaje zarostu','Get every facial hair style',     FACIAL_HAIR.length, () => state.ownedFacialHair.length, 150);
   ach('explorer',      '🧭', 'Odkrywca menu',      'Menu Explorer',     'Odwiedź sklep, ranking, statystyki, edytor i moje poziomy', 'Visit the shop, ranking, stats, editor and my levels', 5,
       () => (state.quests.c.visitShop>0?1:0) + (state.quests.c.visitRanking>0?1:0) + (state.quests.c.visitStats>0?1:0) + (state.quests.c.visitEditor>0?1:0) + (state.quests.c.visitMyLevels>0?1:0), 40);
-  ach('coins_50000',   '💎', 'Milioner w drodze',  'On the Way to Millions', 'Zarób łącznie 50000 monet',   'Earn 50000 coins in total',       50000, () => state.totalCoinsEarned, 420);
+  ach('coins_50000',   '💎', 'Milioner w drodze',  'On the Way to Millions', 'Zarób łącznie 50000 monet',   'Earn 50000 coins in total',       50000, () => state.totalCoinsEarned, 900);
   ach('kills_2000',    '🗡️', 'Legenda rzezi',      'Legend of Slaughter','Pokonaj 2000 wrogów',             'Defeat 2000 enemies',             2000, () => state.enemiesKilled, 480);
   ach('deaths_200',    '♻️', 'Reinkarnacja',       'Reincarnation',     'Zgiń 200 razy',                    'Die 200 times',                   200, () => state.deathCount, 60);
 
