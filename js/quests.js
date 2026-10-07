@@ -115,7 +115,7 @@
   permDef('createLvl',  '🛠️', '', [[1,30],[5,100],[20,250]],                  () => state.quests.c.levelsCreated,      n=>n===1?'Stwórz i zapisz własny poziom':`Stwórz i zapisz ${n} własnych poziomów`, n=>n===1?'Create and save a custom level':`Create and save ${n} custom levels`);
   permDef('bossClean',  '🥇', '', [[1,60],[5,170],[15,350]],                  () => state.quests.c.bossNoHitWins,      n=>n===1?'Pokonaj bossa bez obrażeń':`Pokonaj ${n} bossów bez obrażeń`, n=>n===1?'Defeat a boss without damage':`Defeat ${n} bosses without damage`);
   permDef('fastFin',    '⚡', '', [[10,60],[50,170],[150,350]],               () => state.quests.c.fastFinishes,       n=>`Ukończ ${n} poziomów w mniej niż 20 s łącznie`, n=>`Finish ${n} levels in under 20s in total`);
-  permDef('deaths',     '💀', '', [[10,20],[50,60],[200,150]],                () => state.deathCount,                  n=>`Zgiń łącznie ${n} razy`, n=>`Die ${n} times in total`);
+  permDef('deaths',     '💀', '', [[10,20],[50,60],[200,300]],                () => state.deathCount,                  n=>`Zgiń łącznie ${n} razy`, n=>`Die ${n} times in total`);
   permDef('achCount',   '🏅', '', [[10,50],[25,150],[49,400]],                () => Object.keys(state.quests.ach).length, n=>`Odblokuj ${n} osiągnięć`, n=>`Unlock ${n} achievements`);
 
   // ---------- OSIAGNIECIA (odblokowuja sie same) ----------
@@ -148,7 +148,7 @@
   ach('plv_15',      '🌟', 'Doświadczony',     'Experienced',   'Osiągnij 15. poziom gracza',             'Reach player level 15',            15,    () => playerLevel(), 60);
   ach('plv_30',      '🔱', 'Ekspert',          'Expert',        'Osiągnij 30. poziom gracza',             'Reach player level 30',            30,    () => playerLevel(), 120);
   ach('plv_50',      '🎖️', 'Mistrz poziomów',  'Level Master',  'Osiągnij 50. poziom gracza',             'Reach player level 50',            50,    () => playerLevel(), 200);
-  ach('plv_100',     '👑', 'Maksymalny poziom','Max Level',     'Osiągnij maksymalny poziom gracza (100)','Reach the maximum player level (100)', 100, () => playerLevel(), 400);
+  ach('plv_100',     '👑', 'Maksymalny poziom','Max Level',     'Osiągnij maksymalny poziom gracza (100)','Reach the maximum player level (100)', 100, () => playerLevel(), 1000);
   ach('daily_all',   '📅', 'Perfekcjonista',   'Perfectionist', 'Wykonaj wszystkie 5 zadań dziennych jednego dnia', 'Complete all 5 daily quests in one day', 1, () => state.quests.c.dailyAllDone, 50);
   ach('quests_25',   '📋', 'Zadaniowiec',      'Taskmaster',    'Odbierz nagrodę za 25 zadań',            'Claim the reward for 25 quests',   25,    () => state.quests.c.questsClaimed, 70);
   ach('bounce_50',    '🔵', 'Trampolinowy mistrz', 'Trampoline Master', 'Odbij się na trampolinie 50 razy', 'Bounce on a trampoline 50 times', 50,  () => state.quests.c.bounces, 40);
@@ -170,9 +170,9 @@
   ach('facial_all',    '🧔', 'Brodacz',            'Bearded',           'Zdobądź wszystkie rodzaje zarostu','Get every facial hair style',     FACIAL_HAIR.length, () => state.ownedFacialHair.length, 150);
   ach('explorer',      '🧭', 'Odkrywca menu',      'Menu Explorer',     'Odwiedź sklep, ranking, statystyki, edytor i moje poziomy', 'Visit the shop, ranking, stats, editor and my levels', 5,
       () => (state.quests.c.visitShop>0?1:0) + (state.quests.c.visitRanking>0?1:0) + (state.quests.c.visitStats>0?1:0) + (state.quests.c.visitEditor>0?1:0) + (state.quests.c.visitMyLevels>0?1:0), 40);
-  ach('coins_50000',   '💎', 'Milioner w drodze',  'On the Way to Millions', 'Zarób łącznie 50000 monet',   'Earn 50000 coins in total',       50000, () => state.totalCoinsEarned, 900);
+  ach('coins_50000',   '💎', 'Milioner w drodze',  'On the Way to Millions', 'Zarób łącznie 50000 monet',   'Earn 50000 coins in total',       50000, () => state.totalCoinsEarned, 1000);
   ach('kills_2000',    '🗡️', 'Legenda rzezi',      'Legend of Slaughter','Pokonaj 2000 wrogów',             'Defeat 2000 enemies',             2000, () => state.enemiesKilled, 480);
-  ach('deaths_200',    '♻️', 'Reinkarnacja',       'Reincarnation',     'Zgiń 200 razy',                    'Die 200 times',                   200, () => state.deathCount, 60);
+  ach('deaths_200',    '♻️', 'Reinkarnacja',       'Reincarnation',     'Zgiń 200 razy',                    'Die 200 times',                   200, () => state.deathCount, 280);
 
   // ---------- DANE ----------
   function defaultQuests(){
