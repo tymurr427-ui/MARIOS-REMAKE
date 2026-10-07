@@ -9,7 +9,9 @@
     drawBackground();
     drawPlatforms();
     drawMovers();
+    drawGatesAndSwitches();
     drawHazards();
+    drawLasers();
     drawCrushers();
     drawHammers();
     drawCoins();

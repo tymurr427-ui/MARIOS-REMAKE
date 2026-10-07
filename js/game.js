@@ -98,9 +98,15 @@
     const teleporters = (data.teleporters||[]).map((t,i) => ({
       x:t.x, y:t.y, w:34, h:44, pair: i % 2 === 0 ? i+1 : i-1, cooldown:0
     }));
-    const pipes = (data.pipes||[]).map(p => ({x:p.x, y:GROUND_Y-p.h, w:p.w, h:p.h}));
+    const pipes = (data.pipes||[]).map(p => ({x:p.x, y:(p.y!==undefined ? p.y : GROUND_Y-p.h), w:p.w, h:p.h}));
     const coins = (data.coins||[]).map(c => ({x:c.x, y:c.y, taken:false, t:Math.random()*10}));
     const hazards = (data.hazards||[]).map(h => ({x:h.x, y:(h.y!==undefined ? h.y : GROUND_Y)-18, w:h.w, h:18}));
+    const lasers = (data.lasers||[]).map(l => ({
+      x:l.x, y:l.y, axis:l.axis||'x', length:l.length||160,
+      t: Math.abs(Math.round((l.x||0)+(l.y||0))) % LASER_CYCLE   // przesuniecie fazy wg pozycji, jak przy blinkerach
+    }));
+    const switches = (data.switches||[]).map((s,i) => ({x:s.x, y:s.y, w:34, h:34, pressed:false, id:i}));
+    const gates = (data.gates||[]).map((g,i) => ({x:g.x, y:g.y, w:g.w||24, h:g.h||140, isGate:true, solid:true, id:i}));
     const movers = (data.movers||[]).map(m => ({
       baseX:m.x, baseY:m.y, x:m.x, y:m.y, w:90, h:20,
       axis:m.axis||'x', range: m.range || (m.axis==='y' ? 110 : 60), speed: m.axis==='y' ? 0.8 : 1.0, isMover:true
@@ -127,7 +133,7 @@
     const flag = data.flag ? {x:data.flag.x, y:data.flag.y, w:14, h:220} : {x:(data.width||2000)-150, y:GROUND_Y-220, w:14, h:220};
     return {
       name: data.name || 'Poziom własny',
-      platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers, hammers, teleporters, flag,
+      platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers, hammers, teleporters, lasers, switches, gates, flag,
       checkpoint: data.checkpoint ? {x:data.checkpoint.x, y:data.checkpoint.y} : null,
       width: data.width || 2000,
       bg: data.bg || 'day'
@@ -264,9 +270,9 @@
   }
 
   function enemySolidHit(e){
-    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...(level.movers||[]), ...(level.blinkers||[])]);
+    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...(level.movers||[]), ...(level.blinkers||[]), ...(level.gates||[])]);
     for(const p of solids){
-      if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid)) continue;
+      if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid) || (p.isGate && !p.solid)) continue;
       if(rectsOverlap(e, p)) return p;
     }
     return null;
@@ -422,6 +428,38 @@
     if(player.invuln > 0) return;
     for(const h of level.hazards){
       if(rectsOverlap(player, h)) takeDamage();
+    }
+  }
+
+  // LASER: cykl jak blinker, ale odwrotnie - bezpieczny przez wiekszosc czasu, krotkie "naladowanie"
+  // (ostrzezenie wizualne, jeszcze nie zabija) tuz przed wystrzalem, potem krotki smiercionosny impuls.
+  const LASER_CYCLE = 220, LASER_WARN_AT = 150, LASER_FIRE_AT = 180; // ~2.5s bezpieczny, ~0.5s ladowanie, ~0.7s ogien (60fps)
+  function laserRect(l){
+    return l.axis === 'y'
+      ? {x:l.x-4, y:l.y, w:8, h:l.length}
+      : {x:l.x, y:l.y-4, w:l.length, h:8};
+  }
+  function updateLasers(){
+    if(!level.lasers) return;
+    for(const l of level.lasers){
+      l.t = (l.t + 1) % LASER_CYCLE;
+      l.warning = l.t >= LASER_WARN_AT && l.t < LASER_FIRE_AT;
+      l.firing = l.t >= LASER_FIRE_AT;
+      if(l.firing && player.invuln <= 0 && !player.spectating && rectsOverlap(player, laserRect(l))) takeDamage();
+    }
+  }
+
+  // DZWIGNIA + BRAMA: dotkniecie dzwigni[i] otwiera bramę[i] na stałe (do konca proby).
+  function updateSwitches(){
+    if(!level.switches || player.spectating) return;
+    for(const s of level.switches){
+      if(s.pressed) continue;
+      if(rectsOverlap(player, s)){
+        s.pressed = true;
+        const gate = (level.gates||[])[s.id];
+        if(gate){ gate.solid = false; }
+        AudioEngine.sfxJump();
+      }
     }
   }
 
@@ -593,6 +631,7 @@
       updateBlinkers();
       updateHammers();
       updateTeleporters();
+      updateLasers();
       const aliveRemote = Object.values(remotePlayers).find(rp => !rp.dead && rp.data);
       const followX = aliveRemote ? aliveRemote.data.x : player.x;
       camera.x = Math.max(0, Math.min(followX - W/2, level.width - W));
@@ -638,7 +677,7 @@
 
     updateMovers();
     const movers = level.movers || [];
-    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...movers, ...(level.blinkers||[])]);
+    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...movers, ...(level.blinkers||[]), ...(level.gates||[])]);
 
     // jesli w poprzedniej klatce gracz stal na ruchomej platformie, przenosimy go
     // razem z nia (w X i Y) ZANIM policzymy jego wlasny ruch/kolizje - inaczej przy
@@ -652,7 +691,7 @@
     // ruch poziomy + kolizje
     player.x += player.vx;
     for(const p of solids){
-      if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid) || p.isOneWay) continue;
+      if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid) || (p.isGate && !p.solid) || p.isOneWay) continue;
       if(rectsOverlap(player,p)){
         if(player.vx > 0){ player.x = p.x - player.w; player.vx = 0; }
         else if(player.vx < 0){ player.x = p.x + p.w; player.vx = 0; }
@@ -675,7 +714,7 @@
       player.y += vyDir * step;
       vyLeft -= step;
       for(const p of solids){
-        if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid)) continue;
+        if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid) || (p.isGate && !p.solid)) continue;
         if(p.isOneWay){
           if(vyDir <= 0) continue;                              // nigdy nie blokuje ruchu w gore
           const prevBottom = player.y - vyDir*step + player.h;
@@ -735,6 +774,8 @@
     updateBlinkers();
     updateHammers();
     updateTeleporters();
+    updateLasers();
+    updateSwitches();
     if(levelDone) return;
 
     level.coins.forEach((c, idx) => {

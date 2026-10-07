@@ -223,8 +223,9 @@
         editorCtx.fillStyle = '#fff'; editorCtx.font = 'bold 11px sans-serif'; editorCtx.textAlign = 'center';
         editorCtx.fillText(String(Math.floor(idx/2)+1), ex, ey+4);
       } else if(el.kind==='pipe'){
+        const py = el.y!==undefined ? el.y : (EDITOR_GROUND_Y-el.h);
         editorCtx.fillStyle = '#1e9e46';
-        editorCtx.fillRect(ex, (EDITOR_GROUND_Y-60)*editorScale, el.w*editorScale, 60*editorScale);
+        editorCtx.fillRect(ex, py*editorScale, el.w*editorScale, el.h*editorScale);
       } else if(el.kind==='coin'){
         editorCtx.fillStyle = '#ffd23f';
         editorCtx.beginPath(); editorCtx.arc(ex, ey, 5, 0, Math.PI*2); editorCtx.fill();
@@ -368,6 +369,41 @@
         editorCtx.font = 'bold 14px sans-serif'; editorCtx.textAlign='center';
         editorCtx.fillText('👹', bcx, bcy+5);
         editorCtx.textAlign='left';
+      } else if(el.kind==='laser'){
+        const len = (el.length||160)*editorScale;
+        const exx2 = el.axis==='y' ? ex : ex+len, eyy2 = el.axis==='y' ? ey+len : ey;
+        editorCtx.strokeStyle = 'rgba(255,70,70,.6)'; editorCtx.lineWidth = 3; editorCtx.setLineDash([5,4]);
+        editorCtx.beginPath(); editorCtx.moveTo(ex,ey); editorCtx.lineTo(exx2,eyy2); editorCtx.stroke();
+        editorCtx.setLineDash([]);
+        editorCtx.fillStyle = '#4a4e54';
+        editorCtx.beginPath(); editorCtx.arc(ex,ey,8,0,Math.PI*2); editorCtx.fill();
+        editorCtx.beginPath(); editorCtx.arc(exx2,eyy2,8,0,Math.PI*2); editorCtx.fill();
+        editorCtx.font = 'bold 11px sans-serif'; editorCtx.textAlign='center';
+        editorCtx.fillStyle = '#fff';
+        editorCtx.fillText(el.axis==='y' ? '↕' : '↔', (ex+exx2)/2, (ey+eyy2)/2 - 6);
+        editorCtx.textAlign='left';
+      } else if(el.kind==='switch'){
+        editorCtx.fillStyle = '#4a4e54';
+        editorCtx.fillRect(ex-4, ey+10, 8, 12);
+        editorCtx.fillStyle = '#e74c3c';
+        editorCtx.beginPath(); editorCtx.arc(ex, ey+6, 12, 0, Math.PI*2); editorCtx.fill();
+        editorCtx.strokeStyle = '#2a2e33'; editorCtx.lineWidth = 2; editorCtx.stroke();
+        const idx = editorElements.filter(e2=>e2.kind==='switch').indexOf(el);
+        editorCtx.font = 'bold 11px sans-serif'; editorCtx.textAlign='center';
+        editorCtx.fillStyle = '#fff';
+        editorCtx.fillText(String(idx+1), ex, ey+10);
+        editorCtx.textAlign='left';
+      } else if(el.kind==='gate'){
+        const gw = (el.w||24)*editorScale, gh = (el.h||140)*editorScale;
+        editorCtx.fillStyle = 'rgba(154,163,176,.85)';
+        editorCtx.fillRect(ex, ey, gw, gh);
+        editorCtx.strokeStyle = '#3a4350'; editorCtx.lineWidth = 2;
+        editorCtx.strokeRect(ex, ey, gw, gh);
+        const idx = editorElements.filter(e2=>e2.kind==='gate').indexOf(el);
+        editorCtx.font = 'bold 11px sans-serif'; editorCtx.textAlign='center';
+        editorCtx.fillStyle = '#fff';
+        editorCtx.fillText(String(idx+1), ex+gw/2, ey+16);
+        editorCtx.textAlign='left';
       }
       editorCtx.restore();
     }
@@ -462,12 +498,19 @@
   });
   function editorRotateTurretAtCursor(){
     const el = editorFindElementAt(editorMouseLevelPos.levelX, editorMouseLevelPos.levelY);
-    if(!el || el.kind !== 'turret'){ editorFlashLimitWarning('Najedź kursorem na wieżyczkę i wciśnij R, żeby ją obrócić'); return; }
+    if(!el || (el.kind !== 'turret' && el.kind !== 'laser')){ editorFlashLimitWarning('Najedź kursorem na wieżyczkę lub laser i wciśnij R, żeby obrócić'); return; }
     const before = editorSnapshotJSON();
-    el.dir = -el.dir;
-    editorPushUndo(before);
-    redrawEditor();
-    editorFlashLimitWarning('Obrócono wieżyczkę — strzela w ' + (el.dir === 1 ? 'prawo' : 'lewo'));
+    if(el.kind === 'turret'){
+      el.dir = -el.dir;
+      editorPushUndo(before);
+      redrawEditor();
+      editorFlashLimitWarning('Obrócono wieżyczkę — strzela w ' + (el.dir === 1 ? 'prawo' : 'lewo'));
+    } else {
+      el.axis = el.axis === 'y' ? 'x' : 'y';
+      editorPushUndo(before);
+      redrawEditor();
+      editorFlashLimitWarning('Obrócono laser — ' + (el.axis === 'y' ? 'pionowy' : 'poziomy'));
+    }
   }
 
   let editorLimitWarnTimeout = null;
@@ -498,7 +541,7 @@
     }
     const ey = el.y!==undefined ? el.y : (el.kind==='crusher' ? el.topY : levelY);
     let dx = el.x - levelX;
-    if(el.w !== undefined && (el.kind==='ground' || el.kind==='platform' || el.kind==='pipe' || el.kind==='hazard' || el.kind==='blinker')){
+    if(el.w !== undefined && (el.kind==='ground' || el.kind==='platform' || el.kind==='pipe' || el.kind==='hazard' || el.kind==='blinker' || el.kind==='gate')){
       dx = levelX < el.x ? el.x - levelX : (levelX > el.x + el.w ? levelX - (el.x + el.w) : 0);
     }
     return Math.hypot(dx, ey - levelY);
@@ -529,6 +572,9 @@
       case 'mover_y': return editorElements.filter(e=>e.kind==='mover' && e.axis==='y').length;
       case 'crusher': return editorElements.filter(e=>e.kind==='crusher').length;
       case 'turret': return editorElements.filter(e=>e.kind==='turret').length;
+      case 'laser': return editorElements.filter(e=>e.kind==='laser').length;
+      case 'switch': return editorElements.filter(e=>e.kind==='switch').length;
+      case 'gate': return editorElements.filter(e=>e.kind==='gate').length;
       default: return 0;
     }
   }
@@ -557,6 +603,9 @@
       case 'crusher': return 'crusher';
       case 'turret': return 'turret';
       case 'boss': return 'boss';
+      case 'laser': return 'laser';
+      case 'switch': return 'switch';
+      case 'gate': return 'gate';
       default: return null;
     }
   }
@@ -592,7 +641,7 @@
   }
 
   function editorPlaceAt(levelX, levelY){
-    if(['ground','iceground','sandground','blinker','hammer','teleporter','platform','trampoline','crumbler','oneway','iceplat','pipe','walker','flyer','jumper','shooter','charger','hazard','mover','mover_y','crusher','turret'].includes(editorTool)){
+    if(['ground','iceground','sandground','blinker','hammer','teleporter','platform','trampoline','crumbler','oneway','iceplat','pipe','walker','flyer','jumper','shooter','charger','hazard','mover','mover_y','crusher','turret','laser','switch','gate'].includes(editorTool)){
       if(editorCountByTool(editorTool) >= EDITOR_BLOCK_MAX){
         editorFlashLimitWarning('Maksymalnie ' + EDITOR_BLOCK_MAX + ' na poziom dla tego typu elementu!');
         return;
@@ -624,7 +673,7 @@
     else if(editorTool === 'oneway'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:16, isOneWay:true}); }
     else if(editorTool === 'iceplat'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:20, isIce:true}); }
     else if(editorTool === 'teleporter'){ editorElements.push({kind:'teleporter', x:levelX, y:levelY}); }
-    else if(editorTool === 'pipe'){ editorElements.push({kind:'pipe', x:levelX, w:46, h:60}); }
+    else if(editorTool === 'pipe'){ editorElements.push({kind:'pipe', x:levelX, y:EDITOR_GROUND_Y-60, w:46, h:60}); }
     else if(editorTool === 'coin'){
       const coinCount = editorElements.filter(e=>e.kind==='coin').length;
       if(coinCount >= 40){
@@ -651,6 +700,9 @@
       if(existing >= 0) editorElements.splice(existing,1);
       editorElements.push({kind:'boss', x:levelX, y:EDITOR_GROUND_Y-90});
     }
+    else if(editorTool === 'laser'){ editorElements.push({kind:'laser', x:levelX, y:levelY, axis:'x', length:160}); }
+    else if(editorTool === 'switch'){ editorElements.push({kind:'switch', x:levelX, y:levelY}); }
+    else if(editorTool === 'gate'){ editorElements.push({kind:'gate', x:levelX, y:levelY, w:24, h:140}); }
     redrawEditor();
   }
 
@@ -905,7 +957,7 @@
     const raw = (LEVELS[index])();
     const grounds = (raw.platforms||[]).filter(p=>p.isGround).map(p=>({x:p.x, y:p.y, w:p.w, isIce:p.isIce, isSand:p.isSand}));
     const plats = (raw.platforms||[]).filter(p=>!p.isGround).map(p=>({x:p.x, y:p.y, w:p.w, h:p.h, isTrampoline:p.isTrampoline, isCrumbler:p.isCrumbler, isOneWay:p.isOneWay, isIce:p.isIce}));
-    const pipes = (raw.pipes||[]).map(p=>({x:p.x, w:p.w, h:p.h}));
+    const pipes = (raw.pipes||[]).map(p=>({x:p.x, y:p.y, w:p.w, h:p.h}));
     const coins = (raw.coins||[]).map(c=>({x:c.x, y:c.y}));
     const bossEnemy = (raw.enemies||[]).find(e=>e.type==='boss');
     const enemies = (raw.enemies||[]).filter(e=>e.type!=='boss').map(e=>({x:e.x, y:e.y, enemyType: e.type || 'walker'}));
@@ -940,13 +992,16 @@
       if(isBuiltinLoad && p.h < 40 && pw < MIN_PLATFORM_W){ px -= (MIN_PLATFORM_W - pw)/2; pw = MIN_PLATFORM_W; }
       editorElements.push({kind:'platform', x:px, y:p.y, w:pw, h:p.h, isTrampoline:p.isTrampoline, isCrumbler:p.isCrumbler, isOneWay:p.isOneWay, isIce:p.isIce});
     });
-    (data.pipes||[]).forEach(p => editorElements.push({kind:'pipe', x:p.x, w:p.w, h:p.h}));
+    (data.pipes||[]).forEach(p => editorElements.push({kind:'pipe', x:p.x, y:(p.y!==undefined ? p.y : EDITOR_GROUND_Y-p.h), w:p.w, h:p.h}));
     (data.coins||[]).forEach(c => editorElements.push({kind:'coin', x:c.x, y:c.y}));
     (data.enemies||[]).forEach(e => editorElements.push({kind:'enemy', x:e.x, y:e.y, enemyType:e.enemyType}));
     (data.hazards||[]).forEach(h => editorElements.push({kind:'hazard', x:h.x, y:(h.y!==undefined ? h.y : EDITOR_GROUND_Y), w:h.w}));
     (data.movers||[]).forEach(m => editorElements.push({kind:'mover', x:m.x, y:m.y, axis:m.axis||'x', range:m.range || (m.axis==='y' ? 110 : 60)}));
     (data.crushers||[]).forEach(c => editorElements.push({kind:'crusher', x:c.x, w:c.w, h:c.h, topY:c.topY, bottomY:c.bottomY, speed:c.speed, t:c.t}));
     (data.shooters||[]).forEach(s => editorElements.push({kind:'turret', x:s.x, y:s.y, dir:s.dir, interval:s.interval}));
+    (data.lasers||[]).forEach(l => editorElements.push({kind:'laser', x:l.x, y:l.y, axis:l.axis||'x', length:l.length||160}));
+    (data.switches||[]).forEach(s => editorElements.push({kind:'switch', x:s.x, y:s.y}));
+    (data.gates||[]).forEach(g => editorElements.push({kind:'gate', x:g.x, y:g.y, w:g.w||24, h:g.h||140}));
     if(data.boss) editorElements.push({kind:'boss', x:data.boss.x, y:data.boss.y});
     editorCheckpoint = data.checkpoint ? {x:data.checkpoint.x, y:data.checkpoint.y} : null;
     editorSpawn = data.spawn ? {x:data.spawn.x, y:data.spawn.y} : {x:40, y:EDITOR_GROUND_Y-54};
@@ -1081,19 +1136,22 @@
     const hammers = editorElements.filter(e=>e.kind==='hammer').map(e=>({x:e.x,y:e.y,radius:e.radius,speed:e.speed}));
     const platforms = editorElements.filter(e=>e.kind==='platform').map(e=>({x:e.x,y:e.y,w:e.w,h:e.h,isTrampoline:e.isTrampoline,isCrumbler:e.isCrumbler,isOneWay:e.isOneWay,isIce:e.isIce}));
     const teleporters = editorElements.filter(e=>e.kind==='teleporter').map(e=>({x:e.x,y:e.y}));
-    const pipes = editorElements.filter(e=>e.kind==='pipe').map(e=>({x:e.x,w:e.w,h:e.h}));
+    const pipes = editorElements.filter(e=>e.kind==='pipe').map(e=>({x:e.x,y:e.y,w:e.w,h:e.h}));
     const coins = editorElements.filter(e=>e.kind==='coin').map(e=>({x:e.x,y:e.y}));
     const enemies = editorElements.filter(e=>e.kind==='enemy').map(e=>({x:e.x,y:e.y,enemyType:e.enemyType}));
     const hazards = editorElements.filter(e=>e.kind==='hazard').map(e=>({x:e.x,y:e.y,w:e.w}));
     const movers = editorElements.filter(e=>e.kind==='mover').map(e=>({x:e.x,y:e.y,axis:e.axis,range:e.range}));
     const crushers = editorElements.filter(e=>e.kind==='crusher').map(e=>({x:e.x,w:e.w,h:e.h,topY:e.topY,bottomY:e.bottomY,speed:e.speed,t:e.t}));
     const shooters = editorElements.filter(e=>e.kind==='turret').map(e=>({x:e.x,y:e.y,dir:e.dir,interval:e.interval}));
+    const lasers = editorElements.filter(e=>e.kind==='laser').map(e=>({x:e.x,y:e.y,axis:e.axis,length:e.length}));
+    const switches = editorElements.filter(e=>e.kind==='switch').map(e=>({x:e.x,y:e.y}));
+    const gates = editorElements.filter(e=>e.kind==='gate').map(e=>({x:e.x,y:e.y,w:e.w,h:e.h}));
     const bossEl = editorElements.find(e=>e.kind==='boss');
     return {
       name: document.getElementById('editorLevelName').value.trim() || 'Poziom bez nazwy',
       bg: document.getElementById('editorBgSelect').value,
       width: editorLevelW,
-      grounds, platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers, hammers, teleporters,
+      grounds, platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers, hammers, teleporters, lasers, switches, gates,
       boss: bossEl ? {x:bossEl.x, y:bossEl.y} : null,
       flag: editorFlag, spawn: editorSpawn, checkpoint: editorCheckpoint,
     };
