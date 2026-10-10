@@ -203,16 +203,29 @@
     player.airTime = 0;
     player.ridingMover = null;
     camera.x = Math.max(0, Math.min(player.x - W/2, level.width - W));
-    camera.y = updateCameraY(player.y);
+    camera.y = updateCameraY(player.y, true, true);
   }
 
   // Kamera pionowa (wieze): dla zwyklych poziomow level.minY jest 0/undefined, wiec
   // clamp(..., 0, 0) zawsze daje 0 - identyczne zachowanie jak przed wprowadzeniem wiez.
-  function updateCameraY(followY){
+  let camYCur = 0;
+  function updateCameraY(followY, grounded, force){
     const minY = level.minY || 0;
-    // dolna granica scrolla = 0 (stary "sufit" = widok jak dawniej, grunt zawsze mieszczacy sie w widoku na dole),
-    // gorna granica = minY (szczyt wiezy, ujemny). Dla zwyklych poziomow minY=0 -> camera.y zawsze 0.
-    return Math.max(minY, Math.min(followY - H/2, 0));
+    const clampY = v => Math.max(minY, Math.min(v, 0));
+    const target = clampY(followY - H/2);
+    if(!minY){ camYCur = 0; return 0; }
+    if(force){ camYCur = target; return camYCur; }
+    if(grounded){
+      // na ziemi: plynnie dojezdza do gracza
+      camYCur += (target - camYCur) * 0.1;
+    } else {
+      // w powietrzu (skok): kamera stoi, rusza sie tylko gdy gracz wyjdzie poza pas 25%-75% ekranu
+      const sy = followY - camYCur;
+      if(sy < H*0.25) camYCur = followY - H*0.25;
+      else if(sy > H*0.75) camYCur = followY - H*0.75;
+    }
+    camYCur = clampY(camYCur);
+    return camYCur;
   }
 
   const hudShieldPillEl = document.getElementById('hudShieldPill');
@@ -647,7 +660,7 @@
       const followX = aliveRemote ? aliveRemote.data.x : player.x;
       const followY = aliveRemote ? aliveRemote.data.y : player.y;
       camera.x = Math.max(0, Math.min(followX - W/2, level.width - W));
-      camera.y = updateCameraY(followY);
+      camera.y = updateCameraY(followY, true);
       return;
     }
 
@@ -827,7 +840,7 @@
     }
 
     camera.x = Math.max(0, Math.min(player.x - W/2, level.width - W));
-    camera.y = updateCameraY(player.y);
+    camera.y = updateCameraY(player.y, player.onGround);
     player.animT += Math.abs(player.vx) * 0.22;
   }
 
