@@ -737,7 +737,10 @@
     else if(editorTool === 'hazard'){ editorElements.push({kind:'hazard', x:levelX, y:EDITOR_GROUND_Y, w:40}); }
     else if(editorTool === 'mover'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'x', range:60}); }
     else if(editorTool === 'mover_y'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'y', range:110}); }
-    else if(editorTool === 'crusher'){ editorElements.push({kind:'crusher', x:levelX, w:50, h:50, topY:80, bottomY:EDITOR_GROUND_Y-55, speed:1.0, t:0}); }
+    else if(editorTool === 'crusher'){
+      const cTop = Math.max(20, levelY - 75);
+      editorElements.push({kind:'crusher', x:levelX, w:50, h:50, topY:cTop, bottomY:cTop+150, speed:1.0, t:0});
+    }
     else if(editorTool === 'turret'){
       const dir = levelX < editorLevelW/2 ? 1 : -1;
       editorElements.push({kind:'turret', x:levelX, y:EDITOR_GROUND_Y-90, dir, interval:245});
