@@ -144,6 +144,13 @@
           <option value="20000">📏 20000 px</option>
           <option value="30000">📏 30000 px</option>
         </select>
+        <select id="editorHeightSelect" class="editor-bg-select" title="Wysokość wieży (budowanie w górę)">
+          <option value="0" selected>🏢 Zwykły poziom (bez wieży)</option>
+          <option value="1500">🗼 +1500 px w górę</option>
+          <option value="3000">🗼 +3000 px w górę</option>
+          <option value="6000">🗼 +6000 px w górę</option>
+          <option value="10000">🗼 +10000 px w górę</option>
+        </select>
         <div class="editor-tools" id="editorTools">
           <button class="editor-tool active" data-tool="ground">🟫 Grunt</button>
           <button class="editor-tool" data-tool="iceground">🧊 Zimowy grunt</button>
@@ -178,13 +185,20 @@
           <button class="editor-tool" data-tool="erase">🧹 Gumka</button>
         </div>
       </div>
-      <canvas id="editorCanvas" width="1100" height="380"></canvas>
+      <div class="editor-canvas-row" style="display:flex; gap:6px; align-items:stretch;">
+        <canvas id="editorCanvas" width="1100" height="380" style="flex:1;"></canvas>
+        <div class="editor-scroll-col" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+          <button class="menu-btn small" id="btnEditorScrollUp">▲</button>
+          <input type="range" id="editorScrollRangeY" min="0" max="0" value="0" step="1" orient="vertical" style="writing-mode:vertical-lr; direction:rtl; flex:1; width:28px;">
+          <button class="menu-btn small" id="btnEditorScrollDown">▼</button>
+        </div>
+      </div>
       <div class="editor-scroll-row">
         <button class="menu-btn small" id="btnEditorScrollLeft">◀</button>
         <input type="range" id="editorScrollRange" min="0" max="0" value="0" style="flex:1;">
         <button class="menu-btn small" id="btnEditorScrollRight">▶</button>
       </div>
-      <div class="editor-scroll-hint">Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć. Shift + klik z gruntem stawia długi odcinek (1000 px). Najedź na wieżyczkę i wciśnij R, żeby ją obrócić.</div>
+      <div class="editor-scroll-hint">Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Shift+kółko albo suwak z prawej przewija w pionie wieży. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć. Shift + klik z gruntem stawia długi odcinek (1000 px). Najedź na wieżyczkę/laser i wciśnij R, żeby obrócić.</div>
       <div class="editor-scroll-hint" id="editorPosHint"></div>
       <div class="editor-scroll-hint" id="editorWeightHint">Waga poziomu: 0 B</div>
       <div class="editor-actions">
@@ -393,11 +407,11 @@
 <script src="js/shop.js?v=5"></script>
 <script src="js/audio.js?v=2"></script>
 <script src="js/quests.js?v=27"></script>
-<script src="js/editor.js?v=21"></script>
-<script src="js/game.js?v=24"></script>
+<script src="js/editor.js?v=22"></script>
+<script src="js/game.js?v=25"></script>
 <script src="js/character.js?v=6"></script>
-<script src="js/render.js?v=9"></script>
+<script src="js/render.js?v=10"></script>
 <script src="js/flags.js?v=7"></script>
-<script src="js/loop.js?v=4"></script>
+<script src="js/loop.js?v=5"></script>
 </body>
 </html>
