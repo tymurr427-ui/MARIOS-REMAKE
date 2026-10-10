@@ -743,12 +743,12 @@
     }
     else if(editorTool === 'turret'){
       const dir = levelX < editorLevelW/2 ? 1 : -1;
-      editorElements.push({kind:'turret', x:levelX, y:EDITOR_GROUND_Y-90, dir, interval:245});
+      editorElements.push({kind:'turret', x:levelX, y:levelY, dir, interval:245});
     }
     else if(editorTool === 'boss'){
       const existing = editorElements.findIndex(e=>e.kind==='boss');
       if(existing >= 0) editorElements.splice(existing,1);
-      editorElements.push({kind:'boss', x:levelX, y:EDITOR_GROUND_Y-90});
+      editorElements.push({kind:'boss', x:levelX, y:levelY});
     }
     else if(editorTool === 'laser'){ editorElements.push({kind:'laser', x:levelX, y:levelY, axis:'x', length:160}); }
     else if(editorTool === 'switch'){ editorElements.push({kind:'switch', x:levelX, y:levelY}); }
@@ -907,10 +907,10 @@
       <div class="my-level-row">
         <div class="my-level-info">
           <div class="my-level-name">${medal} ${name}</div>
-          <div class="my-level-code">Autor: ${author} • ▶ ${row.plays||0} razy zagrany • KOD: ${row.code}</div>
+          <div class="my-level-code">Autor: ${author} • ▶ ${row.plays||0} razy zagrany • KOD: ${escapeHtml(row.code)}</div>
         </div>
         <div class="my-level-actions">
-          <button class="my-level-btn play" data-code="${row.code}">▶ GRAJ</button>
+          <button class="my-level-btn play" data-code="${escapeHtml(row.code)}">▶ GRAJ</button>
         </div>
       </div>
     `;
@@ -1130,13 +1130,13 @@
       <div class="my-level-row">
         <div class="my-level-info">
           <div class="my-level-name">${escapeHtml(row.level_data.name || 'Poziom bez nazwy')}</div>
-          <div class="my-level-code">KOD: ${row.code} • Waga: ${formatBytes(sizeBytes)}</div>
+          <div class="my-level-code">KOD: ${escapeHtml(row.code)} • Waga: ${formatBytes(sizeBytes)}</div>
         </div>
         <div class="my-level-actions">
-          <button class="my-level-btn play" data-code="${row.code}">▶ GRAJ</button>
-          <button class="my-level-btn edit" data-code="${row.code}">✏️ EDYTUJ</button>
-          <button class="my-level-btn delete" data-code="${row.code}">🗑 USUŃ</button>
-          ${isTester() ? `<button class="my-level-btn official" data-code="${row.code}" style="background:linear-gradient(#ffd23f,#c8860a);color:#3a2600;">⭐ DODAJ JAKO OFICJALNY</button>` : ''}
+          <button class="my-level-btn play" data-code="${escapeHtml(row.code)}">▶ GRAJ</button>
+          <button class="my-level-btn edit" data-code="${escapeHtml(row.code)}">✏️ EDYTUJ</button>
+          <button class="my-level-btn delete" data-code="${escapeHtml(row.code)}">🗑 USUŃ</button>
+          ${isTester() ? `<button class="my-level-btn official" data-code="${escapeHtml(row.code)}" style="background:linear-gradient(#ffd23f,#c8860a);color:#3a2600;">⭐ DODAJ JAKO OFICJALNY</button>` : ''}
         </div>
       </div>
     `;
