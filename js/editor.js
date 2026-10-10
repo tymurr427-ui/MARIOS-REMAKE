@@ -9,6 +9,12 @@
   const editorScale = editorCanvas.height / EDITOR_LEVEL_H;
   const EDITOR_GROUND_Y = EDITOR_LEVEL_H - 60;
   const EDITOR_VIEW_W = editorCanvas.width / editorScale;
+  // ---- wieza (budowanie w gore) ----
+  // Normalny poziom: wysokosc = EDITOR_LEVEL_H (720), gora poziomu = y:0, tak jak zawsze.
+  // Wieza: editorLevelExtraH dodaje przestrzen POWYZEJ y:0 (ujemne y), grunt (EDITOR_GROUND_Y) zawsze zostaje
+  // na dole bez zmian. W grze dziala identycznie: camera.y=0 zawsze dla extraH=0 (stare poziomy 1:1 jak dawniej).
+  let editorLevelExtraH = 0;
+  const EDITOR_EXTRA_H_MAX = 10000;
 
   let editorTool = 'ground';
   let editorTesting = false;
@@ -17,6 +23,7 @@
   let editorFlag = { x:editorLevelW-150, y:EDITOR_GROUND_Y-220 };
   let editorCheckpoint = null; // edytowalny (x i y) - stawiany na wysokosci klikniecia, przeciagalny w obie osie
   let editorScrollX = 0;
+  let editorScrollY = 0;  // world-Y gornej krawedzi widoku; zakres [-editorLevelExtraH, 0]. 0 = widok domyslny (grunt widoczny, jak dawniej).
   let editorEditingCode = null; // null = nowy poziom; ustawiony = edytujemy/nadpisujemy istniejacy zapisany poziom
 
   const editorScrollRange = document.getElementById('editorScrollRange');
@@ -26,6 +33,45 @@
     editorScrollRange.value = editorScrollX;
     redrawEditor();
   }
+  const editorScrollRangeY = document.getElementById('editorScrollRangeY');
+  function editorSetScrollY(y){
+    editorScrollY = Math.max(-editorLevelExtraH, Math.min(0, y));
+    // suwak jest "do gory = wiecej scrolla": wartosc 0..extraH, 0=dol(domyslnie), max=gora
+    editorScrollRangeY.value = -editorScrollY;
+    redrawEditor();
+  }
+  // ---- wysokosc wiezy ----
+  const editorHeightSelect = document.getElementById('editorHeightSelect');
+  // ile gory elementy faktycznie siegaja (najmniejsze el.y wsrod wszystkich), zeby nie dalo sie zmniejszyc za bardzo
+  function editorContentMinY(){
+    let m = Math.min(0, editorSpawn.y);
+    if(editorFlag) m = Math.min(m, editorFlag.y);
+    if(editorCheckpoint) m = Math.min(m, editorCheckpoint.y);
+    editorElements.forEach(el => {
+      const y = el.kind==='crusher' ? el.topY : el.y;
+      if(y !== undefined) m = Math.min(m, y);
+    });
+    return m;
+  }
+  function editorApplyHeight(h){
+    editorLevelExtraH = h;
+    editorHeightSelect.value = String(h);
+    editorScrollRangeY.max = h;
+    editorSetScrollY(editorScrollY); // przelicz/przytnij do nowego zakresu
+  }
+  editorHeightSelect.onchange = () => {
+    const h = Number(editorHeightSelect.value), old = editorLevelExtraH;
+    const need = -editorContentMinY(); // ile juz zbudowano w gore (dodatnia liczba)
+    if(h < need){
+      editorHeightSelect.value = String(old);
+      editorFlashLimitWarning('Nie można zmniejszyć wysokości wieży - elementy sięgają ' + Math.round(need) + ' px w górę');
+      return;
+    }
+    editorApplyHeight(h);
+  };
+  editorScrollRangeY.oninput = () => editorSetScrollY(-Number(editorScrollRangeY.value));
+  document.getElementById('btnEditorScrollUp').onclick = () => editorSetScrollY(editorScrollY - 200);
+  document.getElementById('btnEditorScrollDown').onclick = () => editorSetScrollY(editorScrollY + 200);
   // ---- dlugosc poziomu ----
   const editorLengthSelect = document.getElementById('editorLengthSelect');
   function editorEnsureLengthOption(w){
@@ -69,7 +115,8 @@
   document.getElementById('btnEditorScrollRight').onclick = () => editorSetScroll(editorScrollX + 300);
   editorCanvas.addEventListener('wheel', (e) => {
     e.preventDefault();
-    editorSetScroll(editorScrollX + (e.deltaY || e.deltaX));
+    if(e.shiftKey) editorSetScrollY(editorScrollY + (e.deltaY || e.deltaX));
+    else editorSetScroll(editorScrollX + (e.deltaY || e.deltaX));
   }, { passive:false });
 
   function editorSnap(v, grid){ return Math.round(v/grid)*grid; }
@@ -143,15 +190,15 @@
     editorCtx.strokeStyle = 'rgba(255,255,255,.3)';
     editorCtx.setLineDash([6,4]);
     editorCtx.beginPath();
-    editorCtx.moveTo(0, EDITOR_GROUND_Y*editorScale);
-    editorCtx.lineTo(editorCanvas.width, EDITOR_GROUND_Y*editorScale);
+    editorCtx.moveTo(0, (EDITOR_GROUND_Y-editorScrollY)*editorScale);
+    editorCtx.lineTo(editorCanvas.width, (EDITOR_GROUND_Y-editorScrollY)*editorScale);
     editorCtx.stroke();
     editorCtx.setLineDash([]);
 
     for(const el of editorElements){
       const ex = (el.x-editorScrollX)*editorScale;
       const refY = el.kind==='crusher' ? el.topY : el.y;
-      const ey = refY*editorScale;
+      const ey = (refY-editorScrollY)*editorScale;
       if(ex < -100 || ex > editorCanvas.width+100) continue;
       editorCtx.save();
       if(el.kind==='ground' && el.isIce){
@@ -225,7 +272,7 @@
       } else if(el.kind==='pipe'){
         const py = el.y!==undefined ? el.y : (EDITOR_GROUND_Y-el.h);
         editorCtx.fillStyle = '#1e9e46';
-        editorCtx.fillRect(ex, py*editorScale, el.w*editorScale, el.h*editorScale);
+        editorCtx.fillRect(ex, (py-editorScrollY)*editorScale, el.w*editorScale, el.h*editorScale);
       } else if(el.kind==='coin'){
         editorCtx.fillStyle = '#ffd23f';
         editorCtx.beginPath(); editorCtx.arc(ex, ey, 5, 0, Math.PI*2); editorCtx.fill();
@@ -265,7 +312,7 @@
       } else if(el.kind==='hazard'){
         editorCtx.fillStyle = '#c0c5cb';
         editorCtx.beginPath();
-        const hzY = (el.y!==undefined ? el.y : EDITOR_GROUND_Y)*editorScale;
+        const hzY = ((el.y!==undefined ? el.y : EDITOR_GROUND_Y)-editorScrollY)*editorScale;
         editorCtx.moveTo(ex, hzY);
         editorCtx.lineTo(ex+el.w*editorScale/2, hzY-14);
         editorCtx.lineTo(ex+el.w*editorScale, hzY);
@@ -410,13 +457,13 @@
 
     // start gracza
     editorCtx.fillStyle = '#e74c3c';
-    editorCtx.beginPath(); editorCtx.arc((editorSpawn.x-editorScrollX)*editorScale, editorSpawn.y*editorScale, 8, 0, Math.PI*2); editorCtx.fill();
+    editorCtx.beginPath(); editorCtx.arc((editorSpawn.x-editorScrollX)*editorScale, (editorSpawn.y-editorScrollY)*editorScale, 8, 0, Math.PI*2); editorCtx.fill();
     editorCtx.fillStyle = '#fff'; editorCtx.font = 'bold 9px sans-serif';
-    editorCtx.fillText('START', (editorSpawn.x-editorScrollX)*editorScale-14, editorSpawn.y*editorScale-12);
+    editorCtx.fillText('START', (editorSpawn.x-editorScrollX)*editorScale-14, (editorSpawn.y-editorScrollY)*editorScale-12);
 
     // checkpoint (slupek stoi na y, wysokosc 220 - jak w grze)
     if(editorCheckpoint){
-      const cpx = (editorCheckpoint.x-editorScrollX)*editorScale, cpy = editorCheckpoint.y*editorScale;
+      const cpx = (editorCheckpoint.x-editorScrollX)*editorScale, cpy = (editorCheckpoint.y-editorScrollY)*editorScale;
       editorCtx.fillStyle = '#b8bcc6';
       editorCtx.fillRect(cpx, cpy-220*editorScale, 2, 220*editorScale);
       editorCtx.fillStyle = '#2ecc71';
@@ -430,7 +477,7 @@
     // flaga
     if(editorFlag){
       editorCtx.fillStyle = '#e74c3c';
-      const fx = (editorFlag.x-editorScrollX)*editorScale, fy = editorFlag.y*editorScale;
+      const fx = (editorFlag.x-editorScrollX)*editorScale, fy = (editorFlag.y-editorScrollY)*editorScale;
       editorCtx.fillRect(fx, fy, 2, 220*editorScale);
       editorCtx.beginPath();
       editorCtx.moveTo(fx+2, fy+4); editorCtx.lineTo(fx+16, fy+10); editorCtx.lineTo(fx+2, fy+16);
@@ -710,7 +757,7 @@
     const rect = editorCanvas.getBoundingClientRect();
     const cx = (e.clientX-rect.left) * (editorCanvas.width/rect.width);
     const cy = (e.clientY-rect.top) * (editorCanvas.height/rect.height);
-    return { levelX: cx/editorScale + editorScrollX, levelY: cy/editorScale };
+    return { levelX: cx/editorScale + editorScrollX, levelY: cy/editorScale + editorScrollY };
   }
 
   function editorFindDraggable(levelX, levelY){
@@ -808,12 +855,14 @@
     editorEditingCode = null;
     editorElements = [];
     editorApplyLength(EDITOR_LENGTH_DEFAULT);
+    editorApplyHeight(0);
     editorSpawn = { x:40, y:EDITOR_GROUND_Y-54 };
     editorFlag = { x:editorLevelW-150, y:EDITOR_GROUND_Y-220 };
     editorCheckpoint = null;
     document.getElementById('editorLevelName').value = '';
     document.getElementById('editorSaveResult').textContent = '';
     editorSetScroll(0);
+    editorSetScrollY(0);
     redrawEditor();
   };
   document.getElementById('editorBgSelect').onchange = redrawEditor;
@@ -1011,7 +1060,10 @@
     document.getElementById('editorSaveResult').textContent = String(code).startsWith('BUILTIN:')
       ? `✏️ Edytujesz WBUDOWANY poziom ${Number(String(code).split(':')[1])+1}. Zapisz, żeby poprawka obowiązywała od razu wszystkich graczy.`
       : `✏️ Edytujesz istniejący poziom (kod ${code}). Zapisz, żeby nadpisać go zmianami.`;
+    const loadedExtraH = Math.round(Number(data.extraHeight)) || 0;
+    editorApplyHeight(loadedExtraH >= 0 && loadedExtraH <= EDITOR_EXTRA_H_MAX ? loadedExtraH : 0);
     editorSetScroll(0);
+    editorSetScrollY(0);
     redrawEditor();
   }
 
@@ -1151,6 +1203,7 @@
       name: document.getElementById('editorLevelName').value.trim() || 'Poziom bez nazwy',
       bg: document.getElementById('editorBgSelect').value,
       width: editorLevelW,
+      extraHeight: editorLevelExtraH,
       grounds, platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers, hammers, teleporters, lasers, switches, gates,
       boss: bossEl ? {x:bossEl.x, y:bossEl.y} : null,
       flag: editorFlag, spawn: editorSpawn, checkpoint: editorCheckpoint,

@@ -7,6 +7,13 @@
       if(tEl){ const ts2 = formatRunTime(runElapsedMs); if(tEl.textContent !== ts2) tEl.textContent = ts2; }
     }
     drawBackground();
+    // Tlo (chmury/pagorki/niebo) celowo zostaje NIEZALEZNE od camera.y (stoi w miejscu w pionie,
+    // tak jak w wiekszosci platformowek) - wszystko inne (grunt, wrogowie, gracz...) scrolluje sie
+    // w pionie razem z kamera. Jeden translate tutaj zalatwia to dla WSZYSTKICH funkcji rysujacych
+    // ponizej (w tym drawPlayer w character.js, drawPlayerFlag w flags.js, drawRemotePlayer w net.js) -
+    // one dalej licza tylko x-offset recznie (`x = ... - camera.x`), a y dostaja poprawne za darmo.
+    ctx.save();
+    ctx.translate(0, -camera.y);
     drawPlatforms();
     drawMovers();
     drawGatesAndSwitches();
@@ -25,6 +32,7 @@
       drawPlayerFlag();
       drawPlayer();
     }
+    ctx.restore();
   }
 
   // ---------- LIMIT FPS + LICZNIK ----------

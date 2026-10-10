@@ -136,6 +136,7 @@
       platforms, pipes, coins, enemies, hazards, movers, crushers, shooters, blinkers, hammers, teleporters, lasers, switches, gates, flag,
       checkpoint: data.checkpoint ? {x:data.checkpoint.x, y:data.checkpoint.y} : null,
       width: data.width || 2000,
+      minY: -(data.extraHeight || 0),   // ile mozna isc w gore ponad stary "sufit" y:0 (wieza); 0 = jak dawniej
       bg: data.bg || 'day'
     };
   }
@@ -157,7 +158,7 @@
       vx:0, vy:0, onGround:false, facing:1, animT:0, invuln:0, airTime:0, spectating:false, ridingMover:null,
       shieldActive:false, shieldTimer:0
     };
-    camera = {x:0};
+    camera = {x:0, y:0};
     runCoins = 0;
     lives = 3 + (state.extraLives || 0);
     if(state.extraLives > 0){
@@ -202,6 +203,16 @@
     player.airTime = 0;
     player.ridingMover = null;
     camera.x = Math.max(0, Math.min(player.x - W/2, level.width - W));
+    camera.y = updateCameraY(player.y);
+  }
+
+  // Kamera pionowa (wieze): dla zwyklych poziomow level.minY jest 0/undefined, wiec
+  // clamp(..., 0, 0) zawsze daje 0 - identyczne zachowanie jak przed wprowadzeniem wiez.
+  function updateCameraY(followY){
+    const minY = level.minY || 0;
+    // dolna granica scrolla = 0 (stary "sufit" = widok jak dawniej, grunt zawsze mieszczacy sie w widoku na dole),
+    // gorna granica = minY (szczyt wiezy, ujemny). Dla zwyklych poziomow minY=0 -> camera.y zawsze 0.
+    return Math.max(minY, Math.min(followY - H/2, 0));
   }
 
   const hudShieldPillEl = document.getElementById('hudShieldPill');
@@ -634,7 +645,9 @@
       updateLasers();
       const aliveRemote = Object.values(remotePlayers).find(rp => !rp.dead && rp.data);
       const followX = aliveRemote ? aliveRemote.data.x : player.x;
+      const followY = aliveRemote ? aliveRemote.data.y : player.y;
       camera.x = Math.max(0, Math.min(followX - W/2, level.width - W));
+      camera.y = updateCameraY(followY);
       return;
     }
 
@@ -762,7 +775,7 @@
     }
     updateShieldHud();
 
-    if(player.y > H + 150){
+    if(player.y > GROUND_Y + 210){  // niezalezne od kamery (dawniej H+150 zakladalo camera.y zawsze 0); GROUND_Y+210 = identyczny prog jak dawniej
       takeDamage();
       if(levelDone) return;
     }
@@ -814,6 +827,7 @@
     }
 
     camera.x = Math.max(0, Math.min(player.x - W/2, level.width - W));
+    camera.y = updateCameraY(player.y);
     player.animT += Math.abs(player.vx) * 0.22;
   }
 
