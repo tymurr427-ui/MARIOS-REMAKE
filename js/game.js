@@ -857,6 +857,9 @@
     }
     if(won && !editorTesting){
       questEvent('win');
+      // male, powtarzalne XP za kazde ukonczenie WBUDOWANEGO poziomu (nie custom - zapobiega farmieniu
+      // wlasnym trywialnym poziomem). Daje graczom droge do prestizu przez zwykla gre, nie tylko daily questy.
+      if(!customLevelActive) addXp(15);
       if(!hitThisRun) questEvent('noHit');
       if(runElapsedMs > 0 && runElapsedMs < 20000) questEvent('fastFinish');
       if(!customLevelActive && currentLevelIndex === totalLevels() - 1) state.quests.c.beatGame++;
