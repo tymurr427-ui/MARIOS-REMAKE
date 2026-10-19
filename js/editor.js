@@ -720,7 +720,7 @@
     else if(editorTool === 'oneway'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:16, isOneWay:true}); }
     else if(editorTool === 'iceplat'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:20, isIce:true}); }
     else if(editorTool === 'teleporter'){ editorElements.push({kind:'teleporter', x:levelX, y:levelY}); }
-    else if(editorTool === 'pipe'){ editorElements.push({kind:'pipe', x:levelX, y:EDITOR_GROUND_Y-60, w:46, h:60}); }
+    else if(editorTool === 'pipe'){ editorElements.push({kind:'pipe', x:levelX, y:levelY, w:46, h:60}); }
     else if(editorTool === 'coin'){
       const coinCount = editorElements.filter(e=>e.kind==='coin').length;
       if(coinCount >= 40){
@@ -734,11 +734,11 @@
     else if(editorTool === 'jumper'){ editorElements.push({kind:'enemy', enemyType:'jumper', x:levelX, y:levelY}); }
     else if(editorTool === 'shooter'){ editorElements.push({kind:'enemy', enemyType:'shooter', x:levelX, y:levelY}); }
     else if(editorTool === 'charger'){ editorElements.push({kind:'enemy', enemyType:'charger', x:levelX, y:levelY}); }
-    else if(editorTool === 'hazard'){ editorElements.push({kind:'hazard', x:levelX, y:EDITOR_GROUND_Y, w:40}); }
+    else if(editorTool === 'hazard'){ editorElements.push({kind:'hazard', x:levelX, y:levelY, w:40}); }
     else if(editorTool === 'mover'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'x', range:60}); }
     else if(editorTool === 'mover_y'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'y', range:110}); }
     else if(editorTool === 'crusher'){
-      const cTop = Math.max(20, levelY - 75);
+      const cTop = Math.max(-editorLevelExtraH + 20, levelY - 75);
       editorElements.push({kind:'crusher', x:levelX, w:50, h:50, topY:cTop, bottomY:cTop+150, speed:1.0, t:0});
     }
     else if(editorTool === 'turret'){
@@ -812,7 +812,7 @@
       editorDrag.el.x = Math.max(0, sx);
       if(editorDrag.el.kind === 'crusher'){
         const range = editorDrag.el.bottomY - editorDrag.el.topY;
-        editorDrag.el.topY = Math.max(20, sy);
+        editorDrag.el.topY = Math.max(-editorLevelExtraH + 20, sy);
         editorDrag.el.bottomY = editorDrag.el.topY + range;
       } else if(editorDrag.el.y !== undefined){
         editorDrag.el.y = sy;
