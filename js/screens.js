@@ -191,6 +191,7 @@
     const unlockedAch = Object.keys(state.quests.ach).length;
     panel.innerHTML = `
       <div class="stats-row"><span>⭐ Poziom gracza</span><b>${playerLevel()}${prestigeBadge(playerPrestige())}</b></div>
+      <div class="stats-row"><span>✨ Łącznie XP</span><b>${state.quests.xp}</b></div>
       <div class="stats-row"><span>🏆 Osiągnięcia</span><b>${unlockedAch} / ${ACHIEVEMENTS.length}</b></div>
       <div class="stats-row"><span>🪙 Aktualne monety</span><b>${state.wallet}</b></div>
       <div class="stats-row"><span>💰 Łącznie zarobione monety</span><b>${state.totalCoinsEarned}</b></div>
@@ -201,6 +202,9 @@
       <div class="stats-row"><span>👹 Pokonani bossowie</span><b>${state.bossesKilled}</b></div>
       <div class="stats-row"><span>👕 Posiadane skiny</span><b>${state.ownedSkins.length} / ${SKINS.length}</b></div>
       <div class="stats-row"><span>🚩 Posiadane trailsy</span><b>${state.ownedTrails.length} / ${TRAILS.length}</b></div>
+      <div class="stats-row"><span>🎩 Posiadane czapki</span><b>${state.ownedHats.length} / ${HATS.length}</b></div>
+      <div class="stats-row"><span>🧔 Posiadany zarost</span><b>${state.ownedFacialHair.length} / ${FACIAL_HAIR.length}</b></div>
+      <div class="stats-row"><span>🎨 Posiadane kolory skóry</span><b>${state.ownedSkinTones.length} / ${SKIN_TONES.length}</b></div>
       <div class="stats-row"><span>🛠️ Stworzone poziomy</span><b id="statsLevelsCount">...</b></div>
     `;
     const countEl = document.getElementById('statsLevelsCount');

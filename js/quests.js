@@ -116,7 +116,7 @@
   permDef('bossClean',  '🥇', '', [[1,60],[5,170],[15,350]],                  () => state.quests.c.bossNoHitWins,      n=>n===1?'Pokonaj bossa bez obrażeń':`Pokonaj ${n} bossów bez obrażeń`, n=>n===1?'Defeat a boss without damage':`Defeat ${n} bosses without damage`);
   permDef('fastFin',    '⚡', '', [[10,60],[50,170],[150,350]],               () => state.quests.c.fastFinishes,       n=>`Ukończ ${n} poziomów w mniej niż 20 s łącznie`, n=>`Finish ${n} levels in under 20s in total`);
   permDef('deaths',     '💀', '', [[10,20],[50,60],[200,300]],                () => state.deathCount,                  n=>`Zgiń łącznie ${n} razy`, n=>`Die ${n} times in total`);
-  permDef('achCount',   '🏅', '', [[10,50],[25,150],[49,400]],                () => Object.keys(state.quests.ach).length, n=>`Odblokuj ${n} osiągnięć`, n=>`Unlock ${n} achievements`);
+  permDef('achCount',   '🏅', '', [[10,50],[25,150],[49,1000]],                () => Object.keys(state.quests.ach).length, n=>`Odblokuj ${n} osiągnięć`, n=>`Unlock ${n} achievements`);
 
   // ---------- OSIAGNIECIA (odblokowuja sie same) ----------
   const ACHIEVEMENTS = [];
@@ -170,7 +170,7 @@
   ach('facial_all',    '🧔', 'Brodacz',            'Bearded',           'Zdobądź wszystkie rodzaje zarostu','Get every facial hair style',     FACIAL_HAIR.length, () => state.ownedFacialHair.length, 150);
   ach('explorer',      '🧭', 'Odkrywca menu',      'Menu Explorer',     'Odwiedź sklep, ranking, statystyki, edytor i moje poziomy', 'Visit the shop, ranking, stats, editor and my levels', 5,
       () => (state.quests.c.visitShop>0?1:0) + (state.quests.c.visitRanking>0?1:0) + (state.quests.c.visitStats>0?1:0) + (state.quests.c.visitEditor>0?1:0) + (state.quests.c.visitMyLevels>0?1:0), 40);
-  ach('coins_50000',   '💎', 'Milioner w drodze',  'On the Way to Millions', 'Zarób łącznie 50000 monet',   'Earn 50000 coins in total',       50000, () => state.totalCoinsEarned, 1000);
+  ach('coins_50000',   '💎', 'Milioner w drodze',  'On the Way to Millions', 'Zarób łącznie 50000 monet',   'Earn 50000 coins in total',       50000, () => state.totalCoinsEarned, 2500);
   ach('kills_2000',    '🗡️', 'Legenda rzezi',      'Legend of Slaughter','Pokonaj 2000 wrogów',             'Defeat 2000 enemies',             2000, () => state.enemiesKilled, 480);
   ach('deaths_200',    '♻️', 'Reinkarnacja',       'Reincarnation',     'Zgiń 200 razy',                    'Die 200 times',                   200, () => state.deathCount, 280);
 
