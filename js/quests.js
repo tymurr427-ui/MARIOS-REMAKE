@@ -6,7 +6,7 @@
 
   // ---------- KONFIG ----------
   const XP_MAX_LEVEL = 100;
-  const DAILY_COUNT = 5;
+  const DAILY_COUNT = 10;
   const DAILY_BONUS_XP = 50;
   // UWAGA: krzywa XP jest powielona w SQL (spb_level_from_xp w supabase-anticheat-v3.sql) - zmieniasz tu, zmien tam.
   const xpNeed = lvl => Math.round(95 + 3.2 * (lvl - 1) + 0.055 * (lvl - 1) * (lvl - 1)); // XP z poziomu lvl na lvl+1 (do 100 lvl ~42 tys. XP, start podobny jak dawniej, koniec wyraźnie dłuższy)
@@ -37,21 +37,21 @@
 
   // ---------- ZADANIA DZIENNE (5 dziennie, losowane deterministycznie z daty) ----------
   const DAILY_GROUPS = [
-    { ev:'coin',    icon:'🪙', fmt:'',    tiers:[{t:30,xp:20},{t:80,xp:40}],   pl:n=>`Zbierz ${n} monet`,             en:n=>`Collect ${n} coins` },
-    { ev:'kill',    icon:'👾', fmt:'',    tiers:[{t:5,xp:20},{t:15,xp:40}],    pl:n=>`Pokonaj ${n} wrogów`,           en:n=>`Defeat ${n} enemies` },
+    { ev:'coin',    icon:'🪙', fmt:'',    tiers:[{t:20,xp:20},{t:50,xp:40}],   pl:n=>`Zbierz ${n} monet`,             en:n=>`Collect ${n} coins` },
+    { ev:'kill',    icon:'👾', fmt:'',    tiers:[{t:3,xp:20},{t:10,xp:40}],    pl:n=>`Pokonaj ${n} wrogów`,           en:n=>`Defeat ${n} enemies` },
     { ev:'win',     icon:'🏁', fmt:'',    tiers:[{t:1,xp:25},{t:3,xp:60}],     pl:n=>n===1?'Ukończ 1 poziom':`Ukończ ${n} poziomy`, en:n=>n===1?'Complete 1 level':`Complete ${n} levels` },
-    { ev:'playSec', icon:'⏱', fmt:'min', tiers:[{t:300,xp:20},{t:900,xp:45}], pl:n=>`Graj przez ${n/60} min`,         en:n=>`Play for ${n/60} min` },
-    { ev:'jump',    icon:'🦘', fmt:'',    tiers:[{t:50,xp:15},{t:150,xp:30}],  pl:n=>`Skocz ${n} razy`,              en:n=>`Jump ${n} times` },
-    { ev:'runSec',  icon:'💨', fmt:'s',   tiers:[{t:30,xp:20},{t:90,xp:40}],   pl:n=>`Biegaj (Shift) przez ${n} s`,   en:n=>`Run (hold Shift) for ${n} s` },
+    { ev:'playSec', icon:'⏱', fmt:'min', tiers:[{t:180,xp:20},{t:600,xp:45}], pl:n=>`Graj przez ${n/60} min`,         en:n=>`Play for ${n/60} min` },
+    { ev:'jump',    icon:'🦘', fmt:'',    tiers:[{t:30,xp:15},{t:100,xp:30}],  pl:n=>`Skocz ${n} razy`,              en:n=>`Jump ${n} times` },
+    { ev:'runSec',  icon:'💨', fmt:'s',   tiers:[{t:20,xp:20},{t:60,xp:40}],   pl:n=>`Biegaj (Shift) przez ${n} s`,   en:n=>`Run (hold Shift) for ${n} s` },
     { ev:'boss',    icon:'👹', fmt:'',    tiers:[{t:1,xp:40},{t:2,xp:90}],     pl:n=>n===1?'Pokonaj 1 bossa':`Pokonaj ${n} bossów`, en:n=>n===1?'Defeat 1 boss':`Defeat ${n} bosses` },
     { ev:'noHit',   icon:'🛡', fmt:'',    tiers:[{t:1,xp:30},{t:2,xp:70}],     pl:n=>n===1?'Ukończ poziom bez obrażeń':`Ukończ ${n} poziomy bez obrażeń`, en:n=>n===1?'Finish a level without taking damage':`Finish ${n} levels without taking damage` },
     { ev:'death',       icon:'💀', fmt:'', tiers:[{t:2,xp:15},{t:5,xp:35}],   pl:n=>`Zgiń ${n} razy`,                          en:n=>`Die ${n} times` },
-    { ev:'bounce',      icon:'🔵', fmt:'', tiers:[{t:5,xp:15},{t:15,xp:35}],  pl:n=>`Odbij się na trampolinie ${n} razy`,      en:n=>`Bounce on a trampoline ${n} times` },
+    { ev:'bounce',      icon:'🔵', fmt:'', tiers:[{t:3,xp:15},{t:10,xp:35}],  pl:n=>`Odbij się na trampolinie ${n} razy`,      en:n=>`Bounce on a trampoline ${n} times` },
     { ev:'teleport',    icon:'🌀', fmt:'', tiers:[{t:2,xp:15},{t:6,xp:35}],   pl:n=>`Użyj teleportu ${n} razy`,                en:n=>`Use a teleporter ${n} times` },
     { ev:'checkpoint',  icon:'📍', fmt:'', tiers:[{t:1,xp:15},{t:3,xp:35}],   pl:n=>`Dotrzyj do checkpointu ${n} razy`,        en:n=>`Reach a checkpoint ${n} times` },
     { ev:'buy',         icon:'🛒', fmt:'', tiers:[{t:1,xp:20},{t:3,xp:50}],   pl:n=>`Kup ${n} przedmiotów w sklepie`,          en:n=>`Buy ${n} items in the shop` },
     { ev:'shield',      icon:'🔷', fmt:'', tiers:[{t:1,xp:15},{t:3,xp:40}],   pl:n=>`Użyj tarczy (Q) ${n} razy`,               en:n=>`Use the shield (Q) ${n} times` },
-    { ev:'attempt',     icon:'🔁', fmt:'', tiers:[{t:3,xp:15},{t:8,xp:35}],   pl:n=>`Rozegraj ${n} podejść do poziomu`,        en:n=>`Play ${n} level attempts` },
+    { ev:'attempt',     icon:'🔁', fmt:'', tiers:[{t:2,xp:15},{t:5,xp:35}],   pl:n=>`Rozegraj ${n} podejść do poziomu`,        en:n=>`Play ${n} level attempts` },
     { ev:'createLevel', icon:'🛠️', fmt:'', tiers:[{t:1,xp:30},{t:2,xp:65}],   pl:n=>n===1?'Stwórz i zapisz własny poziom':`Stwórz i zapisz ${n} własne poziomy`, en:n=>n===1?'Create and save a custom level':`Create and save ${n} custom levels` },
     { ev:'visitShop',     icon:'🏪', fmt:'', tiers:[{t:1,xp:10},{t:2,xp:20}], pl:n=>`Odwiedź sklep ${n} razy`,                 en:n=>`Visit the shop ${n} times` },
     { ev:'visitRanking',  icon:'📊', fmt:'', tiers:[{t:1,xp:10},{t:2,xp:20}], pl:n=>`Sprawdź ranking ${n} razy`,               en:n=>`Check the ranking ${n} times` },
@@ -60,6 +60,8 @@
     { ev:'visitMyLevels', icon:'📁', fmt:'', tiers:[{t:1,xp:10},{t:2,xp:20}], pl:n=>`Otwórz "Moje poziomy" ${n} razy`,         en:n=>`Open "My levels" ${n} times` },
     { ev:'bossNoHit',   icon:'🐲', fmt:'', tiers:[{t:1,xp:45},{t:2,xp:100}],  pl:n=>n===1?'Pokonaj bossa bez obrażeń':`Pokonaj ${n} bossów bez obrażeń`, en:n=>n===1?'Defeat a boss without taking damage':`Defeat ${n} bosses without taking damage` },
     { ev:'fastFinish',  icon:'⚡', fmt:'', tiers:[{t:1,xp:25},{t:2,xp:55}],   pl:n=>n===1?'Ukończ poziom w mniej niż 20 s':`Ukończ ${n} poziomy w mniej niż 20 s każdy`, en:n=>n===1?'Finish a level in under 20s':`Finish ${n} levels in under 20s each` },
+    { ev:'mpJoin',      icon:'🎮', fmt:'', tiers:[{t:1,xp:20},{t:2,xp:45}],   pl:n=>n===1?'Dołącz do gry multiplayer':`Dołącz do gry multiplayer ${n} razy`, en:n=>n===1?'Join a multiplayer game':`Join a multiplayer game ${n} times` },
+    { ev:'record',      icon:'⏱️', fmt:'', tiers:[{t:1,xp:25},{t:3,xp:60}],   pl:n=>n===1?'Pobij własny rekord czasu na poziomie':`Pobij własny rekord czasu na poziomie ${n} razy`, en:n=>n===1?'Beat your own level time record':`Beat your own level time record ${n} times` },
   ];
 
   function hashStr(s){ let h = 2166136261 >>> 0; for(let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; }

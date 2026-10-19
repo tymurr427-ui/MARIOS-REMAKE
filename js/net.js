@@ -160,6 +160,7 @@
     remotePlayers = {};
 
     mpChannel = sb.channel('mp-' + code, { config: { presence: { key: myId }, broadcast: { self: false } } });
+    questEvent('mpJoin');
 
     clearTimeout(mpJoinDeadTimeout);
     if(!hosting){

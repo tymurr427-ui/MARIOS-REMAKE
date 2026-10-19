@@ -984,6 +984,7 @@
         .eq('level_index', levelIndex)
         .maybeSingle();
       if(existing && existing.time_ms <= timeMs) return; // stary czas juz jest lepszy lub taki sam
+      questEvent('record');
       await sb.from('level_times').upsert({
         user_id: currentUser.id,
         level_index: levelIndex,
