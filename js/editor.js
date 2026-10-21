@@ -352,15 +352,9 @@
         editorCtx.fillText(el.axis === 'y' ? '↕' : '↔', ex, ey+3);
         editorCtx.textAlign='left';
       } else if(el.kind==='crusher'){
-        const bottomEy = (el.bottomY!==undefined ? el.bottomY : EDITOR_GROUND_Y-55) * editorScale;
-        // lancuch krotki, taki sam jak w grze (render.js: topY-40 -> y biezacy) - blok spoczywa na topY
+        // lancuch krotki, identyczny jak w grze (render.js: topY-40 -> y biezacy) - blok spoczywa na topY, bez dodatkowych znacznikow zasiegu
         editorCtx.fillStyle = '#5a5a5a';
-        editorCtx.fillRect(ex-4, ey-40*editorScale, 8, 40*editorScale);
-        // cienka linia + znacznik najnizszego polozenia (tylko podglad zasiegu, nie osobny obiekt)
-        editorCtx.strokeStyle = 'rgba(231,76,60,.5)';
-        editorCtx.setLineDash([4,3]);
-        editorCtx.beginPath(); editorCtx.moveTo(ex-18, bottomEy); editorCtx.lineTo(ex+18, bottomEy); editorCtx.stroke();
-        editorCtx.setLineDash([]);
+        editorCtx.fillRect(ex-4*editorScale, ey-40*editorScale, 8*editorScale, 40*editorScale);
         editorCtx.fillStyle = '#3a3f47';
         editorCtx.fillRect(ex-18, ey-18, 36, 36);
         editorCtx.strokeStyle = '#000';
