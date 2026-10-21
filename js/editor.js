@@ -353,15 +353,14 @@
         editorCtx.textAlign='left';
       } else if(el.kind==='crusher'){
         const bottomEy = (el.bottomY!==undefined ? el.bottomY : EDITOR_GROUND_Y-55) * editorScale;
-        editorCtx.strokeStyle = 'rgba(80,60,30,.9)';
-        editorCtx.lineWidth = 2;
-        editorCtx.beginPath(); editorCtx.moveTo(ex,ey-40*editorScale); editorCtx.lineTo(ex,ey); editorCtx.stroke();
-        editorCtx.strokeStyle = 'rgba(231,76,60,.6)';
+        // lancuch krotki, taki sam jak w grze (render.js: topY-40 -> y biezacy) - blok spoczywa na topY
+        editorCtx.fillStyle = '#5a5a5a';
+        editorCtx.fillRect(ex-4, ey-40*editorScale, 8, 40*editorScale);
+        // cienka linia + znacznik najnizszego polozenia (tylko podglad zasiegu, nie osobny obiekt)
+        editorCtx.strokeStyle = 'rgba(231,76,60,.5)';
         editorCtx.setLineDash([4,3]);
-        editorCtx.beginPath(); editorCtx.moveTo(ex,ey); editorCtx.lineTo(ex,bottomEy); editorCtx.stroke();
+        editorCtx.beginPath(); editorCtx.moveTo(ex-18, bottomEy); editorCtx.lineTo(ex+18, bottomEy); editorCtx.stroke();
         editorCtx.setLineDash([]);
-        editorCtx.fillStyle = 'rgba(231,76,60,.3)';
-        editorCtx.fillRect(ex-18, bottomEy-18, 36, 36);
         editorCtx.fillStyle = '#3a3f47';
         editorCtx.fillRect(ex-18, ey-18, 36, 36);
         editorCtx.strokeStyle = '#000';
