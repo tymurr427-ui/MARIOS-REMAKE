@@ -61,7 +61,7 @@
     { ev:'bossNoHit',   icon:'🐲', fmt:'', tiers:[{t:1,xp:45},{t:2,xp:100}],  pl:n=>n===1?'Pokonaj bossa bez obrażeń':`Pokonaj ${n} bossów bez obrażeń`, en:n=>n===1?'Defeat a boss without taking damage':`Defeat ${n} bosses without taking damage` },
     { ev:'fastFinish',  icon:'⚡', fmt:'', tiers:[{t:1,xp:25},{t:2,xp:55}],   pl:n=>n===1?'Ukończ poziom w mniej niż 20 s':`Ukończ ${n} poziomy w mniej niż 20 s każdy`, en:n=>n===1?'Finish a level in under 20s':`Finish ${n} levels in under 20s each` },
     { ev:'mpJoin',      icon:'🎮', fmt:'', tiers:[{t:1,xp:20},{t:2,xp:45}],   pl:n=>n===1?'Dołącz do gry multiplayer':`Dołącz do gry multiplayer ${n} razy`, en:n=>n===1?'Join a multiplayer game':`Join a multiplayer game ${n} times` },
-    { ev:'record',      icon:'⏱️', fmt:'', tiers:[{t:1,xp:25},{t:3,xp:60}],   pl:n=>n===1?'Pobij własny rekord czasu na poziomie':`Pobij własny rekord czasu na poziomie ${n} razy`, en:n=>n===1?'Beat your own level time record':`Beat your own level time record ${n} times` },
+    { ev:'switch',      icon:'🔛', fmt:'', tiers:[{t:1,xp:20},{t:3,xp:45}],   pl:n=>n===1?'Aktywuj dźwignię/przełącznik':`Aktywuj dźwignię/przełącznik ${n} razy`, en:n=>n===1?'Activate a lever/switch':`Activate a lever/switch ${n} times` },
   ];
 
   function hashStr(s){ let h = 2166136261 >>> 0; for(let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; }
@@ -109,15 +109,15 @@
   permDef('facial', '🧔', '',  [[3,30],[8,80],[FACIAL_HAIR.length,200]],   () => state.ownedFacialHair.length, n=>`Posiadaj ${n} rodzajów zarostu`, n=>`Own ${n} facial hair styles`);
   permDef('glasses',    '👓', '', [[3,30],[GLASSES.length,100]],              () => state.ownedGlasses.length,        n=>`Posiadaj ${n} par okularów`, n=>`Own ${n} pairs of glasses`);
   permDef('bounce',     '🔵', '', [[50,30],[300,80],[1000,450]],              () => state.quests.c.bounces,            n=>`Odbij się na trampolinie ${n} razy łącznie`, n=>`Bounce on a trampoline ${n} times in total`);
-  permDef('teleport',   '🌀', '', [[20,30],[100,80],[150,200]],               () => state.quests.c.teleports,          n=>`Użyj teleportu ${n} razy łącznie`, n=>`Use a teleporter ${n} times in total`);
+  permDef('teleport',   '🌀', '', [[20,30],[50,80],[100,200]],                () => state.quests.c.teleports,          n=>`Użyj teleportu ${n} razy łącznie`, n=>`Use a teleporter ${n} times in total`);
   permDef('checkpoint', '📍', '', [[20,30],[50,150],[100,400]],               () => state.quests.c.checkpoints,        n=>`Dotrzyj do checkpointu ${n} razy łącznie`, n=>`Reach a checkpoint ${n} times in total`);
   permDef('buy',        '🛒', '', [[10,30],[50,100],[150,250]],               () => state.quests.c.buys,               n=>`Kup ${n} przedmiotów w sklepie łącznie`, n=>`Buy ${n} items in the shop in total`);
   permDef('shieldUse',  '🔷', '', [[5,30],[20,120],[40,350]],                 () => state.quests.c.shieldUses,         n=>`Użyj tarczy (Q) ${n} razy łącznie`, n=>`Use the shield (Q) ${n} times in total`);
   permDef('attempts',   '🔁', '', [[100,30],[500,100],[800,550]],            () => state.quests.c.attempts,           n=>`Rozegraj ${n} podejść do poziomów łącznie`, n=>`Play ${n} level attempts in total`);
   permDef('createLvl',  '🛠️', '', [[1,30],[5,100],[20,250]],                  () => state.quests.c.levelsCreated,      n=>n===1?'Stwórz i zapisz własny poziom':`Stwórz i zapisz ${n} własnych poziomów`, n=>n===1?'Create and save a custom level':`Create and save ${n} custom levels`);
   permDef('bossClean',  '🥇', '', [[1,60],[5,170],[15,350]],                  () => state.quests.c.bossNoHitWins,      n=>n===1?'Pokonaj bossa bez obrażeń':`Pokonaj ${n} bossów bez obrażeń`, n=>n===1?'Defeat a boss without damage':`Defeat ${n} bosses without damage`);
-  permDef('fastFin',    '⚡', '', [[10,60],[50,170],[150,350]],               () => state.quests.c.fastFinishes,       n=>`Ukończ ${n} poziomów w mniej niż 20 s łącznie`, n=>`Finish ${n} levels in under 20s in total`);
-  permDef('deaths',     '💀', '', [[10,20],[50,60],[200,300]],                () => state.deathCount,                  n=>`Zgiń łącznie ${n} razy`, n=>`Die ${n} times in total`);
+  permDef('fastFin',    '⚡', '', [[10,60],[50,170],[100,350]],               () => state.quests.c.fastFinishes,       n=>`Ukończ ${n} poziomów w mniej niż 20 s łącznie`, n=>`Finish ${n} levels in under 20s in total`);
+  permDef('deaths',     '💀', '', [[10,20],[50,60],[150,300]],                () => state.deathCount,                  n=>`Zgiń łącznie ${n} razy`, n=>`Die ${n} times in total`);
   permDef('achCount',   '🏅', '', [[10,50],[25,150],[49,1000]],                () => Object.keys(state.quests.ach).length, n=>`Odblokuj ${n} osiągnięć`, n=>`Unlock ${n} achievements`);
 
   // ---------- OSIAGNIECIA (odblokowuja sie same) ----------

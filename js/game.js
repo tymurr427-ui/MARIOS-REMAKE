@@ -483,6 +483,7 @@
         const gate = (level.gates||[])[s.id];
         if(gate){ gate.solid = false; }
         AudioEngine.sfxJump();
+        questEvent('switch');
       }
     }
   }
