@@ -355,7 +355,7 @@
         const bottomEy = (el.bottomY!==undefined ? el.bottomY : EDITOR_GROUND_Y-55) * editorScale;
         editorCtx.strokeStyle = 'rgba(80,60,30,.9)';
         editorCtx.lineWidth = 2;
-        editorCtx.beginPath(); editorCtx.moveTo(ex,0); editorCtx.lineTo(ex,ey); editorCtx.stroke();
+        editorCtx.beginPath(); editorCtx.moveTo(ex,ey-40*editorScale); editorCtx.lineTo(ex,ey); editorCtx.stroke();
         editorCtx.strokeStyle = 'rgba(231,76,60,.6)';
         editorCtx.setLineDash([4,3]);
         editorCtx.beginPath(); editorCtx.moveTo(ex,ey); editorCtx.lineTo(ex,bottomEy); editorCtx.stroke();
