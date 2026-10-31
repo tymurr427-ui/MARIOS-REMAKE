@@ -352,9 +352,22 @@
         editorCtx.fillText(el.axis === 'y' ? '↕' : '↔', ex, ey+3);
         editorCtx.textAlign='left';
       } else if(el.kind==='crusher'){
-        // lancuch krotki, identyczny jak w grze (render.js: topY-40 -> y biezacy) - blok spoczywa na topY, bez dodatkowych znacznikow zasiegu
+        const bottomEy = (el.bottomY!==undefined ? el.bottomY : EDITOR_GROUND_Y-55) * editorScale;
+        // lancuch o stalej dlugosci na ekranie (nie znika przy odjezdzie kamery/wysokiej wiezy)
         editorCtx.fillStyle = '#5a5a5a';
-        editorCtx.fillRect(ex-4*editorScale, ey-40*editorScale, 8*editorScale, 40*editorScale);
+        editorCtx.fillRect(ex-4, ey-18, 8, 18);
+        // zasieg opadania - przerywana linia od spodu bloku do najnizszego punktu (bottomY), ze strzalka
+        editorCtx.strokeStyle = 'rgba(231,76,60,.85)';
+        editorCtx.lineWidth = 2;
+        editorCtx.setLineDash([5,4]);
+        editorCtx.beginPath(); editorCtx.moveTo(ex, ey+18); editorCtx.lineTo(ex, bottomEy); editorCtx.stroke();
+        editorCtx.setLineDash([]);
+        editorCtx.fillStyle = 'rgba(231,76,60,.85)';
+        editorCtx.beginPath();
+        editorCtx.moveTo(ex-6, bottomEy-8); editorCtx.lineTo(ex+6, bottomEy-8); editorCtx.lineTo(ex, bottomEy); editorCtx.closePath(); editorCtx.fill();
+        editorCtx.font = 'bold 11px sans-serif'; editorCtx.textAlign = 'center';
+        editorCtx.fillText(Math.round((el.bottomY||0)-(el.topY||0))+'px', ex, bottomEy+14);
+        editorCtx.textAlign = 'left';
         editorCtx.fillStyle = '#3a3f47';
         editorCtx.fillRect(ex-18, ey-18, 36, 36);
         editorCtx.strokeStyle = '#000';
