@@ -124,7 +124,7 @@
     const { data, error } = await sb.from('profiles')
       .select('id,display_name,wallet,playtime_seconds,total_coins_earned,enemies_killed,bosses_killed,unlocked_level,xp')
       .order(rankingSort, { ascending:false, nullsFirst:false })
-      .limit(50);
+      .limit(100);
     if(req !== rankingReq) return; // przyszla nowsza prosba (ktos zmienil sortowanie)
     if(error){
       panel.innerHTML = '<div class="rank-empty">' + escapeHtml('⚠ Błąd wczytywania: ' + (error.message || error)) + '</div>';
