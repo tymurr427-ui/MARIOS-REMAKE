@@ -745,7 +745,7 @@
     else if(editorTool === 'mover_y'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'y', range:110}); }
     else if(editorTool === 'crusher'){
       const cTop = Math.max(-editorLevelExtraH + 20, levelY - 75);
-      editorElements.push({kind:'crusher', x:levelX, w:50, h:50, topY:cTop, bottomY:cTop+150, speed:1.0, t:0});
+      editorElements.push({kind:'crusher', x:levelX, w:50, h:50, topY:cTop, bottomY:cTop+525, speed:1.0, t:0});
     }
     else if(editorTool === 'turret'){
       const dir = levelX < editorLevelW/2 ? 1 : -1;
