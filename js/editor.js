@@ -352,7 +352,7 @@
         editorCtx.fillText(el.axis === 'y' ? '↕' : '↔', ex, ey+3);
         editorCtx.textAlign='left';
       } else if(el.kind==='crusher'){
-        const bottomEy = (el.bottomY!==undefined ? el.bottomY : EDITOR_GROUND_Y-55) * editorScale;
+        const bottomEy = ((el.bottomY!==undefined ? el.bottomY : EDITOR_GROUND_Y-55) - editorScrollY) * editorScale;
         // lancuch o stalej dlugosci na ekranie (nie znika przy odjezdzie kamery/wysokiej wiezy)
         editorCtx.fillStyle = '#5a5a5a';
         editorCtx.fillRect(ex-4, ey-18, 8, 18);
