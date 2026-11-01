@@ -715,9 +715,9 @@
     if(editorTool === 'spawn'){ editorSpawn = {x:levelX, y:levelY}; redrawEditor(); return; }
     if(editorTool === 'flag'){ editorFlag = {x:levelX, y:levelY}; redrawEditor(); return; }
     if(editorTool === 'checkpoint'){ editorCheckpoint = {x:levelX, y:levelY}; redrawEditor(); return; }
-    if(editorTool === 'ground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w: editorShiftHeld ? 1000 : 200}); }
-    else if(editorTool === 'iceground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w: editorShiftHeld ? 1000 : 200, isIce:true}); }
-    else if(editorTool === 'sandground'){ editorElements.push({kind:'ground', x:levelX, y:EDITOR_GROUND_Y, w: editorShiftHeld ? 1000 : 200, isSand:true}); }
+    if(editorTool === 'ground'){ editorElements.push({kind:'ground', x:levelX, y:levelY, w: editorShiftHeld ? 1000 : 200}); }
+    else if(editorTool === 'iceground'){ editorElements.push({kind:'ground', x:levelX, y:levelY, w: editorShiftHeld ? 1000 : 200, isIce:true}); }
+    else if(editorTool === 'sandground'){ editorElements.push({kind:'ground', x:levelX, y:levelY, w: editorShiftHeld ? 1000 : 200, isSand:true}); }
     else if(editorTool === 'blinker'){ editorElements.push({kind:'blinker', x:levelX, y:levelY, w:90, h:20}); }
     else if(editorTool === 'hammer'){ editorElements.push({kind:'hammer', x:levelX, y:levelY, radius:70, speed:0.045}); }
     else if(editorTool === 'platform'){ editorElements.push({kind:'platform', x:levelX, y:levelY, w:MIN_PLATFORM_W, h:22}); }
