@@ -93,33 +93,6 @@
       ctx.beginPath(); ctx.arc(W*0.82, H*0.16, 60, 0, Math.PI*2); ctx.fill();
       ctx.restore();
     }
-    // ULTRA: delikatne promienie slonca (obracajace sie powoli)
-    if(gfxQuality >= 3){
-      ctx.save();
-      ctx.translate(W*0.82, H*0.16);
-      ctx.rotate((timeAlive||0)*0.002);
-      ctx.globalAlpha = 0.08;
-      ctx.fillStyle = '#fff';
-      for(let i=0;i<8;i++){
-        ctx.rotate(Math.PI/4);
-        ctx.fillRect(-3, 0, 6, 140);
-      }
-      ctx.restore();
-    }
-
-    // dalekie gory - najwolniejsza warstwa parallaksy, z tylu za chmurami
-    ctx.fillStyle = shade(bc.hill, -16);
-    for(let i=0;i<6;i++){
-      const hx = ((i*360 - camera.x*0.15) % (level.width+360) + level.width+360) % (level.width+360) - 180;
-      ctx.beginPath();
-      ctx.moveTo(hx-120, GROUND_Y+25);
-      ctx.lineTo(hx-20, GROUND_Y-110);
-      ctx.lineTo(hx+20, GROUND_Y-110);
-      ctx.lineTo(hx+120, GROUND_Y+25);
-      ctx.closePath();
-      ctx.fill();
-    }
-
     ctx.fillStyle = bc.sun;
     ctx.beginPath(); ctx.arc(W*0.82, H*0.16, 34, 0, Math.PI*2); ctx.fill();
 
@@ -616,21 +589,43 @@
     const y = level.checkpoint.y;
     const active = levelCheckpointReached;
     ctx.save();
-    ctx.fillStyle = active ? '#ccc' : '#8a8f99';
+    // maszt - gradient metaliczny
+    if(gfxQuality === 0){ ctx.fillStyle = active ? '#ccc' : '#8a8f99'; }
+    else {
+      const pg = ctx.createLinearGradient(x, 0, x+5, 0);
+      if(active){ pg.addColorStop(0,'#9aa0a8'); pg.addColorStop(0.5,'#f0f2f4'); pg.addColorStop(1,'#8a9099'); }
+      else { pg.addColorStop(0,'#6b7076'); pg.addColorStop(0.5,'#9298a0'); pg.addColorStop(1,'#5f6469'); }
+      ctx.fillStyle = pg;
+    }
     ctx.fillRect(x, y-220, 5, 220);
-    ctx.fillStyle = active ? '#2ecc71' : '#556070';
+    // falujaca choragiewka (zamiast sztywnego trojkata)
+    const wave = gfxQuality >= 1 ? Math.sin((timeAlive||0)*0.08 + x*0.02)*2.5 : 0;
+    if(gfxQuality === 0){ ctx.fillStyle = active ? '#2ecc71' : '#556070'; }
+    else {
+      const fg = ctx.createLinearGradient(x+5, y-214, x+28, y-214);
+      if(active){ fg.addColorStop(0,'#4ee08a'); fg.addColorStop(1,'#1ca355'); }
+      else { fg.addColorStop(0,'#6a7682'); fg.addColorStop(1,'#444c56'); }
+      ctx.fillStyle = fg;
+    }
     ctx.beginPath();
     ctx.moveTo(x+5, y-214);
-    ctx.lineTo(x+30, y-206);
-    ctx.lineTo(x+5, y-198);
+    ctx.quadraticCurveTo(x+18, y-210+wave, x+28, y-206+wave*0.6);
+    ctx.quadraticCurveTo(x+18, y-202, x+5, y-198);
+    ctx.closePath();
     ctx.fill();
     if(active){
       ctx.shadowColor = '#2ecc71';
       ctx.shadowBlur = 12;
       ctx.beginPath();
-      ctx.arc(x+2, y-215, 4, 0, Math.PI*2);
+      ctx.arc(x+2, y-222, 4, 0, Math.PI*2);
       ctx.fillStyle = '#2ecc71';
       ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+    // podstawa masztu
+    if(gfxQuality >= 1){
+      ctx.fillStyle = 'rgba(0,0,0,.25)';
+      ctx.beginPath(); ctx.ellipse(x+2, y+3, 7, 3, 0, 0, Math.PI*2); ctx.fill();
     }
     ctx.restore();
   }
