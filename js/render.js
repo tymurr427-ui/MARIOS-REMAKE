@@ -107,6 +107,19 @@
       ctx.restore();
     }
 
+    // dalekie gory - najwolniejsza warstwa parallaksy, z tylu za chmurami
+    ctx.fillStyle = shade(bc.hill, -16);
+    for(let i=0;i<6;i++){
+      const hx = ((i*360 - camera.x*0.15) % (level.width+360) + level.width+360) % (level.width+360) - 180;
+      ctx.beginPath();
+      ctx.moveTo(hx-120, GROUND_Y+25);
+      ctx.lineTo(hx-20, GROUND_Y-110);
+      ctx.lineTo(hx+20, GROUND_Y-110);
+      ctx.lineTo(hx+120, GROUND_Y+25);
+      ctx.closePath();
+      ctx.fill();
+    }
+
     ctx.fillStyle = bc.sun;
     ctx.beginPath(); ctx.arc(W*0.82, H*0.16, 34, 0, Math.PI*2); ctx.fill();
 
@@ -123,6 +136,17 @@
       ctx.beginPath();
       ctx.arc(hx, GROUND_Y+30, 90, Math.PI, 0);
       ctx.fill();
+    }
+
+    // bliskie krzaki - szybsza warstwa parallaksy, tuz przed gruntem
+    if(gfxQuality >= 1){
+      ctx.fillStyle = shade(bc.hill, -28);
+      for(let i=0;i<14;i++){
+        const bx = ((i*170 - camera.x*0.75) % (level.width+170) + level.width+170) % (level.width+170) - 85;
+        ctx.beginPath();
+        ctx.ellipse(bx, GROUND_Y+8, 34, 15, 0, Math.PI, 0);
+        ctx.fill();
+      }
     }
 
     // ULTRA: delikatna winieta po brzegach ekranu
@@ -204,11 +228,34 @@
       } else if(p.isGround){
         ctx.fillStyle = '#8a5a2b';
         ctx.fillRect(x, p.y, p.w, H-p.y+10);
+        // tekstura ziemi: plamki/zyly, deterministyczne wg pozycji w swiecie (bez migotania przy scrollu)
+        if(gfxQuality >= 1){
+          ctx.fillStyle = 'rgba(0,0,0,.14)';
+          for(let cx=10; cx<p.w; cx+=24){
+            const wx = p.x+cx;
+            const dy = 16 + ((wx*53)%38);
+            ctx.fillRect(x+cx, p.y+dy, 9, 3);
+          }
+        }
+        // trawa: zabkowana krawedz zamiast plaskiego paska
         ctx.fillStyle = '#3fae4a';
-        ctx.fillRect(x, p.y, p.w, 10);
+        ctx.beginPath();
+        ctx.moveTo(x, p.y+10);
+        const teeth = Math.max(2, Math.round(p.w/14));
+        for(let i=0;i<=teeth;i++){
+          const tx = x + (p.w*i/teeth);
+          const ty = p.y + (i%2===0 ? 0 : -4);
+          ctx.lineTo(tx, ty);
+        }
+        ctx.lineTo(x+p.w, p.y+10);
+        ctx.closePath();
+        ctx.fill();
         if(gfxQuality >= 2){
-          ctx.fillStyle = 'rgba(255,255,255,.15)';
-          ctx.fillRect(x, p.y, p.w, 2);
+          ctx.fillStyle = 'rgba(255,255,255,.18)';
+          for(let i=0;i<teeth;i++){
+            const tx = x + (p.w*(i+0.5)/teeth);
+            if(i%2!==0) ctx.fillRect(tx-1, p.y-4, 2, 4);
+          }
         }
       } else {
         if(gfxQuality >= 2){

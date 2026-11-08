@@ -16,7 +16,7 @@
     };
   }
 
-  function drawCharacterSprite(targetCtx, c, bob, airborne, flat, shine, sparkle, facialHair, hatStyle, glasses){
+  function drawCharacterSprite(targetCtx, c, bob, airborne, flat, shine, sparkle, facialHair, hatStyle, glasses, blinking){
     const tctx = targetCtx;
     // ---- cien pod stopami ----
     if(!flat){
@@ -159,20 +159,29 @@
     // oczy - dwa, male i blisko siebie (widok lekko z ukosa); zrenice patrza w prawo, w skoku szerzej otwarte
     const eyeY = airborne ? 9.6 : 10.4;
     const eyeH = airborne ? 3.6 : 3.0;
-    // blizsze oko
-    tctx.fillStyle = '#fff';
-    tctx.beginPath(); tctx.ellipse(21.8, eyeY, 2.5, eyeH, 0, 0, Math.PI*2); tctx.fill();
-    tctx.fillStyle = '#2e6bd6';
-    tctx.beginPath(); tctx.arc(22.5, eyeY + 0.3, 1.5, 0, Math.PI*2); tctx.fill();
-    tctx.fillStyle = '#111';
-    tctx.beginPath(); tctx.arc(22.9, eyeY + 0.3, 0.8, 0, Math.PI*2); tctx.fill();
-    // dalsze oko (troche mniejsze)
-    tctx.fillStyle = '#fff';
-    tctx.beginPath(); tctx.ellipse(28.4, eyeY, 2.2, eyeH - 0.2, 0, 0, Math.PI*2); tctx.fill();
-    tctx.fillStyle = '#2e6bd6';
-    tctx.beginPath(); tctx.arc(29.0, eyeY + 0.3, 1.3, 0, Math.PI*2); tctx.fill();
-    tctx.fillStyle = '#111';
-    tctx.beginPath(); tctx.arc(29.4, eyeY + 0.3, 0.7, 0, Math.PI*2); tctx.fill();
+    if(blinking && !airborne){
+      // mrugniecie: cienka kreska zamiast otwartego oka (tylko na ziemi - w skoku oczy zawsze otwarte)
+      tctx.strokeStyle = shade(c.skin, -22);
+      tctx.lineWidth = 1.3;
+      tctx.lineCap = 'round';
+      tctx.beginPath(); tctx.moveTo(19.6, eyeY); tctx.lineTo(24.0, eyeY); tctx.stroke();
+      tctx.beginPath(); tctx.moveTo(26.5, eyeY); tctx.lineTo(30.3, eyeY); tctx.stroke();
+    } else {
+      // blizsze oko
+      tctx.fillStyle = '#fff';
+      tctx.beginPath(); tctx.ellipse(21.8, eyeY, 2.5, eyeH, 0, 0, Math.PI*2); tctx.fill();
+      tctx.fillStyle = '#2e6bd6';
+      tctx.beginPath(); tctx.arc(22.5, eyeY + 0.3, 1.5, 0, Math.PI*2); tctx.fill();
+      tctx.fillStyle = '#111';
+      tctx.beginPath(); tctx.arc(22.9, eyeY + 0.3, 0.8, 0, Math.PI*2); tctx.fill();
+      // dalsze oko (troche mniejsze)
+      tctx.fillStyle = '#fff';
+      tctx.beginPath(); tctx.ellipse(28.4, eyeY, 2.2, eyeH - 0.2, 0, 0, Math.PI*2); tctx.fill();
+      tctx.fillStyle = '#2e6bd6';
+      tctx.beginPath(); tctx.arc(29.0, eyeY + 0.3, 1.3, 0, Math.PI*2); tctx.fill();
+      tctx.fillStyle = '#111';
+      tctx.beginPath(); tctx.arc(29.4, eyeY + 0.3, 0.7, 0, Math.PI*2); tctx.fill();
+    }
 
     // ---- okulary (rysowane nad oczami, pod wlosami/czapka) ----
     const gl = glasses || 'none';
@@ -658,6 +667,9 @@
   }
   function roundRect(x,y,w,h,r){ roundRectOn(ctx,x,y,w,h,r); }
 
+  // stan animacji trzymany miedzy klatkami (ladowanie/skok - squash&stretch, mruganie)
+  let animWasAirborne = false, animPrevVy = 0, animLandSquash = 0;
+
   function drawPlayer(){
     const c = skinColors();
     const px = player.x - camera.x;
@@ -670,6 +682,28 @@
     const running = player.onGround && Math.abs(player.vx) > 3.5;
     const shine = gfxQuality >= 2;
     const sparkle = gfxQuality >= 3;
+
+    // ---- squash & stretch: rozciagniecie w skoku/spadaniu, splaszczenie przy ladowaniu ----
+    const vy = player.vy || 0;
+    if(player.onGround && animWasAirborne) animLandSquash = Math.min(1, Math.abs(animPrevVy)/14);
+    animWasAirborne = airborne;
+    animPrevVy = vy;
+    animLandSquash *= 0.8; if(animLandSquash < 0.02) animLandSquash = 0;
+    let stretchX = 1, stretchY = 1;
+    if(gfxQuality >= 1){
+      if(airborne){
+        const stretch = Math.max(-1, Math.min(1, vy/14)); // <0 wznoszenie, >0 szybkie opadanie
+        stretchY = 1 + stretch*0.14;
+        stretchX = 1 - stretch*0.09;
+      }
+      stretchY -= animLandSquash*0.26;
+      stretchX += animLandSquash*0.18;
+    }
+
+    // ---- mruganie: co jakis czas krotkie zamkniecie oczu (tylko na ziemi) ----
+    const blinkCycle = 210;
+    const bt = Math.floor(timeAlive||0) % blinkCycle;
+    const blinking = bt < 6;
     // brak obrotu w powietrzu - postac ma wlasna, zaprojektowana poze skoku
     // (podkurczone nogi + uniesione rece w drawCharacterSprite), bez kolowrotka
 
@@ -723,8 +757,8 @@
       ctx.shadowOffsetY = 3;
     }
     ctx.translate(px + player.w/2, py + 28*scale);
-    ctx.scale(player.facing*scale, scale);
+    ctx.scale(player.facing*scale*stretchX, scale*stretchY);
     ctx.translate(-20, -28);
-    drawCharacterSprite(ctx, c, bob, airborne, flat, shine, sparkle, state.equippedFacialHair, state.equippedHatStyle, state.equippedGlasses);
+    drawCharacterSprite(ctx, c, bob, airborne, flat, shine, sparkle, state.equippedFacialHair, state.equippedHatStyle, state.equippedGlasses, blinking);
     ctx.restore();
   }
