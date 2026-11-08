@@ -136,6 +136,22 @@
       ctx.beginPath();
       ctx.arc(hx, GROUND_Y+30, 90, Math.PI, 0);
       ctx.fill();
+      // kepki trawy na szczycie wzgorza - zeby nie wygladalo jak gladka stara kopulka
+      if(gfxQuality >= 1){
+        ctx.fillStyle = shade(bc.hill, 14);
+        for(let k=-1;k<=1;k++){
+          const tx = hx + k*24;
+          const dx2 = (k*24)*(k*24);
+          const ty = (GROUND_Y+30) - Math.sqrt(Math.max(0, 90*90 - dx2));
+          ctx.beginPath();
+          ctx.moveTo(tx-7, ty+3);
+          ctx.lineTo(tx, ty-6);
+          ctx.lineTo(tx+7, ty+3);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.fillStyle = bc.hill;
+      }
     }
 
     // bliskie krzaki - szybsza warstwa parallaksy, tuz przed gruntem
@@ -164,6 +180,23 @@
     ctx.arc(x+20,y-8,14,0,Math.PI*2);
     ctx.arc(x+36,y,18,0,Math.PI*2);
     ctx.fill();
+  }
+
+  // zabkowana (nierowna) gorna krawedz bloku-gruntu - wspolna dla zwyklego/lodowego/piaskowego gruntu
+  function jaggedTopEdge(xx, topY, w, toothH, color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(xx, topY+toothH);
+    const teeth = Math.max(2, Math.round(w/14));
+    for(let i=0;i<=teeth;i++){
+      const tx = xx + (w*i/teeth);
+      const ty = topY + (i%2===0 ? 0 : -4);
+      ctx.lineTo(tx, ty);
+    }
+    ctx.lineTo(xx+w, topY+toothH);
+    ctx.closePath();
+    ctx.fill();
+    return teeth;
   }
 
   function drawPlatforms(){
@@ -204,19 +237,27 @@
       if(p.isGround && p.isIce){
         ctx.fillStyle = '#7fc4dd';
         ctx.fillRect(x, p.y, p.w, H-p.y+10);
-        ctx.fillStyle = '#eaf9ff';
-        ctx.fillRect(x, p.y, p.w, 10);
+        const teeth = jaggedTopEdge(x, p.y, p.w, 10, '#eaf9ff');
         if(gfxQuality >= 2){
           ctx.fillStyle = 'rgba(255,255,255,.5)';
-          ctx.fillRect(x, p.y, p.w, 2);
+          for(let i=0;i<teeth;i++){
+            const tx = x + (p.w*(i+0.5)/teeth);
+            if(i%2!==0) ctx.fillRect(tx-1, p.y-4, 2, 4);
+          }
           ctx.fillStyle = 'rgba(255,255,255,.25)';
           for(let cx=14; cx<p.w; cx+=34) ctx.fillRect(x+cx, p.y+10, 2, 10);
         }
       } else if(p.isGround && p.isSand){
         ctx.fillStyle = '#d9b26a';
         ctx.fillRect(x, p.y, p.w, H-p.y+10);
-        ctx.fillStyle = '#e8cd8f';
-        ctx.fillRect(x, p.y, p.w, 10);
+        const teeth = jaggedTopEdge(x, p.y, p.w, 10, '#e8cd8f');
+        if(gfxQuality >= 2){
+          ctx.fillStyle = 'rgba(255,255,255,.22)';
+          for(let i=0;i<teeth;i++){
+            const tx = x + (p.w*(i+0.5)/teeth);
+            if(i%2!==0) ctx.fillRect(tx-1, p.y-4, 2, 4);
+          }
+        }
         if(gfxQuality >= 1){
           ctx.fillStyle = 'rgba(120,85,30,.35)';
           for(let cx=10; cx<p.w; cx+=22){
@@ -237,19 +278,7 @@
             ctx.fillRect(x+cx, p.y+dy, 9, 3);
           }
         }
-        // trawa: zabkowana krawedz zamiast plaskiego paska
-        ctx.fillStyle = '#3fae4a';
-        ctx.beginPath();
-        ctx.moveTo(x, p.y+10);
-        const teeth = Math.max(2, Math.round(p.w/14));
-        for(let i=0;i<=teeth;i++){
-          const tx = x + (p.w*i/teeth);
-          const ty = p.y + (i%2===0 ? 0 : -4);
-          ctx.lineTo(tx, ty);
-        }
-        ctx.lineTo(x+p.w, p.y+10);
-        ctx.closePath();
-        ctx.fill();
+        const teeth = jaggedTopEdge(x, p.y, p.w, 10, '#3fae4a');
         if(gfxQuality >= 2){
           ctx.fillStyle = 'rgba(255,255,255,.18)';
           for(let i=0;i<teeth;i++){
