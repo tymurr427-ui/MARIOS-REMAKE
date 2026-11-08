@@ -211,26 +211,66 @@
           ctx.fillStyle = 'rgba(0,0,0,.2)';
           ctx.beginPath(); ctx.ellipse(x+p.w/2, p.y+p.h+5, p.w/2.2, 4, 0, 0, Math.PI*2); ctx.fill();
         }
-        ctx.fillStyle = '#7a4a1e';
+        // metalowa baza - gradient zamiast plaskiego brazu
+        if(gfxQuality === 0){ ctx.fillStyle = '#7a4a1e'; }
+        else { const bg = ctx.createLinearGradient(x,0,x+p.w,0); bg.addColorStop(0,'#5a3613'); bg.addColorStop(0.5,'#8a5a2e'); bg.addColorStop(1,'#5a3613'); ctx.fillStyle = bg; }
         ctx.fillRect(x, p.y+p.h-6, p.w, 6);
-        ctx.fillStyle = '#ff5f6d';
-        ctx.fillRect(x, p.y + squash*6, p.w, p.h-6-squash*6);
+        // powierzchnia - gradient czerwieni
+        const topY = p.y + squash*6, surfH = p.h-6-squash*6;
+        if(gfxQuality === 0){ ctx.fillStyle = '#ff5f6d'; }
+        else { const rg = ctx.createLinearGradient(x,topY,x,topY+surfH); rg.addColorStop(0,'#ff8a93'); rg.addColorStop(0.5,'#ff5f6d'); rg.addColorStop(1,'#d8343f'); ctx.fillStyle = rg; }
+        ctx.fillRect(x, topY, p.w, surfH);
         ctx.strokeStyle = '#c0392b';
         ctx.lineWidth = 2;
-        for(let sx=6; sx<p.w-3; sx+=12) { ctx.beginPath(); ctx.moveTo(x+sx, p.y+p.h-6); ctx.lineTo(x+sx+6, p.y+squash*6); ctx.stroke(); }
+        for(let sx=6; sx<p.w-3; sx+=12) { ctx.beginPath(); ctx.moveTo(x+sx, p.y+p.h-6); ctx.lineTo(x+sx+6, topY); ctx.stroke(); }
+        if(gfxQuality >= 1){
+          ctx.fillStyle = 'rgba(255,255,255,.3)';
+          ctx.fillRect(x, topY, p.w, 2);
+        }
+        // pierscien "pop" przy odbiciu
+        if(gfxQuality >= 1 && p.bounceAnim > 6){
+          const ringA = (p.bounceAnim-6)/4;
+          ctx.save(); ctx.globalAlpha = ringA*0.6;
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.ellipse(x+p.w/2, p.y, p.w*0.4*(1.3-ringA*0.3), 6, 0, 0, Math.PI*2); ctx.stroke();
+          ctx.restore();
+        }
         ctx.restore();
         continue;
       }
       if(p.isCrumbler){
         if(p.state === 'gone') continue;
-        const shakeX = p.state === 'shaking' ? (Math.random()*4-2) : 0;
+        const shaking = p.state === 'shaking';
+        const shakeX = shaking ? (Math.random()*4-2) : 0;
         ctx.save();
-        ctx.globalAlpha = p.state === 'shaking' ? (0.5 + Math.sin((p.timer||0)*0.9)*0.3) : 1;
-        ctx.fillStyle = p.state === 'shaking' ? '#8a5a3a' : '#a06a3e';
+        if(gfxQuality === 0){
+          ctx.globalAlpha = shaking ? (0.5 + Math.sin((p.timer||0)*0.9)*0.3) : 1;
+          ctx.fillStyle = shaking ? '#8a5a3a' : '#a06a3e';
+        } else {
+          const g = ctx.createLinearGradient(x,p.y,x,p.y+p.h);
+          if(shaking){ g.addColorStop(0,'#a06a3e'); g.addColorStop(1,'#6e4327'); }
+          else { g.addColorStop(0,'#b87d48'); g.addColorStop(1,'#7a4e28'); }
+          ctx.fillStyle = g;
+        }
         ctx.fillRect(x+shakeX, p.y, p.w, p.h);
         ctx.strokeStyle = '#5a3a1e';
         ctx.lineWidth = 2;
         for(let cx=0; cx<p.w; cx+=18) ctx.strokeRect(x+shakeX+cx, p.y, Math.min(18,p.w-cx), p.h);
+        // peknieicia - wyraznie pokazuja ze blok zaraz spadnie (zamiast samego migotania)
+        if(shaking && gfxQuality >= 1){
+          const crackA = 0.4 + Math.sin((p.timer||0)*0.9)*0.3;
+          ctx.strokeStyle = `rgba(40,20,5,${crackA})`;
+          ctx.lineWidth = 1.5;
+          const wx = Math.floor(p.x);
+          for(let cx=8; cx<p.w-8; cx+=18){
+            const seed = (wx+cx*7)%10;
+            ctx.beginPath();
+            ctx.moveTo(x+shakeX+cx, p.y+3);
+            ctx.lineTo(x+shakeX+cx+3+(seed%3), p.y+p.h*0.5);
+            ctx.lineTo(x+shakeX+cx-2+(seed%2), p.y+p.h-3);
+            ctx.stroke();
+          }
+        }
         ctx.restore();
         continue;
       }
