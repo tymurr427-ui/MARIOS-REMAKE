@@ -810,14 +810,40 @@
       ctx.strokeRect(x, g.y, g.w, g.h);
       ctx.fillStyle = '#3a4350';
       for(let sy = g.y+10; sy < g.y+g.h-6; sy += 22) ctx.fillRect(x+3, sy, g.w-6, 5);
+      if(gfxQuality >= 1){
+        // nity na rogach krat - mechaniczny detal
+        ctx.fillStyle = 'rgba(255,255,255,.5)';
+        for(let sy = g.y+10; sy < g.y+g.h-6; sy += 22){
+          ctx.beginPath(); ctx.arc(x+6, sy+2.5, 1.4, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(x+g.w-6, sy+2.5, 1.4, 0, Math.PI*2); ctx.fill();
+        }
+      }
     }
     if(level.switches) for(const s of level.switches){
       const x = s.x - camera.x;
       if(x+s.w < 0 || x > W) continue;
+      // podstawa (plytka montazowa)
+      ctx.fillStyle = '#2a2e33';
+      ctx.fillRect(x+s.w/2-10, s.y+s.h-4, 20, 6);
+      // trzpien - krotszy gdy wcisniety
       ctx.fillStyle = '#4a4e54';
-      ctx.fillRect(x+s.w/2-4, s.y+s.h-6, 8, 10);
-      ctx.fillStyle = s.pressed ? '#2ecc71' : '#e74c3c';
-      ctx.beginPath(); ctx.arc(x+s.w/2, s.y+ (s.pressed?8:4), 12, 0, Math.PI*2); ctx.fill();
+      ctx.fillRect(x+s.w/2-4, s.y+s.h-6, 8, s.pressed ? 6 : 10);
+      const by = s.y + (s.pressed ? 8 : 4);
+      // poswiata gdy aktywny
+      if(gfxQuality >= 2 && s.pressed){
+        ctx.save(); ctx.globalAlpha = 0.4; ctx.fillStyle = '#2ecc71';
+        ctx.beginPath(); ctx.arc(x+s.w/2, by, 17, 0, Math.PI*2); ctx.fill(); ctx.restore();
+      }
+      // przycisk - gradient zamiast plaskiego koloru
+      if(gfxQuality === 0){
+        ctx.fillStyle = s.pressed ? '#2ecc71' : '#e74c3c';
+      } else {
+        const g = ctx.createRadialGradient(x+s.w/2-3, by-3, 1, x+s.w/2, by, 12);
+        if(s.pressed){ g.addColorStop(0,'#c8f7dc'); g.addColorStop(1,'#1ca355'); }
+        else { g.addColorStop(0,'#ffc4bd'); g.addColorStop(1,'#c0392b'); }
+        ctx.fillStyle = g;
+      }
+      ctx.beginPath(); ctx.arc(x+s.w/2, by, 12, 0, Math.PI*2); ctx.fill();
       ctx.strokeStyle = '#2a2e33'; ctx.lineWidth = 2;
       ctx.stroke();
     }
