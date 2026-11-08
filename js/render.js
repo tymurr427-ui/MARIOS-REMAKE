@@ -912,5 +912,48 @@
         ctx.lineTo(cx+8, cy+bodyH*0.55);
         ctx.fill();
       }
+
+      // cechy charakterystyczne danego typu - zeby sylwetka byla rozpoznawalna nawet bez koloru
+      if(e.type === 'charger'){
+        // rogi - agresywny wyglad szarzujacego
+        ctx.fillStyle = palette.dark;
+        ctx.beginPath(); ctx.moveTo(cx-bodyW*0.55, cy-bodyH*0.55); ctx.lineTo(cx-bodyW*0.85, cy-bodyH*1.25); ctx.lineTo(cx-bodyW*0.25, cy-bodyH*0.8); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(cx+bodyW*0.55, cy-bodyH*0.55); ctx.lineTo(cx+bodyW*0.85, cy-bodyH*1.25); ctx.lineTo(cx+bodyW*0.25, cy-bodyH*0.8); ctx.closePath(); ctx.fill();
+        if(gfxQuality >= 1 && Math.abs(e.vx) > 0.5){
+          // smugi predkosci za plecami podczas szarzy
+          ctx.strokeStyle = 'rgba(255,255,255,.4)';
+          ctx.lineWidth = 2;
+          for(let i=0;i<3;i++){
+            const sy2 = cy - bodyH*0.5 + i*bodyH*0.5;
+            ctx.beginPath(); ctx.moveTo(cx-facing*bodyW*1.1, sy2); ctx.lineTo(cx-facing*bodyW*1.7, sy2); ctx.stroke();
+          }
+        }
+      } else if(e.type === 'shooter'){
+        // lufa skierowana w strone ruchu
+        ctx.fillStyle = palette.dark;
+        ctx.fillRect(cx + facing*bodyW*0.55, cy-3, facing*bodyW*0.5, 6);
+        ctx.fillStyle = palette.stroke;
+        ctx.beginPath(); ctx.arc(cx + facing*(bodyW*0.55+bodyW*0.5), cy, 4, 0, Math.PI*2); ctx.fill();
+      } else if(e.type === 'flyer'){
+        // ogonek stabilizujacy z tylu
+        ctx.fillStyle = palette.mid;
+        ctx.beginPath();
+        ctx.moveTo(cx - facing*bodyW*0.9, cy-2);
+        ctx.lineTo(cx - facing*bodyW*1.4, cy-8);
+        ctx.lineTo(cx - facing*bodyW*1.4, cy+2);
+        ctx.closePath(); ctx.fill();
+      } else if(e.type === 'jumper'){
+        // nic dodatkowego - sprezyste nozki juz wyrozniaja ten typ
+      } else {
+        // domyslny (walker) - male czulki, dla "sluzowato-kosmicznego" wygladu
+        ctx.strokeStyle = palette.dark;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cx-5, cy-bodyH*0.95); ctx.lineTo(cx-8, cy-bodyH*1.35); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx+5, cy-bodyH*0.95); ctx.lineTo(cx+8, cy-bodyH*1.35); ctx.stroke();
+        ctx.fillStyle = palette.light;
+        ctx.beginPath(); ctx.arc(cx-8, cy-bodyH*1.35, 2.2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx+8, cy-bodyH*1.35, 2.2, 0, Math.PI*2); ctx.fill();
+      }
     }
   }
