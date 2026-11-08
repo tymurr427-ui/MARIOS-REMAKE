@@ -720,14 +720,29 @@
     for(const c of level.crushers){
       const x = c.x - camera.x;
       if(x+c.w < 0 || x > W) continue;
-      // lancuch/tłok od gory
-      ctx.fillStyle = '#5a5a5a';
-      ctx.fillRect(x+c.w/2-4, c.topY-40, 8, c.y-(c.topY-40));
-      // blok z kolcami
+      // lancuch - ogniwa zamiast plaskiego paska
+      const chainTop = c.topY-40, chainLen = c.y-chainTop, cxm = x+c.w/2;
+      if(gfxQuality === 0){
+        ctx.fillStyle = '#5a5a5a';
+        ctx.fillRect(cxm-4, chainTop, 8, chainLen);
+      } else {
+        ctx.strokeStyle = '#3a3a3a';
+        ctx.lineWidth = 2.5;
+        for(let ly = chainTop; ly < c.y; ly += 9){
+          const lh = Math.min(7, c.y-ly);
+          ctx.beginPath(); ctx.ellipse(cxm, ly+lh/2, 3.5, lh/2+1, 0, 0, Math.PI*2); ctx.stroke();
+        }
+      }
+      // blok z kolcami - gradient + nity
       const grad = gfxQuality===0 ? null : ctx.createLinearGradient(x, c.y, x, c.y+c.h);
-      if(grad){ grad.addColorStop(0,'#c0c5cb'); grad.addColorStop(1,'#7a828a'); ctx.fillStyle = grad; }
+      if(grad){ grad.addColorStop(0,'#c0c5cb'); grad.addColorStop(0.5,'#9aa0a6'); grad.addColorStop(1,'#6a7076'); ctx.fillStyle = grad; }
       else ctx.fillStyle = '#9aa0a6';
       ctx.fillRect(x, c.y, c.w, c.h);
+      ctx.strokeStyle = '#3a3e44'; ctx.lineWidth = 2; ctx.strokeRect(x, c.y, c.w, c.h);
+      if(gfxQuality >= 1){
+        ctx.fillStyle = 'rgba(255,255,255,.4)';
+        for(const dx2 of [7, c.w-7]) for(const dy2 of [7, c.h-7]){ ctx.beginPath(); ctx.arc(x+dx2, c.y+dy2, 1.6, 0, Math.PI*2); ctx.fill(); }
+      }
       ctx.fillStyle = '#4a4e54';
       for(let i=0;i<c.w;i+=14){
         ctx.beginPath();
@@ -735,6 +750,15 @@
         ctx.lineTo(x+i+7, c.y+c.h+12);
         ctx.lineTo(x+i+14, c.y+c.h);
         ctx.fill();
+      }
+      // pyl przy uderzeniu blisko najnizszego punktu
+      if(gfxQuality >= 1 && c.bottomY !== undefined && (c.bottomY - c.y) < 10){
+        ctx.save(); ctx.globalAlpha = 0.35;
+        ctx.fillStyle = '#8a8f96';
+        for(let i=0;i<3;i++){
+          ctx.beginPath(); ctx.ellipse(x+c.w*0.2+i*c.w*0.3, c.y+c.h+4, 7, 3, 0, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
       }
     }
   }
@@ -773,18 +797,60 @@
       const x = s.x - camera.x;
       if(x < -40 || x > W+40) continue;
       const dir = s.dir || 1;
+      const timer = s.timer===undefined ? s.interval : s.timer;
+      const charging = timer < 15;       // zaraz strzeli - pulsujaca poswiata
+      const justFired = s.interval - timer < 6; // blysk wylotu lufy
       ctx.save();
+
+      if(gfxQuality >= 1){
+        ctx.fillStyle = 'rgba(0,0,0,.25)';
+        ctx.beginPath(); ctx.ellipse(x, s.y+18, 18, 4, 0, 0, Math.PI*2); ctx.fill();
+      }
+
+      // korpus - gradient metaliczny
       const grad = gfxQuality===0 ? null : ctx.createLinearGradient(x-16, s.y-16, x-16, s.y+16);
-      if(grad){ grad.addColorStop(0,'#7d8694'); grad.addColorStop(1,'#454c56'); ctx.fillStyle = grad; }
+      if(grad){ grad.addColorStop(0,'#8a93a0'); grad.addColorStop(0.5,'#5a626e'); grad.addColorStop(1,'#3a4048'); ctx.fillStyle = grad; }
       else ctx.fillStyle = '#5a626e';
       ctx.fillRect(x-16, s.y-16, 32, 32);
+      ctx.strokeStyle = '#242830'; ctx.lineWidth = 2; ctx.strokeRect(x-16, s.y-16, 32, 32);
       ctx.fillStyle = '#2e333a';
       ctx.fillRect(x-16, s.y-16, 32, 6);
       ctx.fillRect(x-16, s.y+10, 32, 6);
-      ctx.fillStyle = '#c0392b';
-      ctx.fillRect(dir>=0 ? x+8 : x-28, s.y-5, 20, 10);
+      if(gfxQuality >= 1){
+        // nity w rogach
+        ctx.fillStyle = 'rgba(255,255,255,.4)';
+        for(const dx of [-12,12]) for(const dy of [-12,12]){ ctx.beginPath(); ctx.arc(x+dx, s.y+dy, 1.5, 0, Math.PI*2); ctx.fill(); }
+      }
+
+      // lufa - cylindryczny gradient
+      const bx0 = dir>=0 ? x+8 : x-28;
+      if(gfxQuality>=1){
+        const lg = ctx.createLinearGradient(0, s.y-5, 0, s.y+5);
+        lg.addColorStop(0,'#e67e68'); lg.addColorStop(0.5,'#c0392b'); lg.addColorStop(1,'#7a2015');
+        ctx.fillStyle = lg;
+      } else ctx.fillStyle = '#c0392b';
+      ctx.fillRect(bx0, s.y-5, 20, 10);
+      ctx.strokeStyle = '#5a1710'; ctx.lineWidth = 1.5; ctx.strokeRect(bx0, s.y-5, 20, 10);
+
+      // poswiata ladowania przed strzalem
+      if(gfxQuality >= 1 && charging){
+        const pulse = 0.5 + 0.5*Math.sin(timer*0.9);
+        ctx.save(); ctx.globalAlpha = 0.5*pulse;
+        ctx.fillStyle = '#ffcc4d';
+        ctx.beginPath(); ctx.arc(x, s.y, 9, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+      // blysk wylotu lufy tuz po strzale
+      if(gfxQuality >= 1 && justFired){
+        ctx.save(); ctx.globalAlpha = 0.8;
+        ctx.fillStyle = '#fff2b0';
+        ctx.beginPath(); ctx.arc(dir>=0 ? x+30 : x-30, s.y, 7, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+
       ctx.fillStyle = '#ffcc4d';
       ctx.beginPath(); ctx.arc(x, s.y, 5, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#8a5a10'; ctx.lineWidth = 1; ctx.stroke();
       ctx.restore();
     }
   }
@@ -814,30 +880,45 @@
       if(x+h.w < 0 || x > W) continue;
       const spikeW = 12;
       const n = Math.max(1, Math.round(h.w / spikeW));
-      const grad = ctx.createLinearGradient(x, h.y, x, h.y+h.h);
-      grad.addColorStop(0, '#e8e8e8');
-      grad.addColorStop(1, '#8a8f96');
-      ctx.fillStyle = gfxQuality === 0 ? '#a0a5ab' : grad;
+
+      // ciemna podstawa pod kolcami - sprawia ze nie "wiszom w powietrzu"
+      if(gfxQuality >= 1){
+        ctx.fillStyle = '#4a4e54';
+        ctx.fillRect(x, h.y+h.h-3, h.w, 3);
+      }
+
       for(let i=0;i<n;i++){
         const sx = x + i*(h.w/n);
+        const sw = h.w/n;
+        if(gfxQuality >= 1){
+          // kazdy kolec - wlasny gradient boczny (jasna lewa strona, ciemna prawa = polysk metalu)
+          const sg = ctx.createLinearGradient(sx, 0, sx+sw, 0);
+          sg.addColorStop(0, '#f2f2f2');
+          sg.addColorStop(0.45, '#cfd2d6');
+          sg.addColorStop(1, '#787e86');
+          ctx.fillStyle = sg;
+        } else {
+          ctx.fillStyle = '#a0a5ab';
+        }
         ctx.beginPath();
         ctx.moveTo(sx, h.y+h.h);
-        ctx.lineTo(sx + h.w/n/2, h.y);
-        ctx.lineTo(sx + h.w/n, h.y+h.h);
+        ctx.lineTo(sx + sw/2, h.y);
+        ctx.lineTo(sx + sw, h.y+h.h);
         ctx.closePath();
         ctx.fill();
-      }
-      if(gfxQuality >= 2){
+        if(gfxQuality >= 2){
+          // cienka jasna kreska na lewej krawedzi - ostrze
+          ctx.strokeStyle = 'rgba(255,255,255,.6)';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(sx+1, h.y+h.h-1); ctx.lineTo(sx+sw/2, h.y+1); ctx.stroke();
+        }
         ctx.strokeStyle = 'rgba(0,0,0,.3)';
         ctx.lineWidth = 1;
-        for(let i=0;i<n;i++){
-          const sx = x + i*(h.w/n);
-          ctx.beginPath();
-          ctx.moveTo(sx, h.y+h.h);
-          ctx.lineTo(sx + h.w/n/2, h.y);
-          ctx.lineTo(sx + h.w/n, h.y+h.h);
-          ctx.stroke();
-        }
+        ctx.beginPath();
+        ctx.moveTo(sx, h.y+h.h);
+        ctx.lineTo(sx + sw/2, h.y);
+        ctx.lineTo(sx + sw, h.y+h.h);
+        ctx.stroke();
       }
     }
   }
