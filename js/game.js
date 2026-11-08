@@ -48,6 +48,7 @@
   }
 
   let level, player, camera, runCoins, lives, levelDone, timeAlive, currentLevelIndex;
+  let noHitStreak = 0;
   let levelCheckpointReached = false;
   let hitThisRun = false;
   let levelStartTime = 0, runElapsedMs = 0;
@@ -864,6 +865,11 @@
       if(!hitThisRun) questEvent('noHit');
       if(runElapsedMs > 0 && runElapsedMs < 20000) questEvent('fastFinish');
       if(!customLevelActive && currentLevelIndex === totalLevels() - 1) state.quests.c.beatGame++;
+      if(level.coins && level.coins.length > 0 && level.coins.every(c => c.taken)) questEvent('allCoins');
+      if(!hitThisRun){ noHitStreak++; if(noHitStreak % 3 === 0) questEvent('streak3'); }
+      else noHitStreak = 0;
+    } else if(!editorTesting){
+      noHitStreak = 0;
     }
     saveProfile();
     setTimeout(() => {

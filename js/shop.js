@@ -88,11 +88,13 @@
     const owned = state.ownedSkins.includes(sk.id);
     if(owned){
       state.equippedSkin = sk.id;
+      questEvent('changeStyle');
       renderShop();
       saveProfile();
     } else if(sk.lvl && isTester()){
       state.ownedSkins.push(sk.id);
       state.equippedSkin = sk.id;
+      questEvent('changeStyle');
       renderShop();
       saveProfile();
     } else if(!sk.lvl && state.wallet >= sk.price){
@@ -101,6 +103,7 @@
       questEvent('buy');
       state.ownedSkins.push(sk.id);
       state.equippedSkin = sk.id;
+      questEvent('changeStyle');
       renderShop();
       saveProfile();
     }
@@ -260,12 +263,14 @@
       card.onclick = () => {
         if(owned){
           state[equippedFieldName] = it.id;
+          questEvent('changeStyle');
           renderCustomize();
           saveProfile();
         } else if(afford){
           if(!isTester()){ state.wallet -= it.price; state.totalSpent += it.price; questEvent('buy'); }
           state[ownedArrName].push(it.id);
           state[equippedFieldName] = it.id;
+          questEvent('changeStyle');
           renderCustomize();
           saveProfile();
           AudioEngine.sfxCoin();

@@ -62,6 +62,9 @@
     { ev:'fastFinish',  icon:'⚡', fmt:'', tiers:[{t:1,xp:25},{t:2,xp:55}],   pl:n=>n===1?'Ukończ poziom w mniej niż 20 s':`Ukończ ${n} poziomy w mniej niż 20 s każdy`, en:n=>n===1?'Finish a level in under 20s':`Finish ${n} levels in under 20s each` },
     { ev:'mpJoin',      icon:'🎮', fmt:'', tiers:[{t:1,xp:20},{t:2,xp:45}],   pl:n=>n===1?'Dołącz do gry multiplayer':`Dołącz do gry multiplayer ${n} razy`, en:n=>n===1?'Join a multiplayer game':`Join a multiplayer game ${n} times` },
     { ev:'switch',      icon:'🔛', fmt:'', tiers:[{t:1,xp:20},{t:3,xp:45}],   pl:n=>n===1?'Aktywuj dźwignię/przełącznik':`Aktywuj dźwignię/przełącznik ${n} razy`, en:n=>n===1?'Activate a lever/switch':`Activate a lever/switch ${n} times` },
+    { ev:'allCoins',    icon:'💯', fmt:'', tiers:[{t:1,xp:25},{t:2,xp:55}],   pl:n=>n===1?'Ukończ poziom zbierając wszystkie monety':`Ukończ ${n} poziomy zbierając wszystkie monety`, en:n=>n===1?'Finish a level collecting all its coins':`Finish ${n} levels collecting all their coins` },
+    { ev:'changeStyle', icon:'🎨', fmt:'', tiers:[{t:1,xp:10},{t:3,xp:25}],   pl:n=>n===1?'Zmień wygląd postaci w sklepie':`Zmień wygląd postaci ${n} razy w sklepie`, en:n=>n===1?'Change your look in the shop':`Change your look ${n} times in the shop` },
+    { ev:'streak3',     icon:'🔥', fmt:'', tiers:[{t:1,xp:35},{t:2,xp:80}],   pl:n=>n===1?'Ukończ 3 poziomy z rzędu bez obrażeń':`Zrób to ${n} razy`, en:n=>n===1?'Finish 3 levels in a row without taking damage':`Do it ${n} times` },
   ];
 
   function hashStr(s){ let h = 2166136261 >>> 0; for(let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; }
@@ -181,7 +184,8 @@
     return { xp:0, day:'', daily:{ prog:{}, claimed:{}, bonus:false }, permClaimed:{}, lvlClaimed:{}, ach:{}, achXp:{},
              c:{ levelsCompleted:0, beatGame:0, jumps:0, runSec:0, dailyAllDone:0, dailyClaimed:0, questsClaimed:0, noHitWins:0,
                  bounces:0, teleports:0, checkpoints:0, buys:0, shieldUses:0, attempts:0, levelsCreated:0, bossNoHitWins:0, fastFinishes:0,
-                 visitShop:0, visitRanking:0, visitStats:0, visitEditor:0, visitMyLevels:0 } };
+                 visitShop:0, visitRanking:0, visitStats:0, visitEditor:0, visitMyLevels:0,
+                 allCoinLevels:0, styleChanges:0, streak3s:0 } };
   }
   function normalizeQuests(raw){
     const d = defaultQuests();
@@ -254,6 +258,9 @@
     else if(ev === 'visitStats') q.c.visitStats += n;
     else if(ev === 'visitEditor') q.c.visitEditor += n;
     else if(ev === 'visitMyLevels') q.c.visitMyLevels += n;
+    else if(ev === 'allCoins') q.c.allCoinLevels += n;
+    else if(ev === 'changeStyle') q.c.styleChanges += n;
+    else if(ev === 'streak3') q.c.streak3s += n;
     dailySet().forEach(d => {
       if(d.ev === ev) q.daily.prog[d.id] = Math.min(d.target, (q.daily.prog[d.id] || 0) + n);
     });
