@@ -93,6 +93,33 @@
       ctx.beginPath(); ctx.arc(W*0.82, H*0.16, 60, 0, Math.PI*2); ctx.fill();
       ctx.restore();
     }
+    // ULTRA: delikatne promienie slonca (obracajace sie powoli)
+    if(gfxQuality >= 3){
+      ctx.save();
+      ctx.translate(W*0.82, H*0.16);
+      ctx.rotate((timeAlive||0)*0.002);
+      ctx.globalAlpha = 0.08;
+      ctx.fillStyle = '#fff';
+      for(let i=0;i<8;i++){
+        ctx.rotate(Math.PI/4);
+        ctx.fillRect(-3, 0, 6, 140);
+      }
+      ctx.restore();
+    }
+
+    // dalekie gory - najwolniejsza warstwa parallaksy, z tylu za chmurami
+    ctx.fillStyle = shade(bc.hill, -16);
+    for(let i=0;i<6;i++){
+      const hx = ((i*360 - camera.x*0.15) % (level.width+360) + level.width+360) % (level.width+360) - 180;
+      ctx.beginPath();
+      ctx.moveTo(hx-120, GROUND_Y+25);
+      ctx.lineTo(hx-20, GROUND_Y-110);
+      ctx.lineTo(hx+20, GROUND_Y-110);
+      ctx.lineTo(hx+120, GROUND_Y+25);
+      ctx.closePath();
+      ctx.fill();
+    }
+
     ctx.fillStyle = bc.sun;
     ctx.beginPath(); ctx.arc(W*0.82, H*0.16, 34, 0, Math.PI*2); ctx.fill();
 
@@ -109,22 +136,6 @@
       ctx.beginPath();
       ctx.arc(hx, GROUND_Y+30, 90, Math.PI, 0);
       ctx.fill();
-      // kepki trawy na szczycie wzgorza - zeby nie wygladalo jak gladka stara kopulka
-      if(gfxQuality >= 1){
-        ctx.fillStyle = shade(bc.hill, 14);
-        for(let k=-1;k<=1;k++){
-          const tx = hx + k*24;
-          const dx2 = (k*24)*(k*24);
-          const ty = (GROUND_Y+30) - Math.sqrt(Math.max(0, 90*90 - dx2));
-          ctx.beginPath();
-          ctx.moveTo(tx-7, ty+3);
-          ctx.lineTo(tx, ty-6);
-          ctx.lineTo(tx+7, ty+3);
-          ctx.closePath();
-          ctx.fill();
-        }
-        ctx.fillStyle = bc.hill;
-      }
     }
 
     // bliskie krzaki - szybsza warstwa parallaksy, tuz przed gruntem
