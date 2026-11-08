@@ -327,22 +327,25 @@
           if(gfxQuality === 0){ ctx.fillStyle = '#c96a2e'; }
           else { const g=ctx.createLinearGradient(x,p.y,x,p.y+p.h); g.addColorStop(0,'#e0924a'); g.addColorStop(0.35,'#c96a2e'); g.addColorStop(1,'#8a4718'); ctx.fillStyle=g; }
           ctx.fillRect(x, p.y, p.w, p.h);
-          ctx.strokeStyle = '#5c2c0c'; ctx.lineWidth = 2; ctx.strokeRect(x, p.y, p.w, p.h);
+          // obrys tylko po bokach i na dole (gora ma jasna krawedz, nie ciemna - zeby nie wygladalo na "podwojny cien")
+          ctx.strokeStyle = '#5c2c0c'; ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x, p.y); ctx.lineTo(x, p.y+p.h); ctx.lineTo(x+p.w, p.y+p.h); ctx.lineTo(x+p.w, p.y);
+          ctx.stroke();
           if(gfxQuality >= 1){
+            // podzial na deski - pionowe linie
             ctx.strokeStyle = '#7a3d15';
             ctx.lineWidth = 1.5;
-            for(let bx=22; bx<p.w; bx+=22){ ctx.beginPath(); ctx.moveTo(x+bx, p.y); ctx.lineTo(x+bx, p.y+p.h); ctx.stroke(); }
-            // seki w desce (deterministyczne wg pozycji, bez migotania)
-            ctx.fillStyle = 'rgba(90,45,10,.4)';
+            for(let bx=22; bx<p.w; bx+=22){ ctx.beginPath(); ctx.moveTo(x+bx, p.y+1); ctx.lineTo(x+bx, p.y+p.h-1); ctx.stroke(); }
+            // pojedynczy sek na srodku kazdej deski, zawsze na tej samej wysokosci (bez losowego "krzywego" rozrzutu)
+            ctx.fillStyle = 'rgba(90,45,10,.35)';
             for(let bx=0; bx<p.w; bx+=22){
-              const wx = p.x+bx;
-              ctx.beginPath(); ctx.ellipse(x+bx+11, p.y+p.h*(0.4+((wx*37)%30)/100), 2.3, 1.6, 0, 0, Math.PI*2); ctx.fill();
+              ctx.beginPath(); ctx.ellipse(x+bx+11, p.y+p.h*0.55, 2.3, 1.5, 0, 0, Math.PI*2); ctx.fill();
             }
           }
-          if(gfxQuality >= 2){
-            ctx.fillStyle = 'rgba(255,255,255,.22)';
-            ctx.fillRect(x, p.y, p.w, 2);
-          }
+          // jasna krawedz na gorze (deska oswietlona z gory)
+          ctx.fillStyle = 'rgba(255,255,255,.28)';
+          ctx.fillRect(x, p.y, p.w, 2);
         }
       }
     }
@@ -402,9 +405,12 @@
         grad.addColorStop(1, '#0f6e2c');
         ctx.fillStyle = grad;
         ctx.fillRect(x, p.y+12, p.w, p.h-12);
+        // obrys korpusu: tylko boki i dol (gora jest zaslonieta przez kolnierz - bez podwojnej linii w miejscu styku)
         ctx.strokeStyle = '#0a4a1e';
         ctx.lineWidth = 2;
-        ctx.strokeRect(x, p.y+12, p.w, p.h-12);
+        ctx.beginPath();
+        ctx.moveTo(x, p.y+12); ctx.lineTo(x, p.y+p.h); ctx.lineTo(x+p.w, p.y+p.h); ctx.lineTo(x+p.w, p.y+12);
+        ctx.stroke();
       }
 
       // kolnierz (poszerzona gorna czesc) z wlasnym cieniowaniem
@@ -421,9 +427,12 @@
         cgrad.addColorStop(1, '#0f6e2c');
         ctx.fillStyle = cgrad;
         ctx.fillRect(collarX, p.y, collarW, 14);
+        // obrys kolnierza: tylko boki i gora (dol styka sie z korpusem - bez podwojnej linii)
         ctx.strokeStyle = '#0a4a1e';
         ctx.lineWidth = 2;
-        ctx.strokeRect(collarX, p.y, collarW, 14);
+        ctx.beginPath();
+        ctx.moveTo(collarX, p.y+14); ctx.lineTo(collarX, p.y); ctx.lineTo(collarX+collarW, p.y); ctx.lineTo(collarX+collarW, p.y+14);
+        ctx.stroke();
       }
 
       // ciemny otwor na gorze - sugeruje wejscie do srodka
