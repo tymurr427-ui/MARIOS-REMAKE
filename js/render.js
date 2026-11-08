@@ -352,12 +352,45 @@
     for(const tp of (level.teleporters||[])){
       const x = tp.x - camera.x;
       if(x+tp.w < 0 || x > W) continue;
-      const pulse = 0.5 + Math.sin(Date.now()*0.006 + tp.x*0.05) * 0.3;
+      const t = Date.now()*0.001;
+      const pulse = 0.5 + Math.sin(t*5 + tp.x*0.05) * 0.3;
+      const ccx = x+tp.w/2, ccy = tp.y+tp.h/2, rx = tp.w/2, ry = tp.h/2;
       ctx.save();
-      ctx.fillStyle = `rgba(160,90,255,${0.55+pulse*0.2})`;
-      ctx.beginPath(); ctx.ellipse(x+tp.w/2, tp.y+tp.h/2, tp.w/2, tp.h/2, 0, 0, Math.PI*2); ctx.fill();
-      ctx.strokeStyle = '#c9a8ff'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.ellipse(x+tp.w/2, tp.y+tp.h/2, tp.w/2-4, tp.h/2-4, 0, 0, Math.PI*2); ctx.stroke();
+      if(gfxQuality >= 2){ ctx.shadowColor = 'rgba(160,90,255,.9)'; ctx.shadowBlur = 14; }
+      // wir portalu - gradient radialny zamiast plaskiego fioletu
+      if(gfxQuality === 0){
+        ctx.fillStyle = `rgba(160,90,255,${0.55+pulse*0.2})`;
+      } else {
+        const grad = ctx.createRadialGradient(ccx, ccy, 1, ccx, ccy, Math.max(rx,ry));
+        grad.addColorStop(0, `rgba(235,215,255,${0.7+pulse*0.25})`);
+        grad.addColorStop(0.55, `rgba(160,90,255,${0.55+pulse*0.2})`);
+        grad.addColorStop(1, 'rgba(90,30,160,.35)');
+        ctx.fillStyle = grad;
+      }
+      ctx.beginPath(); ctx.ellipse(ccx, ccy, rx, ry, 0, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // obracajace sie pierscienie (efekt wiru)
+      if(gfxQuality >= 1){
+        ctx.strokeStyle = '#c9a8ff'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(ccx, ccy, rx-4, ry-4, t*2 % Math.PI, 0, Math.PI*2); ctx.stroke();
+        ctx.strokeStyle = 'rgba(235,215,255,.7)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.ellipse(ccx, ccy, rx*0.55, ry*0.55, -t*3 % Math.PI, 0, Math.PI*2); ctx.stroke();
+      } else {
+        ctx.strokeStyle = '#c9a8ff'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(ccx, ccy, rx-4, ry-4, 0, 0, Math.PI*2); ctx.stroke();
+      }
+
+      // iskierki wirujace wokol portalu
+      if(gfxQuality >= 2){
+        for(let i=0;i<4;i++){
+          const ang = t*2.2 + i*(Math.PI/2);
+          const sx = ccx + Math.cos(ang)*(rx+6);
+          const sy = ccy + Math.sin(ang)*(ry+6);
+          ctx.fillStyle = 'rgba(235,215,255,.9)';
+          ctx.beginPath(); ctx.arc(sx, sy, 2, 0, Math.PI*2); ctx.fill();
+        }
+      }
       ctx.restore();
     }
     for(const b of (level.blinkers||[])){
@@ -499,14 +532,41 @@
 
   function drawFlag(){
     const x = level.flag.x - camera.x;
-    ctx.fillStyle = '#ccc';
-    ctx.fillRect(x, level.flag.y, 6, level.flag.h);
+    const fy = level.flag.y;
+    // maszt - gradient metaliczny zamiast plaskiej szarosci
+    if(gfxQuality === 0){
+      ctx.fillStyle = '#ccc';
+    } else {
+      const pg = ctx.createLinearGradient(x, 0, x+6, 0);
+      pg.addColorStop(0, '#9aa0a8'); pg.addColorStop(0.5, '#f0f2f4'); pg.addColorStop(1, '#8a9099');
+      ctx.fillStyle = pg;
+    }
+    ctx.fillRect(x, fy, 6, level.flag.h);
+    // kulka na szczycie
+    ctx.fillStyle = '#ffd23f';
+    ctx.beginPath(); ctx.arc(x+3, fy-3, 4, 0, Math.PI*2); ctx.fill();
+    if(gfxQuality >= 1){
+      ctx.fillStyle = 'rgba(255,255,255,.6)';
+      ctx.beginPath(); ctx.arc(x+1.5, fy-4.5, 1.3, 0, Math.PI*2); ctx.fill();
+    }
+    // falujaca flaga (fala przy wolnym koncu, zamiast sztywnego trojkata)
+    const wave = gfxQuality >= 1 ? Math.sin((timeAlive||0)*0.08)*3 : 0;
     ctx.fillStyle = '#e74c3c';
     ctx.beginPath();
-    ctx.moveTo(x+6, level.flag.y+6);
-    ctx.lineTo(x+34, level.flag.y+16);
-    ctx.lineTo(x+6, level.flag.y+26);
+    ctx.moveTo(x+6, fy+6);
+    ctx.quadraticCurveTo(x+22, fy+10+wave, x+34, fy+16+wave*0.6);
+    ctx.quadraticCurveTo(x+22, fy+22, x+6, fy+26);
+    ctx.closePath();
     ctx.fill();
+    if(gfxQuality >= 2){
+      ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x+6, fy+16); ctx.quadraticCurveTo(x+22, fy+16+wave*0.8, x+32, fy+16+wave*0.5); ctx.stroke();
+    }
+    // podstawa masztu
+    if(gfxQuality >= 1){
+      ctx.fillStyle = 'rgba(0,0,0,.25)';
+      ctx.beginPath(); ctx.ellipse(x+3, fy+level.flag.h+2, 7, 3, 0, 0, Math.PI*2); ctx.fill();
+    }
   }
 
   function drawCheckpoint(){
