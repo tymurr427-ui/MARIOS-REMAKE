@@ -205,7 +205,7 @@
   .shop-grid.customize-grid.compact { grid-template-columns:repeat(6, 1fr); gap:8px; }
   /* tylko lista fasonow czapek przewija sie sama (bedzie ich przybywac); reszta pokazuje sie w calosci */
   #hatStylesGrid {
-    max-height:344px;               /* 3 rzedy + kawalek nastepnego, zeby bylo widac, ze jest wiecej */
+    max-height:680px;               /* 6 rzedy widoczne, mniej przewijania */
     overflow-y:auto;
     overflow-x:hidden;
     padding:4px 6px 4px 4px;
