@@ -431,21 +431,21 @@
   }
   .mp-hud-pill {
     position:absolute;
-    top:14px;
+    top:clamp(14px, .73vw, 21px);
     left:50%;
     transform:translateX(-50%);
     background:rgba(217,102,14,.75);
     border:2px solid #7a3a05;
     color:#fff;
     font-weight:bold;
-    font-size:13px;
-    padding:5px 14px;
+    font-size:clamp(13px, .68vw, 20px);
+    padding:clamp(5px, .26vw, 8px) clamp(14px, .73vw, 21px);
     border-radius:16px;
     z-index:5;
   }
   .boss-hud-pill {
     position:absolute;
-    top:64px;
+    top:clamp(64px, 3.33vw, 96px);
     left:50%;
     transform:translateX(-50%);
     z-index:6;
@@ -453,18 +453,18 @@
     flex-direction:column;
     align-items:center;
     gap:4px;
-    min-width:280px;
+    min-width:clamp(280px, 14.6vw, 420px);
   }
   .boss-hud-text {
     color:#fff;
     font-weight:900;
-    font-size:14px;
+    font-size:clamp(14px, .73vw, 21px);
     text-shadow:2px 2px 0 #000;
     letter-spacing:1px;
   }
   .boss-hud-track {
-    width:280px;
-    height:16px;
+    width:clamp(280px, 14.6vw, 420px);
+    height:clamp(16px, .83vw, 24px);
     background:rgba(0,0,0,.5);
     border:2px solid rgba(255,255,255,.4);
     border-radius:8px;
@@ -547,27 +547,27 @@
 
   #hud {
     position:absolute;
-    top:14px; left:14px;
+    top:clamp(14px, .73vw, 21px); left:clamp(14px, .73vw, 21px);
     color:#fff;
     font-weight:bold;
-    font-size:17px;
+    font-size:clamp(17px, .89vw, 26px);   /* rosnie na duzych ekranach (4K), bez zmian na 1080p */
     text-shadow:2px 2px 0 #000;
     display:flex;
-    gap:14px;
+    gap:clamp(14px, .73vw, 21px);
     z-index:5;
   }
   .hud-pill {
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:clamp(8px, .42vw, 12px);
     background:rgba(0,0,0,.45);
     border:2px solid rgba(255,255,255,.25);
-    padding:6px 14px 6px 8px;
+    padding:clamp(6px, .31vw, 9px) clamp(14px, .73vw, 21px) clamp(6px, .31vw, 9px) clamp(8px, .42vw, 12px);
     border-radius:24px;
     backdrop-filter:blur(2px);
   }
   .hud-coin-icon {
-    width:26px; height:26px;
+    width:clamp(26px, 1.35vw, 40px); height:clamp(26px, 1.35vw, 40px);
     border-radius:50%;
     position:relative;
     background:
@@ -579,12 +579,12 @@
     content:"$";
     position:absolute; inset:0;
     display:flex; align-items:center; justify-content:center;
-    font-size:14px;
+    font-size:clamp(14px, .73vw, 21px);
     color:#8a5a00;
     font-family:'Arial Black', sans-serif;
     text-shadow:0 1px 0 rgba(255,255,255,.5);
   }
-  .hud-heart-icon { font-size:20px; filter:drop-shadow(1px 2px 0 #000); }
+  .hud-heart-icon { font-size:clamp(20px, 1.04vw, 30px); filter:drop-shadow(1px 2px 0 #000); }
   .shield-pill {
     background:rgba(80,180,255,.55) !important;
     border-color:rgba(150,220,255,.6) !important;
@@ -596,7 +596,7 @@
     0%, 100% { box-shadow:0 0 6px rgba(120,200,255,.8); }
     50% { box-shadow:0 0 16px rgba(120,200,255,1); }
   }
-  #hudCoins, #hudLives { font-size:20px; }
+  #hudCoins, #hudLives { font-size:clamp(20px, 1.04vw, 30px); }
   .coin-pop {
     position:absolute;
     font-weight:900;
@@ -613,19 +613,20 @@
   }
   #pauseBtn, #fsBtn, #muteBtn {
     position:absolute;
-    top:10px;
+    top:clamp(10px, .52vw, 15px);
     z-index:5;
     background:rgba(0,0,0,.4);
     border:2px solid #fff;
     color:#fff;
     border-radius:6px;
-    padding:4px 10px;
+    padding:clamp(4px, .21vw, 6px) clamp(10px, .52vw, 15px);
     cursor:pointer;
     font-weight:bold;
+    font-size:clamp(14px, .73vw, 21px);
   }
-  #pauseBtn { right:10px; }
-  #fsBtn { right:100px; }
-  #muteBtn { right:270px; }
+  #pauseBtn { right:clamp(10px, .52vw, 15px); }
+  #fsBtn { right:clamp(100px, 5.2vw, 150px); }
+  #muteBtn { right:clamp(270px, 14.1vw, 405px); }
   .msg-banner {
     position:absolute;
     top:40%;
