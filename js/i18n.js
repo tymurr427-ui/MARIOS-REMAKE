@@ -21,8 +21,8 @@
     '▲ Kolce':'▲ Spikes','↔️ Platf. (poziom)':'↔️ Platf. (horiz.)','↕️ Platf. (pion)':'↕️ Platf. (vert.)',
     '💥 Miażdżarka':'💥 Crusher','🗼 Wieżyczka':'🗼 Turret','🏁 Start gracza':'🏁 Player start','🚩 Flaga (meta)':'🚩 Flag (goal)',
     '🧹 Gumka':'🧹 Eraser',
-    'Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć. Shift + klik z gruntem stawia długi odcinek (1000 px).':
-      'Scroll with the mouse wheel over the canvas or use the slider to edit further parts of a long level. Click and drag an existing element (or the start/flag) to move it. Shift + click with the Ground tool places a long stretch (1000 px).',
+    'Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Shift+kółko albo suwak z prawej przewija w pionie wieży. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć. Shift + klik z gruntem stawia długi odcinek (1000 px). Najedź na wieżyczkę/laser i wciśnij R, żeby obrócić.':
+      'Scroll with the mouse wheel over the canvas or use the slider to edit further parts of a long level. Shift+wheel or the slider on the right scrolls the tower vertically. Click and drag an existing element (or the start/flag) to move it. Shift + click with the Ground tool places a long stretch (1000 px). Hover over a turret/laser and press R to rotate it.',
     '🗑 WYCZYŚĆ':'🗑 CLEAR','▶ TESTUJ':'▶ TEST','💾 ZAPISZ I POKAŻ KOD':'💾 SAVE & SHOW CODE',
     'Masz kod poziomu od znajomego?':'Got a level code from a friend?','▶ ZAGRAJ':'▶ PLAY',
     'Maksymalnie 40 monet na poziom!':'Maximum 40 coins per level!',
@@ -40,7 +40,13 @@
     'Limit FPS':'FPS limit','BEZ LIMITU':'UNLIMITED','Licznik FPS':'FPS counter','📊 WŁĄCZONY':'📊 ON','📊 WYŁĄCZONY':'📊 OFF',
     'Fizyka gry zawsze liczy się 60 razy na sekundę, więc tempo gry jest takie samo przy każdym limicie. Więcej FPS = płynniejszy obraz, mniej FPS = mniejsze obciążenie komputera. „Bez limitu” dopasuje się do odświeżania monitora.':
       'Game physics always runs 60 times per second, so the game speed is the same at every limit. More FPS = smoother picture, fewer FPS = lower load on your computer. "Unlimited" matches your monitor refresh rate.',
-    'Głośność':'Volume','Długość poziomu':'Level length','🟠 Trampolina':'🟠 Trampoline','🧱 Kruszący blok':'🧱 Crumbling block','↩ COFNIJ (Ctrl+Z)':'↩ UNDO (Ctrl+Z)',
+    'Głośność':'Volume','Długość poziomu':'Level length','🔼 Trampolina':'🔼 Trampoline','🧱 Kruszący blok':'🧱 Crumbling block','↩ COFNIJ (Ctrl+Z)':'↩ UNDO (Ctrl+Z)',
+    '🧊 Zimowy grunt':'🧊 Icy ground','🏜️ Piaskowy grunt':'🏜️ Sandy ground','🧊 Lodowa platforma':'🧊 Ice platform',
+    '🏢 Zwykły poziom (bez wieży)':'🏢 Regular level (no tower)','💫 Platforma znikająca':'💫 Vanishing platform',
+    '🔨 Młot obrotowy':'🔨 Rotating hammer','🟨 Jednokierunkowa':'🟨 One-way platform','🌀 Teleport':'🌀 Teleport',
+    '🟠 Strzelec':'🟠 Shooter','🔴 Szarżujący':'🔴 Charger','⚡ Laser (najedź+R obraca)':'⚡ Laser (hover+R to rotate)',
+    '🔴 Dźwignia':'🔴 Switch','🚪 Brama (paruje się z dźwignią po kolejności)':'🚪 Gate (pairs with switches in order)',
+    '👹 Boss':'👹 Boss','📍 Checkpoint':'📍 Checkpoint',
     '↩ Nie ma czego cofać (maks. 3 cofnięcia)':'↩ Nothing to undo (max 3 undos)','Sortuj wg:':'Sort by:','🪙 Monety':'🪙 Coins','⏱ Czas gry':'⏱ Playtime','💰 Zarobione':'💰 Earned','👾 Wrogowie':'👾 Enemies','👹 Bossowie':'👹 Bosses','🗺 Poziom':'🗺 Level','⭐ Poziom gracza':'⭐ Player Level',
     'Ranking niedostępny bez konta (Supabase).':'Ranking unavailable without an account (Supabase).','Brak wyników.':'No results yet.','Grafika':'Graphics','Język':'Language','WYBIERZ POZIOM':'SELECT LEVEL','🔒 zablokowany':'🔒 locked',
     '🪙 Aktualne monety':'🪙 Current coins','💰 Łącznie zarobione monety':'💰 Total coins earned','🛒 Wydane monety':'🛒 Coins spent',
@@ -165,6 +171,7 @@
     [/^↩ Nie ma czego cofać \(maks\. (\d+) cofnięć\)$/, '↩ Nothing to undo (max $1 undos)'],
     [/^Maksymalnie (\d+) na poziom dla tego typu elementu!$/, 'Maximum $1 per level for this element type!'],
     [/^Nie można zmniejszyć wysokości wieży - elementy sięgają (\d+) px w górę$/, 'Cannot reduce the tower height - elements reach $1 px upward'],
+    [/^🗼 \+(\d+) px w górę$/, '🗼 +$1 px upward'],
     [/^Gracz( \d+| 💀)?$/, 'Player$1'],
     [/^✅ Zalogowano: (.*)$/, '✅ Logged in: $1'],
     [/^Autor: (.*) • ▶ (\d+) razy zagrany • KOD: (.*)$/, 'Author: $1 • ▶ played $2 times • CODE: $3'],
