@@ -109,7 +109,7 @@
     const switches = (data.switches||[]).map((s,i) => ({x:s.x, y:s.y, w:34, h:34, pressed:false, id:i}));
     const gates = (data.gates||[]).map((g,i) => ({x:g.x, y:g.y, w:g.w||24, h:g.h||140, isGate:true, solid:true, id:i}));
     const movers = (data.movers||[]).map(m => ({
-      baseX:m.x, baseY:m.y, x:m.x, y:m.y, w:90, h:20,
+      baseX:m.x, baseY:m.y, x:m.x, y:m.y, w:MIN_PLATFORM_W, h:20,
       axis:m.axis||'x', range: m.range || (m.axis==='y' ? 110 : 60), speed: m.axis==='y' ? 0.8 : 1.0, isMover:true
     }));
     const crushers = (data.crushers||[]).map(c => ({
