@@ -62,4 +62,5 @@ Player progress (coins, XP, player level, owned cosmetic items, speedrun times) 
 
 ## Credits
 
-Built and maintained by tymurr427.
+Directed and designed by **tymurr427** — project ideas, decisions, testing and feedback.
+Code written by **Claude** (Anthropic, Claude Sonnet 5) under tymurr427's direction.
