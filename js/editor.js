@@ -139,6 +139,7 @@
   }
 
   function redrawEditor(){
+    editorScheduleDraftSave();
     const weightEl = document.getElementById('editorWeightHint');
     if(weightEl){
       const bytes = new Blob([JSON.stringify(collectEditorData())]).size;
@@ -490,6 +491,35 @@
       editorCtx.fill();
     }
   }
+
+  // ---------- AUTOZAPIS SZKICU (przetrwa zamkniecie przegladarki) ----------
+  const EDITOR_DRAFT_KEY = 'spb_editor_draft';
+  let editorDraftSaveTimer = null;
+  function editorSaveDraftNow(){
+    try{
+      const data = collectEditorData();
+      localStorage.setItem(EDITOR_DRAFT_KEY, JSON.stringify({ code: editorEditingCode, data }));
+    } catch(e){ /* brak miejsca/localStorage zablokowane - trudno, nie blokujemy edycji */ }
+  }
+  function editorScheduleDraftSave(){
+    clearTimeout(editorDraftSaveTimer);
+    editorDraftSaveTimer = setTimeout(editorSaveDraftNow, 600);
+  }
+  function editorRestoreDraftFromStorage(){
+    try{
+      const raw = localStorage.getItem(EDITOR_DRAFT_KEY);
+      if(!raw) return;
+      const draft = JSON.parse(raw);
+      if(!draft || !draft.data || !draft.data.grounds) return;
+      loadLevelDataIntoEditor(draft.code || null, draft.data);
+      if(!draft.code){
+        const resultEl = document.getElementById('editorSaveResult');
+        if(resultEl) resultEl.textContent = '📝 Przywrócono niezapisany szkic z poprzedniej sesji.';
+      }
+    } catch(e){ /* uszkodzony/brak szkicu - zostaje pusty edytor */ }
+  }
+  window.addEventListener('beforeunload', editorSaveDraftNow);
+  document.addEventListener('visibilitychange', () => { if(document.hidden) editorSaveDraftNow(); });
 
   // ---------- COFANIE (Ctrl+Z, maks. 3 kroki) ----------
   const EDITOR_UNDO_MAX = 10;
@@ -1310,3 +1340,5 @@
     showScreen('game');
     startLevel('custom', res.data);
   };
+
+  editorRestoreDraftFromStorage();
