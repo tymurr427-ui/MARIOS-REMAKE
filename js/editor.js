@@ -149,18 +149,29 @@
         editorCtx.fill();
       }
     } else if(kind==='palm'){
-      const trunkW = w*0.09;
       editorCtx.save();
-      editorCtx.translate(cx, baseY);
-      editorCtx.rotate(-0.1);
-      editorCtx.fillRect(-trunkW/2, -h*0.95, trunkW, h*0.95);
+      editorCtx.strokeStyle = '#6b4a2b';
+      editorCtx.lineWidth = Math.max(2, w*0.08);
+      editorCtx.lineCap = 'round';
+      editorCtx.beginPath();
+      editorCtx.moveTo(cx, baseY);
+      editorCtx.quadraticCurveTo(cx - w*0.1, baseY - h*0.55, cx - w*0.05, baseY - h*0.95);
+      editorCtx.stroke();
       editorCtx.restore();
-      const topX = cx - Math.sin(0.1)*h*0.95, topY = baseY - Math.cos(0.1)*h*0.95;
-      for(let i=0;i<5;i++){
-        const ang = -Math.PI/2 + (i-2)*0.5;
+      const topX = cx - w*0.05, topY = baseY - h*0.95;
+      editorCtx.fillStyle = '#3f8f4a';
+      for(let i=0;i<6;i++){
+        const ang = -Math.PI/2 + (i-2.5)*0.48;
+        editorCtx.save();
+        editorCtx.translate(topX, topY);
+        editorCtx.rotate(ang);
         editorCtx.beginPath();
-        editorCtx.ellipse(topX + Math.cos(ang)*w*0.3, topY + Math.sin(ang)*w*0.16, w*0.26, w*0.1, ang, 0, Math.PI*2);
+        editorCtx.moveTo(0,0);
+        editorCtx.quadraticCurveTo(w*0.22, -h*0.05, w*0.44, h*0.02);
+        editorCtx.quadraticCurveTo(w*0.22, h*0.08, 0, 0);
+        editorCtx.closePath();
         editorCtx.fill();
+        editorCtx.restore();
       }
     } else if(kind==='coral'){
       for(let i=-1;i<=1;i++){

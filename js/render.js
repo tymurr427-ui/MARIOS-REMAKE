@@ -40,18 +40,31 @@
         ctx.fill();
       }
     } else if(kind==='palm'){
-      const trunkW = w*0.09;
+      // pien zawsze brazowy, liscie zawsze zielone - zeby sylwetka czytelnie wygladala jak palma,
+      // niezaleznie od koloru nieba/piasku danego biomu (sam kolor "hill" robil z tego kwiatek).
       ctx.save();
-      ctx.translate(cx, baseY);
-      ctx.rotate(-0.1);
-      ctx.fillRect(-trunkW/2, -h*0.95, trunkW, h*0.95);
+      ctx.strokeStyle = '#6b4a2b';
+      ctx.lineWidth = Math.max(2, w*0.08);
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(cx, baseY);
+      ctx.quadraticCurveTo(cx - w*0.1, baseY - h*0.55, cx - w*0.05, baseY - h*0.95);
+      ctx.stroke();
       ctx.restore();
-      const topX = cx - Math.sin(0.1)*h*0.95, topY = baseY - Math.cos(0.1)*h*0.95;
-      for(let i=0;i<5;i++){
-        const ang = -Math.PI/2 + (i-2)*0.5;
+      const topX = cx - w*0.05, topY = baseY - h*0.95;
+      ctx.fillStyle = '#3f8f4a';
+      for(let i=0;i<6;i++){
+        const ang = -Math.PI/2 + (i-2.5)*0.48;
+        ctx.save();
+        ctx.translate(topX, topY);
+        ctx.rotate(ang);
         ctx.beginPath();
-        ctx.ellipse(topX + Math.cos(ang)*w*0.3, topY + Math.sin(ang)*w*0.16, w*0.26, w*0.1, ang, 0, Math.PI*2);
+        ctx.moveTo(0,0);
+        ctx.quadraticCurveTo(w*0.22, -h*0.05, w*0.44, h*0.02);
+        ctx.quadraticCurveTo(w*0.22, h*0.08, 0, 0);
+        ctx.closePath();
         ctx.fill();
+        ctx.restore();
       }
     } else if(kind==='coral'){
       for(let i=-1;i<=1;i++){
@@ -210,8 +223,8 @@
       drawBiomeDeco(decoKind, hx, GROUND_Y+30, 180, 90);
     }
 
-    // bliskie krzaki - szybsza warstwa parallaksy, tuz przed gruntem
-    if(gfxQuality >= 1){
+    // bliskie krzaki - szybsza warstwa parallaksy, tuz przed gruntem (pomijana tam, gdzie "none" - np. kosmos)
+    if(gfxQuality >= 1 && decoKind !== 'none'){
       ctx.fillStyle = shade(bc.hill, -28);
       for(let i=0;i<14;i++){
         const bx = ((i*170 - camera.x*0.75) % (level.width+170) + level.width+170) % (level.width+170) - 85;
