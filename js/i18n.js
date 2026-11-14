@@ -18,12 +18,12 @@
     'Nazwa poziomu':'Level name','☀️ Dzień':'☀️ Day','🌙 Noc':'🌙 Night','🌆 Zmierzch':'🌆 Dusk','🌋 Wulkan':'🌋 Volcano',
     '❄️ Lód':'❄️ Ice','🏜️ Pustynia':'🏜️ Desert','🌌 Zorza':'🌌 Aurora','🟫 Grunt':'🟫 Ground','▬ Platforma':'▬ Platform',
     '🟢 Rura':'🟢 Pipe','🪙 Moneta':'🪙 Coin','🟣 Wróg':'🟣 Enemy','🔵 Latacz':'🔵 Flyer','🟢 Skoczek':'🟢 Jumper',
-    '▲ Kolce':'▲ Spikes','↔️ Platf. (poziom, najedź+[ ] zasięg)':'↔️ Platf. (horiz., hover+[ ] range)','↕️ Platf. (pion, najedź+[ ] zasięg)':'↕️ Platf. (vert., hover+[ ] range)',
-    'Najedź kursorem na platformę "mover" i wciśnij [ albo ], żeby zmienić jej zasięg ruchu':'Hover over a "mover" platform and press [ or ] to change its movement range',
+    '▲ Kolce':'▲ Spikes','↔️ Platf. (poziom, najedź+strzałki zasięg)':'↔️ Platf. (horiz., hover+arrows range)','↕️ Platf. (pion, najedź+strzałki zasięg)':'↕️ Platf. (vert., hover+arrows range)',
+    'Najedź kursorem na platformę "mover" i wciśnij strzałkę w górę/dół, żeby zmienić jej zasięg ruchu':'Hover over a "mover" platform and press the up/down arrow key to change its movement range',
     '💥 Miażdżarka':'💥 Crusher','🗼 Wieżyczka':'🗼 Turret','🏁 Start gracza':'🏁 Player start','🚩 Flaga (meta)':'🚩 Flag (goal)',
     '🧹 Gumka':'🧹 Eraser',
-    'Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Shift+kółko albo suwak z prawej przewija w pionie wieży. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć. Shift + klik z gruntem stawia długi odcinek (1000 px). Najedź na wieżyczkę/laser i wciśnij R, żeby obrócić. Najedź na platformę "mover" i wciśnij [ albo ], żeby zmienić jej zasięg ruchu.':
-      'Scroll with the mouse wheel over the canvas or use the slider to edit further parts of a long level. Shift+wheel or the slider on the right scrolls the tower vertically. Click and drag an existing element (or the start/flag) to move it. Shift + click with the Ground tool places a long stretch (1000 px). Hover over a turret/laser and press R to rotate it. Hover over a "mover" platform and press [ or ] to change its movement range.',
+    'Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Shift+kółko albo suwak z prawej przewija w pionie wieży. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć. Shift + klik z gruntem stawia długi odcinek (1000 px). Najedź na wieżyczkę/laser i wciśnij R, żeby obrócić. Najedź na platformę "mover" i wciśnij strzałkę w górę/dół, żeby zmienić jej zasięg ruchu.':
+      'Scroll with the mouse wheel over the canvas or use the slider to edit further parts of a long level. Shift+wheel or the slider on the right scrolls the tower vertically. Click and drag an existing element (or the start/flag) to move it. Shift + click with the Ground tool places a long stretch (1000 px). Hover over a turret/laser and press R to rotate it. Hover over a "mover" platform and press the up/down arrow key to change its movement range.',
     '🗑 WYCZYŚĆ':'🗑 CLEAR','▶ TESTUJ':'▶ TEST','💾 ZAPISZ I POKAŻ KOD':'💾 SAVE & SHOW CODE',
     'Masz kod poziomu od znajomego?':'Got a level code from a friend?','▶ ZAGRAJ':'▶ PLAY',
     'Maksymalnie 40 monet na poziom!':'Maximum 40 coins per level!',

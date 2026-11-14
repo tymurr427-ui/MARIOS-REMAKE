@@ -658,20 +658,22 @@
     editorRotateTurretAtCursor();
   });
 
-  // Najedz na platforme "mover" i wcisnij [ / ], zeby zmniejszyc/zwiekszyc jej zasieg ruchu
+  // Najedz na platforme "mover" i wcisnij strzalke w gore/dol, zeby zwiekszyc/zmniejszyc jej zasieg ruchu
   // (domyslny zasieg czesto jest za maly, zeby pokonac szerszy wykop - bez tego nie dalo sie go zwiekszyc).
   const MOVER_RANGE_MIN = 20, MOVER_RANGE_MAX = 800, MOVER_RANGE_STEP = 20;
   window.addEventListener('keydown', (e) => {
-    if(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || (e.code !== 'BracketLeft' && e.code !== 'BracketRight')) return;
+    if(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || (e.code !== 'ArrowUp' && e.code !== 'ArrowDown')) return;
     if(editorScreen.classList.contains('hidden')) return;
     const t = e.target && e.target.tagName;
     if(t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return;
+    const hovered = editorFindElementAt(editorMouseLevelPos.levelX, editorMouseLevelPos.levelY);
+    if(!hovered || hovered.kind !== 'mover') return; // strzalki maja inne zastosowania gdzie indziej - nie przechwytuj ich bez potrzeby
     e.preventDefault();
-    editorAdjustMoverRangeAtCursor(e.code === 'BracketRight' ? MOVER_RANGE_STEP : -MOVER_RANGE_STEP);
+    editorAdjustMoverRangeAtCursor(e.code === 'ArrowUp' ? MOVER_RANGE_STEP : -MOVER_RANGE_STEP);
   });
   function editorAdjustMoverRangeAtCursor(delta){
     const el = editorFindElementAt(editorMouseLevelPos.levelX, editorMouseLevelPos.levelY);
-    if(!el || el.kind !== 'mover'){ editorFlashLimitWarning('Najedź kursorem na platformę "mover" i wciśnij [ albo ], żeby zmienić jej zasięg ruchu'); return; }
+    if(!el || el.kind !== 'mover'){ editorFlashLimitWarning('Najedź kursorem na platformę "mover" i wciśnij strzałkę w górę/dół, żeby zmienić jej zasięg ruchu'); return; }
     const before = editorSnapshotJSON();
     el.range = Math.max(MOVER_RANGE_MIN, Math.min(MOVER_RANGE_MAX, (el.range||60) + delta));
     editorPushUndo(before);
