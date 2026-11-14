@@ -11,6 +11,86 @@
     return 'rgb(' + r + ',' + g + ',' + b + ')';
   }
 
+  // Jaki ksztalt dekoracji w tle pasuje do danego biomu (zamiast zawsze tych samych gor).
+  function biomeDecoKind(){
+    const bg = level.bg;
+    if(bg==='forest' || bg==='autumn') return 'tree';
+    if(bg==='beach') return 'palm';
+    if(bg==='underwater') return 'coral';
+    if(bg==='desert') return 'dune';
+    if(bg==='candy') return 'lollipop';
+    if(bg==='space') return 'none';
+    if(bg==='volcano' || bg==='ice' || bg==='aurora' || bg==='cave') return 'peak';
+    return 'round'; // domyslna trawiasta sceneria (grass/night/dusk) - zostaja okragle pagorki jak dawniej
+  }
+  // Rysuje jedna "gore/drzewo/palme/itp." o srodku (cx,baseY), szerokosci w i wysokosci h.
+  function drawBiomeDeco(kind, cx, baseY, w, h){
+    if(kind==='none') return;
+    if(kind==='tree'){
+      const trunkH = h*0.22, trunkW = w*0.12;
+      ctx.fillRect(cx-trunkW/2, baseY-trunkH, trunkW, trunkH);
+      for(let i=0;i<3;i++){
+        const ty = baseY - trunkH - i*h*0.26;
+        const tw = w*(1 - i*0.22);
+        ctx.beginPath();
+        ctx.moveTo(cx-tw/2, ty);
+        ctx.lineTo(cx, ty-h*0.38);
+        ctx.lineTo(cx+tw/2, ty);
+        ctx.closePath();
+        ctx.fill();
+      }
+    } else if(kind==='palm'){
+      const trunkW = w*0.09;
+      ctx.save();
+      ctx.translate(cx, baseY);
+      ctx.rotate(-0.1);
+      ctx.fillRect(-trunkW/2, -h*0.95, trunkW, h*0.95);
+      ctx.restore();
+      const topX = cx - Math.sin(0.1)*h*0.95, topY = baseY - Math.cos(0.1)*h*0.95;
+      for(let i=0;i<5;i++){
+        const ang = -Math.PI/2 + (i-2)*0.5;
+        ctx.beginPath();
+        ctx.ellipse(topX + Math.cos(ang)*w*0.3, topY + Math.sin(ang)*w*0.16, w*0.26, w*0.1, ang, 0, Math.PI*2);
+        ctx.fill();
+      }
+    } else if(kind==='coral'){
+      for(let i=-1;i<=1;i++){
+        const bx = cx + i*w*0.3, bh = h*(0.55+Math.abs(i)*0.18);
+        ctx.beginPath();
+        ctx.moveTo(bx-w*0.05, baseY);
+        for(let yy=0; yy<=bh; yy+=bh/6){
+          const wob = Math.sin(yy*0.3 + i*2)*w*0.08;
+          ctx.lineTo(bx+wob, baseY-yy);
+        }
+        ctx.lineTo(bx+w*0.09, baseY-bh);
+        ctx.lineTo(bx+w*0.05, baseY);
+        ctx.closePath();
+        ctx.fill();
+      }
+    } else if(kind==='dune'){
+      ctx.beginPath();
+      ctx.ellipse(cx, baseY+h*0.2, w*0.56, h*0.5, 0, Math.PI, 0);
+      ctx.fill();
+    } else if(kind==='lollipop'){
+      ctx.fillRect(cx-w*0.04, baseY-h*0.5, w*0.08, h*0.5);
+      ctx.beginPath();
+      ctx.arc(cx, baseY-h*0.62, w*0.3, 0, Math.PI*2);
+      ctx.fill();
+    } else if(kind==='peak'){
+      ctx.beginPath();
+      ctx.moveTo(cx-w/2, baseY);
+      ctx.lineTo(cx-w*0.16, baseY-h);
+      ctx.lineTo(cx+w*0.16, baseY-h);
+      ctx.lineTo(cx+w/2, baseY);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.arc(cx, baseY, w/2, Math.PI, 0);
+      ctx.fill();
+    }
+  }
+
   function bgColors(){
     if(level.bg==='night') return {sky1:'#0b1233', sky2:'#1c2a5e', hill:'#152a4a', sun:'#dfe7ff'};
     if(level.bg==='dusk') return {sky1:'#8a4a8f', sky2:'#e0764f', hill:'#3d2352', sun:'#ffdca0'};
@@ -36,11 +116,10 @@
       ctx.fillStyle = bc.sky2;
       ctx.fillRect(0,0,W,H);
       ctx.fillStyle = bc.hill;
+      const lowKind = biomeDecoKind();
       for(let i=0;i<3;i++){
         const hx = ((i*420 - camera.x*0.5) % (level.width+420) + level.width+420) % (level.width+420) - 210;
-        ctx.beginPath();
-        ctx.arc(hx, GROUND_Y+30, 90, Math.PI, 0);
-        ctx.fill();
+        drawBiomeDeco(lowKind, hx, GROUND_Y+30, 180, 90);
       }
       return;
     }
@@ -107,17 +186,12 @@
       ctx.restore();
     }
 
-    // dalekie gory - najwolniejsza warstwa parallaksy, z tylu za chmurami
+    // dalekie dekoracje (gory/drzewa/palmy/itp. zalezne od biomu) - najwolniejsza warstwa parallaksy, z tylu za chmurami
+    const decoKind = biomeDecoKind();
     ctx.fillStyle = shade(bc.hill, -16);
     for(let i=0;i<6;i++){
       const hx = ((i*360 - camera.x*0.15) % (level.width+360) + level.width+360) % (level.width+360) - 180;
-      ctx.beginPath();
-      ctx.moveTo(hx-120, GROUND_Y+25);
-      ctx.lineTo(hx-20, GROUND_Y-110);
-      ctx.lineTo(hx+20, GROUND_Y-110);
-      ctx.lineTo(hx+120, GROUND_Y+25);
-      ctx.closePath();
-      ctx.fill();
+      drawBiomeDeco(decoKind, hx, GROUND_Y+25, 240, 135);
     }
 
     ctx.fillStyle = bc.sun;
@@ -133,9 +207,7 @@
     ctx.fillStyle = bc.hill;
     for(let i=0;i<8;i++){
       const hx = ((i*260 - camera.x*0.5) % (level.width+260) + level.width+260) % (level.width+260) - 130;
-      ctx.beginPath();
-      ctx.arc(hx, GROUND_Y+30, 90, Math.PI, 0);
-      ctx.fill();
+      drawBiomeDeco(decoKind, hx, GROUND_Y+30, 180, 90);
     }
 
     // bliskie krzaki - szybsza warstwa parallaksy, tuz przed gruntem

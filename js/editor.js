@@ -121,6 +121,85 @@
 
   function editorSnap(v, grid){ return Math.round(v/grid)*grid; }
 
+  // Ten sam dobor ksztaltu dekoracji co w grze (render.js: biomeDecoKind) - zeby podglad w edytorze sie zgadzal.
+  function editorBiomeDecoKind(bg){
+    if(bg==='forest' || bg==='autumn') return 'tree';
+    if(bg==='beach') return 'palm';
+    if(bg==='underwater') return 'coral';
+    if(bg==='desert') return 'dune';
+    if(bg==='candy') return 'lollipop';
+    if(bg==='space') return 'none';
+    if(bg==='volcano' || bg==='ice' || bg==='aurora' || bg==='cave') return 'peak';
+    return 'round';
+  }
+  // Ten sam rysownik ksztaltu co w grze (render.js: drawBiomeDeco), na kontekscie edytora.
+  function editorDrawBiomeDeco(kind, cx, baseY, w, h){
+    if(kind==='none') return;
+    if(kind==='tree'){
+      const trunkH = h*0.22, trunkW = w*0.12;
+      editorCtx.fillRect(cx-trunkW/2, baseY-trunkH, trunkW, trunkH);
+      for(let i=0;i<3;i++){
+        const ty = baseY - trunkH - i*h*0.26;
+        const tw = w*(1 - i*0.22);
+        editorCtx.beginPath();
+        editorCtx.moveTo(cx-tw/2, ty);
+        editorCtx.lineTo(cx, ty-h*0.38);
+        editorCtx.lineTo(cx+tw/2, ty);
+        editorCtx.closePath();
+        editorCtx.fill();
+      }
+    } else if(kind==='palm'){
+      const trunkW = w*0.09;
+      editorCtx.save();
+      editorCtx.translate(cx, baseY);
+      editorCtx.rotate(-0.1);
+      editorCtx.fillRect(-trunkW/2, -h*0.95, trunkW, h*0.95);
+      editorCtx.restore();
+      const topX = cx - Math.sin(0.1)*h*0.95, topY = baseY - Math.cos(0.1)*h*0.95;
+      for(let i=0;i<5;i++){
+        const ang = -Math.PI/2 + (i-2)*0.5;
+        editorCtx.beginPath();
+        editorCtx.ellipse(topX + Math.cos(ang)*w*0.3, topY + Math.sin(ang)*w*0.16, w*0.26, w*0.1, ang, 0, Math.PI*2);
+        editorCtx.fill();
+      }
+    } else if(kind==='coral'){
+      for(let i=-1;i<=1;i++){
+        const bx = cx + i*w*0.3, bh = h*(0.55+Math.abs(i)*0.18);
+        editorCtx.beginPath();
+        editorCtx.moveTo(bx-w*0.05, baseY);
+        for(let yy=0; yy<=bh; yy+=bh/6){
+          const wob = Math.sin(yy*0.3 + i*2)*w*0.08;
+          editorCtx.lineTo(bx+wob, baseY-yy);
+        }
+        editorCtx.lineTo(bx+w*0.09, baseY-bh);
+        editorCtx.lineTo(bx+w*0.05, baseY);
+        editorCtx.closePath();
+        editorCtx.fill();
+      }
+    } else if(kind==='dune'){
+      editorCtx.beginPath();
+      editorCtx.ellipse(cx, baseY+h*0.2, w*0.56, h*0.5, 0, Math.PI, 0);
+      editorCtx.fill();
+    } else if(kind==='lollipop'){
+      editorCtx.fillRect(cx-w*0.04, baseY-h*0.5, w*0.08, h*0.5);
+      editorCtx.beginPath();
+      editorCtx.arc(cx, baseY-h*0.62, w*0.3, 0, Math.PI*2);
+      editorCtx.fill();
+    } else if(kind==='peak'){
+      editorCtx.beginPath();
+      editorCtx.moveTo(cx-w/2, baseY);
+      editorCtx.lineTo(cx-w*0.16, baseY-h);
+      editorCtx.lineTo(cx+w*0.16, baseY-h);
+      editorCtx.lineTo(cx+w/2, baseY);
+      editorCtx.closePath();
+      editorCtx.fill();
+    } else {
+      editorCtx.beginPath();
+      editorCtx.arc(cx, baseY, w/2, Math.PI, 0);
+      editorCtx.fill();
+    }
+  }
+
   function editorBgPreviewColors(bg){
     if(bg==='night') return {sky1:'#0b1233', sky2:'#1c2a5e', hill:'#152a4a', sun:'#dfe7ff'};
     if(bg==='dusk') return {sky1:'#8a4a8f', sky2:'#e0764f', hill:'#3d2352', sun:'#ffdca0'};
@@ -177,14 +256,13 @@
       cloudI++;
     }
 
-    // dekoracyjne pagórki w tle (tak jak w grze — nie mają związku z realnym gruntem)
+    // dekoracyjne tlo zalezne od biomu (gory/drzewa/palmy/itp. - tak jak w grze, nie maja zwiazku z realnym gruntem)
     const hillW = 420*editorScale;
     const hillOffset = ((editorScrollX*0.5*editorScale) % hillW + hillW) % hillW;
+    const bgKind = editorBiomeDecoKind(document.getElementById('editorBgSelect').value);
     editorCtx.fillStyle = c.hill;
     for(let hx = -hillOffset - hillW; hx < editorCanvas.width + hillW; hx += hillW){
-      editorCtx.beginPath();
-      editorCtx.arc(hx + hillW/2, EDITOR_GROUND_Y*editorScale + 30*editorScale, 90*editorScale, Math.PI, 0);
-      editorCtx.fill();
+      editorDrawBiomeDeco(bgKind, hx + hillW/2, EDITOR_GROUND_Y*editorScale + 30*editorScale, 180*editorScale, 90*editorScale);
     }
 
     // linia gruntu (poziom, na ktorym stoja bloki ziemi)
