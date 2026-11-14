@@ -171,8 +171,8 @@
           <button class="editor-tool" data-tool="shooter">🟠 Strzelec</button>
           <button class="editor-tool" data-tool="charger">🔴 Szarżujący</button>
           <button class="editor-tool" data-tool="hazard">▲ Kolce</button>
-          <button class="editor-tool" data-tool="mover">↔️ Platf. (poziom, najedź+[ ] zasięg)</button>
-          <button class="editor-tool" data-tool="mover_y">↕️ Platf. (pion, najedź+[ ] zasięg)</button>
+          <button class="editor-tool" data-tool="mover">↔️ Platf. (poziom, najedź+strzałki zasięg)</button>
+          <button class="editor-tool" data-tool="mover_y">↕️ Platf. (pion, najedź+strzałki zasięg)</button>
           <button class="editor-tool" data-tool="crusher">💥 Miażdżarka</button>
           <button class="editor-tool" data-tool="turret">🗼 Wieżyczka</button>
           <button class="editor-tool" data-tool="laser">⚡ Laser (najedź+R obraca)</button>
@@ -198,7 +198,7 @@
         <input type="range" id="editorScrollRange" min="0" max="0" value="0" style="flex:1;">
         <button class="menu-btn small" id="btnEditorScrollRight">▶</button>
       </div>
-      <div class="editor-scroll-hint">Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Shift+kółko albo suwak z prawej przewija w pionie wieży. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć. Shift + klik z gruntem stawia długi odcinek (1000 px). Najedź na wieżyczkę/laser i wciśnij R, żeby obrócić. Najedź na platformę "mover" i wciśnij [ albo ], żeby zmienić jej zasięg ruchu.</div>
+      <div class="editor-scroll-hint">Przewijaj kółkiem myszy nad canvasem albo suwakiem, żeby edytować dalsze fragmenty długiego poziomu. Shift+kółko albo suwak z prawej przewija w pionie wieży. Kliknij i przeciągnij istniejący element (albo start/flagę), żeby go przesunąć. Shift + klik z gruntem stawia długi odcinek (1000 px). Najedź na wieżyczkę/laser i wciśnij R, żeby obrócić. Najedź na platformę "mover" i wciśnij strzałkę w górę/dół, żeby zmienić jej zasięg ruchu.</div>
       <div class="editor-scroll-hint" id="editorPosHint"></div>
       <div class="editor-scroll-hint" id="editorWeightHint">Waga poziomu: 0 B</div>
       <div class="editor-actions">
@@ -396,7 +396,7 @@
 
 </div>
 
-<script src="js/i18n.js?v=10"></script>
+<script src="js/i18n.js?v=11"></script>
 
 <script src="js/data.js?v=7"></script>
 <script src="js/levels.js?v=2"></script>
@@ -407,7 +407,7 @@
 <script src="js/shop.js?v=6"></script>
 <script src="js/audio.js?v=2"></script>
 <script src="js/quests.js?v=36"></script>
-<script src="js/editor.js?v=40"></script>
+<script src="js/editor.js?v=41"></script>
 <script src="js/game.js?v=30"></script>
 <script src="js/character.js?v=7"></script>
 <script src="js/render.js?v=27"></script>
