@@ -178,16 +178,24 @@
         editorCtx.restore();
       }
     } else if(kind==='coral'){
+      const seaweedColors = ['#1f6f54','#2a8a68','#1a5c46'];
       for(let i=-1;i<=1;i++){
-        const bx = cx + i*w*0.3, bh = h*(0.55+Math.abs(i)*0.18);
+        const bx = cx + i*w*0.3, bh = h*(0.6+Math.abs(i)*0.15);
+        editorCtx.fillStyle = seaweedColors[i+1];
+        const steps = 12;
         editorCtx.beginPath();
-        editorCtx.moveTo(bx-w*0.05, baseY);
-        for(let yy=0; yy<=bh; yy+=bh/6){
-          const wob = Math.sin(yy*0.3 + i*2)*w*0.08;
-          editorCtx.lineTo(bx+wob, baseY-yy);
+        editorCtx.moveTo(bx-w*0.045, baseY);
+        for(let s=0; s<=steps; s++){
+          const tt = s/steps, yy = tt*bh;
+          const wob = Math.sin(tt*Math.PI*1.3 + i)*w*0.05;
+          editorCtx.lineTo(bx+wob-w*0.045, baseY-yy);
         }
-        editorCtx.lineTo(bx+w*0.09, baseY-bh);
-        editorCtx.lineTo(bx+w*0.05, baseY);
+        editorCtx.quadraticCurveTo(bx, baseY-bh-h*0.03, bx+w*0.045, baseY-bh*0.97);
+        for(let s=steps; s>=0; s--){
+          const tt = s/steps, yy = tt*bh;
+          const wob = Math.sin(tt*Math.PI*1.3 + i)*w*0.05;
+          editorCtx.lineTo(bx+wob+w*0.045, baseY-yy);
+        }
         editorCtx.closePath();
         editorCtx.fill();
       }

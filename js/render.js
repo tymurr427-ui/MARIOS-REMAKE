@@ -71,16 +71,26 @@
         ctx.restore();
       }
     } else if(kind==='coral'){
+      // kilka lagodnie falujacych wodorostow (zamiast postrzepionych kolcow) - kolor zawsze zielonkawy,
+      // niezaleznie od ciemnej barwy biomu podwodnego (ta sama barwa robila z tego ledwo widoczne czarne kolce).
+      const seaweedColors = ['#1f6f54','#2a8a68','#1a5c46'];
       for(let i=-1;i<=1;i++){
-        const bx = cx + i*w*0.3, bh = h*(0.55+Math.abs(i)*0.18);
+        const bx = cx + i*w*0.3, bh = h*(0.6+Math.abs(i)*0.15);
+        ctx.fillStyle = seaweedColors[i+1];
+        const steps = 12;
         ctx.beginPath();
-        ctx.moveTo(bx-w*0.05, baseY);
-        for(let yy=0; yy<=bh; yy+=bh/6){
-          const wob = Math.sin(yy*0.3 + i*2)*w*0.08;
-          ctx.lineTo(bx+wob, baseY-yy);
+        ctx.moveTo(bx-w*0.045, baseY);
+        for(let s=0; s<=steps; s++){
+          const tt = s/steps, yy = tt*bh;
+          const wob = Math.sin(tt*Math.PI*1.3 + i)*w*0.05;
+          ctx.lineTo(bx+wob-w*0.045, baseY-yy);
         }
-        ctx.lineTo(bx+w*0.09, baseY-bh);
-        ctx.lineTo(bx+w*0.05, baseY);
+        ctx.quadraticCurveTo(bx, baseY-bh-h*0.03, bx+w*0.045, baseY-bh*0.97);
+        for(let s=steps; s>=0; s--){
+          const tt = s/steps, yy = tt*bh;
+          const wob = Math.sin(tt*Math.PI*1.3 + i)*w*0.05;
+          ctx.lineTo(bx+wob+w*0.045, baseY-yy);
+        }
         ctx.closePath();
         ctx.fill();
       }
@@ -214,14 +224,18 @@
       drawBiomeDeco(decoKind, hx, GROUND_Y+25, 240, 135);
     }
 
-    ctx.fillStyle = bc.sun;
-    ctx.beginPath(); ctx.arc(W*0.82, H*0.16, 34, 0, Math.PI*2); ctx.fill();
+    if(level.bg !== 'underwater'){
+      ctx.fillStyle = bc.sun;
+      ctx.beginPath(); ctx.arc(W*0.82, H*0.16, 34, 0, Math.PI*2); ctx.fill();
+    }
 
     ctx.fillStyle = 'rgba(255,255,255,.9)';
     const cloudCount = gfxQuality >= 2 ? 8 : 6;
     for(let i=0;i<cloudCount;i++){
       const cx = ((i*300 - camera.x*0.3) % (level.width+300) + level.width+300) % (level.width+300) - 150;
       const bob = gfxQuality >= 2 ? Math.sin((timeAlive||0)*0.01 + i)*4 : 0;
+      // Pod woda nie ma chmur ani slonca na niebie - zamiast tego plywaja rybki.
+      if(level.bg === 'underwater'){ drawFish(cx, H*0.15 + (i%3)*70 + bob, i%2===0); continue; }
       drawCloud(cx, H*0.15 + (i%2)*30 + bob);
     }
     const nearParallax = (decoKind === 'tree') ? 0 : 0.5;
@@ -257,6 +271,31 @@
     ctx.arc(x+20,y-8,14,0,Math.PI*2);
     ctx.arc(x+36,y,18,0,Math.PI*2);
     ctx.fill();
+  }
+
+  // Rybka plywajaca w tle biomu podwodnego (zamiast chmur, ktore nie maja sensu pod woda).
+  function drawFish(x, y, flip){
+    const t = (timeAlive||0)*0.0025 + x*0.01;
+    const wob = Math.sin(t*3)*3;
+    const fx = flip ? -1 : 1;
+    ctx.save();
+    ctx.translate(x, y+wob);
+    ctx.scale(fx, 1);
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 16, 9, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-14, 0);
+    ctx.lineTo(-24, -8);
+    ctx.lineTo(-24, 8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(8, -2, 2, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(20,30,40,.6)';
+    ctx.fill();
+    ctx.restore();
   }
 
   // zabkowana (nierowna) gorna krawedz bloku-gruntu - wspolna dla zwyklego/lodowego/piaskowego gruntu
