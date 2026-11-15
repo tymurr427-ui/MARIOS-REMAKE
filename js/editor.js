@@ -273,8 +273,9 @@
 
     // dekoracyjne tlo zalezne od biomu (gory/drzewa/palmy/itp. - tak jak w grze, nie maja zwiazku z realnym gruntem)
     const hillW = 420*editorScale;
-    const hillOffset = ((editorScrollX*0.5*editorScale) % hillW + hillW) % hillW;
     const bgKind = editorBiomeDecoKind(document.getElementById('editorBgSelect').value);
+    const bgParallax = (bgKind === 'tree') ? 0 : 0.5;
+    const hillOffset = ((editorScrollX*bgParallax*editorScale) % hillW + hillW) % hillW;
     editorCtx.fillStyle = c.hill;
     for(let hx = -hillOffset - hillW; hx < editorCanvas.width + hillW; hx += hillW){
       editorDrawBiomeDeco(bgKind, hx + hillW/2, EDITOR_GROUND_Y*editorScale + 30*editorScale, 180*editorScale, 90*editorScale);

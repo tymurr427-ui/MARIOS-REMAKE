@@ -134,8 +134,9 @@
       ctx.fillRect(0,0,W,H);
       ctx.fillStyle = bc.hill;
       const lowKind = biomeDecoKind();
+      const lowParallax = (lowKind === 'tree') ? 0 : 0.5;
       for(let i=0;i<3;i++){
-        const hx = ((i*420 - camera.x*0.5) % (level.width+420) + level.width+420) % (level.width+420) - 210;
+        const hx = ((i*420 - camera.x*lowParallax) % (level.width+420) + level.width+420) % (level.width+420) - 210;
         drawBiomeDeco(lowKind, hx, GROUND_Y+30, 180, 90);
       }
       return;
@@ -204,10 +205,12 @@
     }
 
     // dalekie dekoracje (gory/drzewa/palmy/itp. zalezne od biomu) - najwolniejsza warstwa parallaksy, z tylu za chmurami
+    // Las: drzewa stoja w miejscu na ekranie (nie "lecą" razem z graczem) - zwykle tlo, bez paralaksy.
     const decoKind = biomeDecoKind();
+    const farParallax = (decoKind === 'tree') ? 0 : 0.15;
     ctx.fillStyle = shade(bc.hill, -16);
     for(let i=0;i<6;i++){
-      const hx = ((i*360 - camera.x*0.15) % (level.width+360) + level.width+360) % (level.width+360) - 180;
+      const hx = ((i*360 - camera.x*farParallax) % (level.width+360) + level.width+360) % (level.width+360) - 180;
       drawBiomeDeco(decoKind, hx, GROUND_Y+25, 240, 135);
     }
 
@@ -221,9 +224,10 @@
       const bob = gfxQuality >= 2 ? Math.sin((timeAlive||0)*0.01 + i)*4 : 0;
       drawCloud(cx, H*0.15 + (i%2)*30 + bob);
     }
+    const nearParallax = (decoKind === 'tree') ? 0 : 0.5;
     ctx.fillStyle = bc.hill;
     for(let i=0;i<8;i++){
-      const hx = ((i*260 - camera.x*0.5) % (level.width+260) + level.width+260) % (level.width+260) - 130;
+      const hx = ((i*260 - camera.x*nearParallax) % (level.width+260) + level.width+260) % (level.width+260) - 130;
       drawBiomeDeco(decoKind, hx, GROUND_Y+30, 180, 90);
     }
 
