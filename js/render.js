@@ -238,11 +238,15 @@
       if(level.bg === 'underwater'){ drawFish(cx, H*0.15 + (i%3)*70 + bob, i%2===0); continue; }
       drawCloud(cx, H*0.15 + (i%2)*30 + bob);
     }
-    const nearParallax = (decoKind === 'tree') ? 0 : 0.5;
-    ctx.fillStyle = bc.hill;
-    for(let i=0;i<8;i++){
-      const hx = ((i*260 - camera.x*nearParallax) % (level.width+260) + level.width+260) % (level.width+260) - 130;
-      drawBiomeDeco(decoKind, hx, GROUND_Y+30, 180, 90);
+    // Las: tylko JEDNA rownomiernie rozstawiona warstwa drzew (ta "daleka" powyzej) - druga,
+    // nakladajaca sie warstwa o innym odstepie/rozmiarze robila z tego nierowny, pozlepiany balagan
+    // skoro obie i tak sa teraz nieruchome (bez tego kontrastu, ktory dawala paralaksa, drugi rzad tylko przeszkadzal).
+    if(decoKind !== 'tree'){
+      ctx.fillStyle = bc.hill;
+      for(let i=0;i<8;i++){
+        const hx = ((i*260 - camera.x*0.5) % (level.width+260) + level.width+260) % (level.width+260) - 130;
+        drawBiomeDeco(decoKind, hx, GROUND_Y+30, 180, 90);
+      }
     }
 
     // bliskie krzaki - szybsza warstwa parallaksy, tuz przed gruntem (tylko tam, gdzie nie ma wlasnej dekoracji biomu)
