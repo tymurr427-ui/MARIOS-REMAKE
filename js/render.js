@@ -215,13 +215,24 @@
     }
 
     // dalekie dekoracje (gory/drzewa/palmy/itp. zalezne od biomu) - najwolniejsza warstwa parallaksy, z tylu za chmurami
-    // Las: drzewa stoja w miejscu na ekranie (nie "lecą" razem z graczem) - zwykle tlo, bez paralaksy.
     const decoKind = biomeDecoKind();
-    const farParallax = (decoKind === 'tree') ? 0 : 0.15;
-    ctx.fillStyle = shade(bc.hill, -16);
-    for(let i=0;i<6;i++){
-      const hx = ((i*360 - camera.x*farParallax) % (level.width+360) + level.width+360) % (level.width+360) - 180;
-      drawBiomeDeco(decoKind, hx, GROUND_Y+25, 240, 135);
+    if(decoKind === 'tree'){
+      // Las: drzewa nieruchome wzgledem ekranu, duze+male NA ROWNEJ, JEDNEJ siatce (na przemian,
+      // bez przerw) - zamiast dwoch niezaleznych warstw o innym odstepie, ktore nie trafialy w siebie.
+      const step = 220;
+      const count = Math.ceil(W/step) + 2;
+      for(let i=0;i<count;i++){
+        const hx = i*step - step/2;
+        const big = i % 2 === 0;
+        ctx.fillStyle = big ? shade(bc.hill, -16) : bc.hill;
+        drawBiomeDeco('tree', hx, GROUND_Y + (big?25:30), big?240:180, big?135:90);
+      }
+    } else {
+      ctx.fillStyle = shade(bc.hill, -16);
+      for(let i=0;i<6;i++){
+        const hx = ((i*360 - camera.x*0.15) % (level.width+360) + level.width+360) % (level.width+360) - 180;
+        drawBiomeDeco(decoKind, hx, GROUND_Y+25, 240, 135);
+      }
     }
 
     if(level.bg !== 'underwater'){
@@ -238,9 +249,6 @@
       if(level.bg === 'underwater'){ drawFish(cx, H*0.15 + (i%3)*70 + bob, i%2===0); continue; }
       drawCloud(cx, H*0.15 + (i%2)*30 + bob);
     }
-    // Las: tylko JEDNA rownomiernie rozstawiona warstwa drzew (ta "daleka" powyzej) - druga,
-    // nakladajaca sie warstwa o innym odstepie/rozmiarze robila z tego nierowny, pozlepiany balagan
-    // skoro obie i tak sa teraz nieruchome (bez tego kontrastu, ktory dawala paralaksa, drugi rzad tylko przeszkadzal).
     if(decoKind !== 'tree'){
       ctx.fillStyle = bc.hill;
       for(let i=0;i<8;i++){
