@@ -204,10 +204,21 @@
       editorCtx.ellipse(cx, baseY+h*0.2, w*0.56, h*0.5, 0, Math.PI, 0);
       editorCtx.fill();
     } else if(kind==='lollipop'){
-      editorCtx.fillRect(cx-w*0.04, baseY-h*0.5, w*0.08, h*0.5);
+      const candyColor = editorCtx.fillStyle;
+      editorCtx.fillStyle = '#fff3e0';
+      editorCtx.fillRect(cx-w*0.035, baseY-h*0.55, w*0.07, h*0.55);
+      editorCtx.fillStyle = candyColor;
       editorCtx.beginPath();
-      editorCtx.arc(cx, baseY-h*0.62, w*0.3, 0, Math.PI*2);
+      editorCtx.arc(cx, baseY-h*0.68, w*0.3, 0, Math.PI*2);
       editorCtx.fill();
+      editorCtx.strokeStyle = 'rgba(255,255,255,.55)';
+      editorCtx.lineWidth = Math.max(2, w*0.035);
+      editorCtx.beginPath();
+      editorCtx.arc(cx, baseY-h*0.68, w*0.2, 0.3, 2.6);
+      editorCtx.stroke();
+      editorCtx.beginPath();
+      editorCtx.arc(cx, baseY-h*0.68, w*0.1, -2.6, 0.6);
+      editorCtx.stroke();
     } else if(kind==='peak'){
       editorCtx.beginPath();
       editorCtx.moveTo(cx-w/2, baseY);
