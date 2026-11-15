@@ -27,14 +27,18 @@
   function drawBiomeDeco(kind, cx, baseY, w, h){
     if(kind==='none') return;
     if(kind==='tree'){
-      const trunkH = h*0.22, trunkW = w*0.12;
+      const canopyColor = ctx.fillStyle;
+      const th = h*1.7; // drzewa maja byc wyraznie wyzsze niz byly pierwotne gory/pagorki
+      const trunkH = th*0.24, trunkW = w*0.12;
+      ctx.fillStyle = '#5c3a21'; // pien - drewno jest brazowe, nie zielone jak korona
       ctx.fillRect(cx-trunkW/2, baseY-trunkH, trunkW, trunkH);
+      ctx.fillStyle = canopyColor;
       for(let i=0;i<3;i++){
-        const ty = baseY - trunkH - i*h*0.26;
+        const ty = baseY - trunkH - i*th*0.26;
         const tw = w*(1 - i*0.22);
         ctx.beginPath();
         ctx.moveTo(cx-tw/2, ty);
-        ctx.lineTo(cx, ty-h*0.38);
+        ctx.lineTo(cx, ty-th*0.38);
         ctx.lineTo(cx+tw/2, ty);
         ctx.closePath();
         ctx.fill();
@@ -223,8 +227,8 @@
       drawBiomeDeco(decoKind, hx, GROUND_Y+30, 180, 90);
     }
 
-    // bliskie krzaki - szybsza warstwa parallaksy, tuz przed gruntem (pomijana tam, gdzie "none" - np. kosmos)
-    if(gfxQuality >= 1 && decoKind !== 'none'){
+    // bliskie krzaki - szybsza warstwa parallaksy, tuz przed gruntem (tylko tam, gdzie nie ma wlasnej dekoracji biomu)
+    if(gfxQuality >= 1 && decoKind === 'round'){
       ctx.fillStyle = shade(bc.hill, -28);
       for(let i=0;i<14;i++){
         const bx = ((i*170 - camera.x*0.75) % (level.width+170) + level.width+170) % (level.width+170) - 85;

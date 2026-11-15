@@ -136,14 +136,18 @@
   function editorDrawBiomeDeco(kind, cx, baseY, w, h){
     if(kind==='none') return;
     if(kind==='tree'){
-      const trunkH = h*0.22, trunkW = w*0.12;
+      const canopyColor = editorCtx.fillStyle;
+      const th = h*1.7;
+      const trunkH = th*0.24, trunkW = w*0.12;
+      editorCtx.fillStyle = '#5c3a21';
       editorCtx.fillRect(cx-trunkW/2, baseY-trunkH, trunkW, trunkH);
+      editorCtx.fillStyle = canopyColor;
       for(let i=0;i<3;i++){
-        const ty = baseY - trunkH - i*h*0.26;
+        const ty = baseY - trunkH - i*th*0.26;
         const tw = w*(1 - i*0.22);
         editorCtx.beginPath();
         editorCtx.moveTo(cx-tw/2, ty);
-        editorCtx.lineTo(cx, ty-h*0.38);
+        editorCtx.lineTo(cx, ty-th*0.38);
         editorCtx.lineTo(cx+tw/2, ty);
         editorCtx.closePath();
         editorCtx.fill();
