@@ -99,10 +99,23 @@
       ctx.ellipse(cx, baseY+h*0.2, w*0.56, h*0.5, 0, Math.PI, 0);
       ctx.fill();
     } else if(kind==='lollipop'){
-      ctx.fillRect(cx-w*0.04, baseY-h*0.5, w*0.08, h*0.5);
+      // patyczek zawsze jasny/kremowy - inaczej, na rozowym tle biomu "candy", robil sie niewidoczny
+      const candyColor = ctx.fillStyle;
+      ctx.fillStyle = '#fff3e0';
+      ctx.fillRect(cx-w*0.035, baseY-h*0.55, w*0.07, h*0.55);
+      ctx.fillStyle = candyColor;
       ctx.beginPath();
-      ctx.arc(cx, baseY-h*0.62, w*0.3, 0, Math.PI*2);
+      ctx.arc(cx, baseY-h*0.68, w*0.3, 0, Math.PI*2);
       ctx.fill();
+      // spiralny "cukierkowy" pasek, zeby bylo widac ze to lizak a nie zwykla kulka
+      ctx.strokeStyle = 'rgba(255,255,255,.55)';
+      ctx.lineWidth = Math.max(2, w*0.035);
+      ctx.beginPath();
+      ctx.arc(cx, baseY-h*0.68, w*0.2, 0.3, 2.6);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, baseY-h*0.68, w*0.1, -2.6, 0.6);
+      ctx.stroke();
     } else if(kind==='peak'){
       ctx.beginPath();
       ctx.moveTo(cx-w/2, baseY);
@@ -240,6 +253,8 @@
       ctx.beginPath(); ctx.arc(W*0.82, H*0.16, 34, 0, Math.PI*2); ctx.fill();
     }
 
+    if(decoKind === 'lollipop') drawCandyScatter();
+
     ctx.fillStyle = 'rgba(255,255,255,.9)';
     const cloudCount = gfxQuality >= 2 ? 8 : 6;
     for(let i=0;i<cloudCount;i++){
@@ -286,6 +301,52 @@
   }
 
   // Rybka plywajaca w tle biomu podwodnego (zamiast chmur, ktore nie maja sensu pod woda).
+  // Biom "candy": cukierki porozrzucane po calym tle (nie tylko lizaki stojace rzedem na dole jak gory).
+  function drawWrappedCandy(cx, cy, size, color){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size*0.55, size*0.4, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    ctx.beginPath();
+    ctx.moveTo(-size*0.48, 0); ctx.lineTo(-size*0.95, -size*0.32); ctx.lineTo(-size*0.95, size*0.32);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(size*0.48, 0); ctx.lineTo(size*0.95, -size*0.32); ctx.lineTo(size*0.95, size*0.32);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function drawMiniLollipop(cx, cy, size, color){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.strokeStyle = '#fff3e0';
+    ctx.lineWidth = Math.max(2, size*0.14);
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, size*0.4); ctx.lineTo(0, size*0.95); ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(0, 0, size*0.42, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.6)';
+    ctx.lineWidth = Math.max(1.5, size*0.07);
+    ctx.beginPath(); ctx.arc(0, 0, size*0.26, 0.3, 2.6); ctx.stroke();
+    ctx.restore();
+  }
+  function drawCandyScatter(){
+    const palette = ['#ff6fae','#9b5de5','#ffd166','#06d6a0','#4cc9f0','#ff8fab'];
+    const periodW = 1900;
+    for(let i=0;i<16;i++){
+      const x0 = i*(periodW/16) + Math.sin(i*12.9)*70;
+      const hx = ((x0 - camera.x*0.1) % periodW + periodW) % periodW - 60;
+      const fy = 0.08 + ((i*0.6179) % 1) * 0.6; // rozsiane po gornych/srodkowych 2/3 ekranu
+      const cy = H*fy;
+      const size = 20 + (i%4)*7;
+      const color = palette[i % palette.length];
+      if(i % 2 === 0) drawWrappedCandy(hx, cy, size, color);
+      else drawMiniLollipop(hx, cy, size, color);
+    }
+  }
+
   function drawFish(x, y, flip){
     const t = (timeAlive||0)*0.0025 + x*0.01;
     const wob = Math.sin(t*3)*3;
