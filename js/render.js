@@ -121,6 +121,7 @@
       }
       ctx.stroke();
       ctx.restore();
+      ctx.fillStyle = candyColor; // restore() wyzej cofa tez fillStyle do stanu z przed save() (brazowy patyczek) - trzeba przywrocic recznie, inaczej kolejny lizak w petli wyjdzie brazowy
       ctx.strokeStyle = 'rgba(0,0,0,.18)';
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(cx, ly, r, 0, Math.PI*2); ctx.stroke();

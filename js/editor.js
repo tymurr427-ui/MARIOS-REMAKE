@@ -224,6 +224,7 @@
       }
       editorCtx.stroke();
       editorCtx.restore();
+      editorCtx.fillStyle = candyColor;
       editorCtx.strokeStyle = 'rgba(0,0,0,.18)';
       editorCtx.lineWidth = 1.5;
       editorCtx.beginPath(); editorCtx.arc(cx, ly, r, 0, Math.PI*2); editorCtx.stroke();
