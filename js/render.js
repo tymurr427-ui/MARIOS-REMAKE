@@ -130,7 +130,7 @@
       ctx.fillRect(cx-r, ly-r, r*2, r*2);
       // spiralny, zakrecony wzor w dwoch kolorach - jak prawdziwy lizak, a nie plaska kulka
       ctx.strokeStyle = candyColor;
-      ctx.lineWidth = r*0.55;
+      ctx.lineWidth = r*0.26;
       ctx.lineCap = 'round';
       ctx.beginPath();
       const turns = 2.4, steps = 30;
@@ -359,7 +359,7 @@
     ctx.fillStyle = '#fff8ec';
     ctx.fillRect(-r, -r, r*2, r*2);
     ctx.strokeStyle = color;
-    ctx.lineWidth = r*0.6;
+    ctx.lineWidth = r*0.26;
     ctx.lineCap = 'round';
     ctx.beginPath();
     const turns = 2.2, steps = 24;

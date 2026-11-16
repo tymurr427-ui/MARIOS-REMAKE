@@ -230,7 +230,7 @@
       editorCtx.fillStyle = '#fff8ec';
       editorCtx.fillRect(cx-r, ly-r, r*2, r*2);
       editorCtx.strokeStyle = candyColor;
-      editorCtx.lineWidth = r*0.55;
+      editorCtx.lineWidth = r*0.26;
       editorCtx.lineCap = 'round';
       editorCtx.beginPath();
       const turns = 2.4, steps = 30;
