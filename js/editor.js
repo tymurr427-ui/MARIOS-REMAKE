@@ -205,20 +205,28 @@
       editorCtx.fill();
     } else if(kind==='lollipop'){
       const candyColor = editorCtx.fillStyle;
-      editorCtx.fillStyle = '#fff3e0';
+      editorCtx.fillStyle = '#8a5a2b';
       editorCtx.fillRect(cx-w*0.035, baseY-h*0.55, w*0.07, h*0.55);
-      editorCtx.fillStyle = candyColor;
+      const r = w*0.3, ly = baseY-h*0.68;
+      editorCtx.save();
+      editorCtx.beginPath(); editorCtx.arc(cx, ly, r, 0, Math.PI*2); editorCtx.clip();
+      editorCtx.fillStyle = '#fff8ec';
+      editorCtx.fillRect(cx-r, ly-r, r*2, r*2);
+      editorCtx.strokeStyle = candyColor;
+      editorCtx.lineWidth = r*0.55;
+      editorCtx.lineCap = 'round';
       editorCtx.beginPath();
-      editorCtx.arc(cx, baseY-h*0.68, w*0.3, 0, Math.PI*2);
-      editorCtx.fill();
-      editorCtx.strokeStyle = 'rgba(255,255,255,.55)';
-      editorCtx.lineWidth = Math.max(2, w*0.035);
-      editorCtx.beginPath();
-      editorCtx.arc(cx, baseY-h*0.68, w*0.2, 0.3, 2.6);
+      const turns = 2.4, steps = 30;
+      for(let s=0; s<=steps; s++){
+        const t = s/steps, ang = t*turns*Math.PI*2, rad = t*r*1.25;
+        const px = cx + Math.cos(ang)*rad, py = ly + Math.sin(ang)*rad;
+        if(s===0) editorCtx.moveTo(px,py); else editorCtx.lineTo(px,py);
+      }
       editorCtx.stroke();
-      editorCtx.beginPath();
-      editorCtx.arc(cx, baseY-h*0.68, w*0.1, -2.6, 0.6);
-      editorCtx.stroke();
+      editorCtx.restore();
+      editorCtx.strokeStyle = 'rgba(0,0,0,.18)';
+      editorCtx.lineWidth = 1.5;
+      editorCtx.beginPath(); editorCtx.arc(cx, ly, r, 0, Math.PI*2); editorCtx.stroke();
     } else if(kind==='peak'){
       editorCtx.beginPath();
       editorCtx.moveTo(cx-w/2, baseY);

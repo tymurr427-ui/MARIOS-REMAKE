@@ -99,23 +99,31 @@
       ctx.ellipse(cx, baseY+h*0.2, w*0.56, h*0.5, 0, Math.PI, 0);
       ctx.fill();
     } else if(kind==='lollipop'){
-      // patyczek zawsze jasny/kremowy - inaczej, na rozowym tle biomu "candy", robil sie niewidoczny
       const candyColor = ctx.fillStyle;
-      ctx.fillStyle = '#fff3e0';
+      // patyczek - drewniany, jak w prawdziwym lizaku (nie biały/rozowy)
+      ctx.fillStyle = '#8a5a2b';
       ctx.fillRect(cx-w*0.035, baseY-h*0.55, w*0.07, h*0.55);
-      ctx.fillStyle = candyColor;
+      const r = w*0.3, ly = baseY-h*0.68;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx, ly, r, 0, Math.PI*2); ctx.clip();
+      ctx.fillStyle = '#fff8ec';
+      ctx.fillRect(cx-r, ly-r, r*2, r*2);
+      // spiralny, zakrecony wzor w dwoch kolorach - jak prawdziwy lizak, a nie plaska kulka
+      ctx.strokeStyle = candyColor;
+      ctx.lineWidth = r*0.55;
+      ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.arc(cx, baseY-h*0.68, w*0.3, 0, Math.PI*2);
-      ctx.fill();
-      // spiralny "cukierkowy" pasek, zeby bylo widac ze to lizak a nie zwykla kulka
-      ctx.strokeStyle = 'rgba(255,255,255,.55)';
-      ctx.lineWidth = Math.max(2, w*0.035);
-      ctx.beginPath();
-      ctx.arc(cx, baseY-h*0.68, w*0.2, 0.3, 2.6);
+      const turns = 2.4, steps = 30;
+      for(let s=0; s<=steps; s++){
+        const t = s/steps, ang = t*turns*Math.PI*2, rad = t*r*1.25;
+        const px = cx + Math.cos(ang)*rad, py = ly + Math.sin(ang)*rad;
+        if(s===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
       ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(cx, baseY-h*0.68, w*0.1, -2.6, 0.6);
-      ctx.stroke();
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(0,0,0,.18)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx, ly, r, 0, Math.PI*2); ctx.stroke();
     } else if(kind==='peak'){
       ctx.beginPath();
       ctx.moveTo(cx-w/2, baseY);
@@ -321,15 +329,30 @@
   function drawMiniLollipop(cx, cy, size, color){
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.strokeStyle = '#fff3e0';
-    ctx.lineWidth = Math.max(2, size*0.14);
+    ctx.strokeStyle = '#8a5a2b'; // drewniany patyczek
+    ctx.lineWidth = Math.max(2, size*0.12);
     ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(0, size*0.4); ctx.lineTo(0, size*0.95); ctx.stroke();
-    ctx.fillStyle = color;
-    ctx.beginPath(); ctx.arc(0, 0, size*0.42, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,.6)';
-    ctx.lineWidth = Math.max(1.5, size*0.07);
-    ctx.beginPath(); ctx.arc(0, 0, size*0.26, 0.3, 2.6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, size*0.4); ctx.lineTo(0, size*1.1); ctx.stroke();
+    const r = size*0.42;
+    ctx.save();
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.clip();
+    ctx.fillStyle = '#fff8ec';
+    ctx.fillRect(-r, -r, r*2, r*2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = r*0.6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    const turns = 2.2, steps = 24;
+    for(let s=0; s<=steps; s++){
+      const t = s/steps, ang = t*turns*Math.PI*2, rad = t*r*1.25;
+      const px = Math.cos(ang)*rad, py = Math.sin(ang)*rad;
+      if(s===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(0,0,0,.18)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.stroke();
     ctx.restore();
   }
   function drawCandyScatter(){
