@@ -154,19 +154,25 @@
       }
     } else if(kind==='palm'){
       const th = h*1.6;
+      const palmP0x=cx, palmP0y=baseY, palmP1x=cx-w*0.13, palmP1y=baseY-th*0.55, palmP2x=cx-w*0.06, palmP2y=baseY-th;
       editorCtx.save();
       editorCtx.strokeStyle = '#6b4a2b';
       editorCtx.lineWidth = Math.max(3, w*0.1);
       editorCtx.lineCap = 'round';
       editorCtx.beginPath();
-      editorCtx.moveTo(cx, baseY);
-      editorCtx.quadraticCurveTo(cx - w*0.13, baseY - th*0.55, cx - w*0.06, baseY - th);
+      editorCtx.moveTo(palmP0x, palmP0y);
+      editorCtx.quadraticCurveTo(palmP1x, palmP1y, palmP2x, palmP2y);
       editorCtx.stroke();
       editorCtx.strokeStyle = 'rgba(0,0,0,.15)';
       editorCtx.lineWidth = Math.max(1.5, w*0.03);
-      for(let r=0.2; r<0.9; r+=0.18){
-        const rx = cx - w*0.13*Math.sin(r*Math.PI/2) - w*0.06*r, ry = baseY - th*r;
-        editorCtx.beginPath(); editorCtx.moveTo(rx-w*0.05, ry); editorCtx.lineTo(rx+w*0.05, ry-w*0.02); editorCtx.stroke();
+      for(let t=0.2; t<0.9; t+=0.18){
+        const mt = 1-t;
+        const px = mt*mt*palmP0x + 2*mt*t*palmP1x + t*t*palmP2x;
+        const py = mt*mt*palmP0y + 2*mt*t*palmP1y + t*t*palmP2y;
+        const tx = 2*mt*(palmP1x-palmP0x) + 2*t*(palmP2x-palmP1x);
+        const ty = 2*mt*(palmP1y-palmP0y) + 2*t*(palmP2y-palmP1y);
+        const tl = Math.hypot(tx,ty) || 1, nx = -ty/tl, ny = tx/tl, rlen = w*0.05;
+        editorCtx.beginPath(); editorCtx.moveTo(px-nx*rlen, py-ny*rlen); editorCtx.lineTo(px+nx*rlen, py+ny*rlen); editorCtx.stroke();
       }
       editorCtx.restore();
       const topX = cx - w*0.06, topY = baseY - th;
