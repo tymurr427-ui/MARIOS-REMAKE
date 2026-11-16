@@ -239,12 +239,11 @@
     // dalekie dekoracje (gory/drzewa/palmy/itp. zalezne od biomu) - najwolniejsza warstwa parallaksy, z tylu za chmurami
     const decoKind = biomeDecoKind();
     if(decoKind === 'tree'){
-      // Las: drzewa nieruchome wzgledem ekranu, duze+male NA ROWNEJ, JEDNEJ siatce (na przemian,
-      // bez przerw) - zamiast dwoch niezaleznych warstw o innym odstepie, ktore nie trafialy w siebie.
-      const step = 220;
-      const count = Math.ceil(W/step) + 2;
+      // Las: duze+male drzewa na JEDNEJ rownej siatce (na przemian, bez przerw) - wszystkie razem
+      // przesuwaja sie w tym samym, wolnym tempie, wiec nigdy sie wzgledem siebie nie rozjada/naloza.
+      const step = 220, count = 26, period = step*count;
       for(let i=0;i<count;i++){
-        const hx = i*step - step/2;
+        const hx = ((i*step - camera.x*0.2) % period + period) % period - step;
         const big = i % 2 === 0;
         ctx.fillStyle = big ? shade(bc.hill, -16) : bc.hill;
         drawBiomeDeco('tree', hx, GROUND_Y + (big?25:30), big?240:180, big?135:90);
