@@ -45,27 +45,40 @@
       }
     } else if(kind==='palm'){
       // pien zawsze brazowy, liscie zawsze zielone - zeby sylwetka czytelnie wygladala jak palma,
-      // niezaleznie od koloru nieba/piasku danego biomu (sam kolor "hill" robil z tego kwiatek).
+      // niezaleznie od koloru nieba/piasku danego biomu. Wyzszy pien + dluzsze, obwisle liscie (bardziej jak prawdziwa palma).
+      const th = h*1.6;
       ctx.save();
       ctx.strokeStyle = '#6b4a2b';
-      ctx.lineWidth = Math.max(2, w*0.08);
+      ctx.lineWidth = Math.max(3, w*0.1);
       ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(cx, baseY);
-      ctx.quadraticCurveTo(cx - w*0.1, baseY - h*0.55, cx - w*0.05, baseY - h*0.95);
+      ctx.quadraticCurveTo(cx - w*0.13, baseY - th*0.55, cx - w*0.06, baseY - th);
       ctx.stroke();
+      // sloje na pniu - delikatne przewezenia, zeby nie byl gladkim patykiem
+      ctx.strokeStyle = 'rgba(0,0,0,.15)';
+      ctx.lineWidth = Math.max(1.5, w*0.03);
+      for(let r=0.2; r<0.9; r+=0.18){
+        const rx = cx - w*0.13*Math.sin(r*Math.PI/2) - w*0.06*r, ry = baseY - th*r;
+        ctx.beginPath(); ctx.moveTo(rx-w*0.05, ry); ctx.lineTo(rx+w*0.05, ry-w*0.02); ctx.stroke();
+      }
       ctx.restore();
-      const topX = cx - w*0.05, topY = baseY - h*0.95;
+      const topX = cx - w*0.06, topY = baseY - th;
       ctx.fillStyle = '#3f8f4a';
-      for(let i=0;i<6;i++){
-        const ang = -Math.PI/2 + (i-2.5)*0.48;
+      // liscie pod roznymi katami (gorne bardziej pionowe, boczne dluzsze i obwisle) - naturalniejszy ksztalt niz symetryczna "gwiazdka"
+      const fronds = [
+        {deg:-152, len:0.95}, {deg:-118, len:1.05}, {deg:-90, len:1.1}, {deg:-62, len:1.05}, {deg:-28, len:0.95},
+        {deg:-135, len:0.8}, {deg:-45, len:0.8}
+      ];
+      for(const fr of fronds){
+        const ang = fr.deg*Math.PI/180, len = w*0.62*fr.len;
         ctx.save();
         ctx.translate(topX, topY);
         ctx.rotate(ang);
         ctx.beginPath();
         ctx.moveTo(0,0);
-        ctx.quadraticCurveTo(w*0.22, -h*0.05, w*0.44, h*0.02);
-        ctx.quadraticCurveTo(w*0.22, h*0.08, 0, 0);
+        ctx.quadraticCurveTo(len*0.55, -len*0.1, len*0.88, len*0.22); // unosi sie, potem opada - naturalny obwis liscia
+        ctx.quadraticCurveTo(len*0.5, len*0.04, 0, 0);
         ctx.closePath();
         ctx.fill();
         ctx.restore();

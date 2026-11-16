@@ -153,26 +153,37 @@
         editorCtx.fill();
       }
     } else if(kind==='palm'){
+      const th = h*1.6;
       editorCtx.save();
       editorCtx.strokeStyle = '#6b4a2b';
-      editorCtx.lineWidth = Math.max(2, w*0.08);
+      editorCtx.lineWidth = Math.max(3, w*0.1);
       editorCtx.lineCap = 'round';
       editorCtx.beginPath();
       editorCtx.moveTo(cx, baseY);
-      editorCtx.quadraticCurveTo(cx - w*0.1, baseY - h*0.55, cx - w*0.05, baseY - h*0.95);
+      editorCtx.quadraticCurveTo(cx - w*0.13, baseY - th*0.55, cx - w*0.06, baseY - th);
       editorCtx.stroke();
+      editorCtx.strokeStyle = 'rgba(0,0,0,.15)';
+      editorCtx.lineWidth = Math.max(1.5, w*0.03);
+      for(let r=0.2; r<0.9; r+=0.18){
+        const rx = cx - w*0.13*Math.sin(r*Math.PI/2) - w*0.06*r, ry = baseY - th*r;
+        editorCtx.beginPath(); editorCtx.moveTo(rx-w*0.05, ry); editorCtx.lineTo(rx+w*0.05, ry-w*0.02); editorCtx.stroke();
+      }
       editorCtx.restore();
-      const topX = cx - w*0.05, topY = baseY - h*0.95;
+      const topX = cx - w*0.06, topY = baseY - th;
       editorCtx.fillStyle = '#3f8f4a';
-      for(let i=0;i<6;i++){
-        const ang = -Math.PI/2 + (i-2.5)*0.48;
+      const fronds = [
+        {deg:-152, len:0.95}, {deg:-118, len:1.05}, {deg:-90, len:1.1}, {deg:-62, len:1.05}, {deg:-28, len:0.95},
+        {deg:-135, len:0.8}, {deg:-45, len:0.8}
+      ];
+      for(const fr of fronds){
+        const ang = fr.deg*Math.PI/180, len = w*0.62*fr.len;
         editorCtx.save();
         editorCtx.translate(topX, topY);
         editorCtx.rotate(ang);
         editorCtx.beginPath();
         editorCtx.moveTo(0,0);
-        editorCtx.quadraticCurveTo(w*0.22, -h*0.05, w*0.44, h*0.02);
-        editorCtx.quadraticCurveTo(w*0.22, h*0.08, 0, 0);
+        editorCtx.quadraticCurveTo(len*0.55, -len*0.1, len*0.88, len*0.22);
+        editorCtx.quadraticCurveTo(len*0.5, len*0.04, 0, 0);
         editorCtx.closePath();
         editorCtx.fill();
         editorCtx.restore();
