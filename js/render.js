@@ -276,21 +276,25 @@
       }
     }
 
-    if(level.bg !== 'underwater'){
+    if(level.bg !== 'underwater' && level.bg !== 'space'){
       ctx.fillStyle = bc.sun;
       ctx.beginPath(); ctx.arc(W*0.82, H*0.16, 34, 0, Math.PI*2); ctx.fill();
     }
 
     if(decoKind === 'lollipop') drawCandyScatter();
+    if(level.bg === 'autumn') drawLeafScatter();
+    if(level.bg === 'space') drawPlanetScatter();
 
-    ctx.fillStyle = 'rgba(255,255,255,.9)';
-    const cloudCount = gfxQuality >= 2 ? 8 : 6;
-    for(let i=0;i<cloudCount;i++){
-      const cx = ((i*300 - camera.x*0.3) % (level.width+300) + level.width+300) % (level.width+300) - 150;
-      const bob = gfxQuality >= 2 ? Math.sin((timeAlive||0)*0.01 + i)*4 : 0;
-      // Pod woda nie ma chmur ani slonca na niebie - zamiast tego plywaja rybki.
-      if(level.bg === 'underwater'){ drawFish(cx, H*0.15 + (i%3)*70 + bob, i%2===0); continue; }
-      drawCloud(cx, H*0.15 + (i%2)*30 + bob);
+    if(level.bg !== 'space'){
+      ctx.fillStyle = 'rgba(255,255,255,.9)';
+      const cloudCount = gfxQuality >= 2 ? 8 : 6;
+      for(let i=0;i<cloudCount;i++){
+        const cx = ((i*300 - camera.x*0.3) % (level.width+300) + level.width+300) % (level.width+300) - 150;
+        const bob = gfxQuality >= 2 ? Math.sin((timeAlive||0)*0.01 + i)*4 : 0;
+        // Pod woda nie ma chmur ani slonca na niebie - zamiast tego plywaja rybki.
+        if(level.bg === 'underwater'){ drawFish(cx, H*0.15 + (i%3)*70 + bob, i%2===0); continue; }
+        drawCloud(cx, H*0.15 + (i%2)*30 + bob);
+      }
     }
     if(decoKind !== 'tree'){
       ctx.fillStyle = bc.hill;
@@ -387,6 +391,78 @@
       const color = palette[i % palette.length];
       if(i % 2 === 0) drawWrappedCandy(hx, cy, size, color);
       else drawMiniLollipop(hx, cy, size, color);
+    }
+  }
+
+  // Biom "autumn": jesienne liscie porozrzucane/furkoczace po calym tle (tak jak cukierki w biomie "candy").
+  function drawLeaf(cx, cy, size, color, rot){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rot);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, -size*0.6);
+    ctx.quadraticCurveTo(size*0.5, -size*0.15, 0, size*0.6);
+    ctx.quadraticCurveTo(-size*0.5, -size*0.15, 0, -size*0.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.25)';
+    ctx.lineWidth = Math.max(1, size*0.05);
+    ctx.beginPath(); ctx.moveTo(0, -size*0.55); ctx.lineTo(0, size*0.5); ctx.stroke();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(1.5, size*0.08);
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, size*0.55); ctx.lineTo(0, size*0.8); ctx.stroke();
+    ctx.restore();
+  }
+  function drawLeafScatter(){
+    const palette = ['#d9534f','#e8871e','#f0c419','#a0522d','#c0392b','#e67e22'];
+    const periodW = 1900;
+    for(let i=0;i<18;i++){
+      const x0 = i*(periodW/18) + Math.sin(i*7.3)*60;
+      const hx = ((x0 - camera.x*0.15) % periodW + periodW) % periodW - 60;
+      const fy = 0.05 + ((i*0.618) % 1) * 0.65; // rozsiane po gornych/srodkowych 2/3 ekranu, jak cukierki
+      const cy = H*fy;
+      const size = 14 + (i%4)*5;
+      const color = palette[i % palette.length];
+      const rot = Math.sin((timeAlive||0)*0.0012 + i*1.7)*0.7 + i*0.3; // lekkie furkotanie
+      drawLeaf(hx, cy, size, color, rot);
+    }
+  }
+
+  // Biom "space": zamiast chmur i slonca, w tle widac rozne planety (niektore z pierscieniem).
+  function drawPlanet(cx, cy, r, color, ring){
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+    // cien polkuli, zeby wygladala jak kula a nie plaskie kolko
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip();
+    ctx.fillStyle = 'rgba(0,0,0,.25)';
+    ctx.beginPath(); ctx.arc(cx+r*0.35, cy+r*0.35, r*0.9, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+    if(ring){
+      ctx.strokeStyle = ring;
+      ctx.lineWidth = Math.max(2, r*0.22);
+      ctx.beginPath(); ctx.ellipse(cx, cy, r*1.7, r*0.45, -0.3, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawPlanetScatter(){
+    const planets = [
+      {r:30, color:'#e07a3f', ring:null},
+      {r:22, color:'#5fb3d9', ring:'rgba(255,255,255,.4)'},
+      {r:16, color:'#c45b8f', ring:null},
+      {r:26, color:'#8fd19e', ring:'rgba(200,200,255,.35)'},
+      {r:14, color:'#e8c15a', ring:null},
+    ];
+    const periodW = 1900;
+    for(let i=0;i<planets.length;i++){
+      const p = planets[i];
+      const x0 = i*(periodW/planets.length) + Math.sin(i*5.1)*80;
+      const hx = ((x0 - camera.x*0.08) % periodW + periodW) % periodW - 60;
+      const fy = 0.08 + ((i*0.618) % 1) * 0.55;
+      drawPlanet(hx, H*fy, p.r, p.color, p.ring);
     }
   }
 
