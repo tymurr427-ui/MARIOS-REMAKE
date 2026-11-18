@@ -233,8 +233,9 @@
       ctx.restore();
     }
 
-    // HIGH+: aureola wokol slonca (w biomie "space" w tym miejscu jest zamiast tego duza planeta, bez aureoli/promieni)
-    if(gfxQuality >= 2 && level.bg !== 'space'){
+    // HIGH+: aureola wokol slonca (w biomach "space" i "underwater" nie ma slonca wiec pomijamy -
+    // inaczej widac bylo swiecaca "gwiazde" na niebie mimo ze jestesmy pod woda/w kosmosie)
+    if(gfxQuality >= 2 && level.bg !== 'space' && level.bg !== 'underwater'){
       ctx.save();
       ctx.globalAlpha = 0.35;
       const sunGlow = ctx.createRadialGradient(W*0.82,H*0.16,10,W*0.82,H*0.16,60);
@@ -245,7 +246,7 @@
       ctx.restore();
     }
     // ULTRA: delikatne promienie slonca (obracajace sie powoli)
-    if(gfxQuality >= 3 && level.bg !== 'space'){
+    if(gfxQuality >= 3 && level.bg !== 'space' && level.bg !== 'underwater'){
       ctx.save();
       ctx.translate(W*0.82, H*0.16);
       ctx.rotate((timeAlive||0)*0.002);
@@ -294,7 +295,7 @@
         const cx = ((i*300 - camera.x*0.3) % (level.width+300) + level.width+300) % (level.width+300) - 150;
         const bob = gfxQuality >= 2 ? Math.sin((timeAlive||0)*0.01 + i)*4 : 0;
         // Pod woda nie ma chmur ani slonca na niebie - zamiast tego plywaja rybki.
-        if(level.bg === 'underwater'){ drawFish(cx, H*0.15 + (i%3)*70 + bob, i%2===0); continue; }
+        if(level.bg === 'underwater'){ drawFish(cx, H*0.15 + (i%3)*70 + bob, i%2===0, i); continue; }
         drawCloud(cx, H*0.15 + (i%2)*30 + bob);
       }
     }
@@ -479,25 +480,52 @@
     }
   }
 
-  function drawFish(x, y, flip){
+  // variant: 0=okragla rybka (jak wczesniej), 1=pomaranczowa z paskami (jak nemo), 2=fioletowa wydluzona
+  // z pletwa grzbietowa, 3=zolta pekata (jak flądra/fugu) - rozne ryby zamiast jednego powtarzajacego sie ksztaltu.
+  function drawFish(x, y, flip, variant){
     const t = (timeAlive||0)*0.0025 + x*0.01;
     const wob = Math.sin(t*3)*3;
     const fx = flip ? -1 : 1;
+    const v = variant % 4;
+    const colors = ['rgba(255,255,255,.55)', 'rgba(255,140,60,.85)', 'rgba(170,120,255,.75)', 'rgba(255,220,70,.8)'];
+    const bodyColor = colors[v];
     ctx.save();
     ctx.translate(x, y+wob);
     ctx.scale(fx, 1);
-    ctx.fillStyle = 'rgba(255,255,255,.55)';
+
+    if(v === 3){
+      // pekata, okragla rybka (jak fugu) - szersza niz dluga
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath(); ctx.ellipse(0, 0, 13, 12, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-10, 0); ctx.lineTo(-18, -7); ctx.lineTo(-18, 7); ctx.closePath(); ctx.fill();
+    } else {
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, v===2?20:16, v===2?7:9, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(v===2?-18:-14, 0);
+      ctx.lineTo(v===2?-28:-24, -8);
+      ctx.lineTo(v===2?-28:-24, 8);
+      ctx.closePath();
+      ctx.fill();
+    }
+    if(v === 1){
+      // paski na grzbiecie (jak nemo)
+      ctx.strokeStyle = 'rgba(255,255,255,.7)';
+      ctx.lineWidth = 2.5;
+      for(const sx of [-6, 2]){
+        ctx.beginPath(); ctx.moveTo(sx, -8); ctx.lineTo(sx, 8); ctx.stroke();
+      }
+    }
+    if(v === 2){
+      // pletwa grzbietowa
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath(); ctx.moveTo(-2, -7); ctx.lineTo(4, -15); ctx.lineTo(8, -6); ctx.closePath(); ctx.fill();
+    }
     ctx.beginPath();
-    ctx.ellipse(0, 0, 16, 9, 0, 0, Math.PI*2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(-14, 0);
-    ctx.lineTo(-24, -8);
-    ctx.lineTo(-24, 8);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(8, -2, 2, 0, Math.PI*2);
+    ctx.arc(v===3?6:8, -2, 2, 0, Math.PI*2);
     ctx.fillStyle = 'rgba(20,30,40,.6)';
     ctx.fill();
     ctx.restore();
