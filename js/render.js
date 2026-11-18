@@ -462,13 +462,17 @@
       {r:12, color:'#e0a9e8', ring:null},
       {r:18, color:'#4f9d8a', ring:null},
       {r:24, color:'#d9533f', ring:'rgba(255,255,255,.3)'},
+      {r:13, color:'#5ec2a0', ring:null},
+      {r:17, color:'#c98fe0', ring:'rgba(255,255,255,.3)'},
+      {r:10, color:'#f0b23f', ring:null},
+      {r:15, color:'#6fa8e0', ring:'rgba(255,230,180,.3)'},
     ];
     const periodW = 2200;
     for(let i=0;i<planets.length;i++){
       const p = planets[i];
       const x0 = i*(periodW/planets.length) + Math.sin(i*5.1)*80;
       const hx = ((x0 - camera.x*0.08) % periodW + periodW) % periodW - 60;
-      const fy = 0.08 + ((i*0.618) % 1) * 0.55;
+      const fy = 0.08 + ((i*0.618) % 1) * 0.72;
       drawPlanet(hx, H*fy, p.r, p.color, p.ring);
     }
   }
