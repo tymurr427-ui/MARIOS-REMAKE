@@ -120,10 +120,12 @@
       ctx.fill();
     } else if(kind==='lollipop'){
       const candyColor = ctx.fillStyle;
-      // patyczek - drewniany, jak w prawdziwym lizaku (nie biały/rozowy)
+      // patyczek - drewniany, jak w prawdziwym lizaku (nie biały/rozowy). Dlugosc liczona od srednicy
+      // kulki (r*2.3), a nie na sztywno od h - inaczej przy duzych lizakach kulka zakrywala prawie caly
+      // patyczek i widac bylo tylko maly kawalek u dolu.
+      const r = w*0.3, stickLen = r*2.3, ly = baseY - r - stickLen;
       ctx.fillStyle = '#8a5a2b';
-      ctx.fillRect(cx-w*0.035, baseY-h*0.55, w*0.07, h*0.55);
-      const r = w*0.3, ly = baseY-h*0.68;
+      ctx.fillRect(cx-w*0.035, ly, w*0.07, baseY-ly);
       ctx.save();
       ctx.beginPath(); ctx.arc(cx, ly, r, 0, Math.PI*2); ctx.clip();
       ctx.fillStyle = '#fff8ec';

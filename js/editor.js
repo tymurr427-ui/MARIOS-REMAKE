@@ -222,9 +222,9 @@
       editorCtx.fill();
     } else if(kind==='lollipop'){
       const candyColor = editorCtx.fillStyle;
+      const r = w*0.3, stickLen = r*2.3, ly = baseY - r - stickLen;
       editorCtx.fillStyle = '#8a5a2b';
-      editorCtx.fillRect(cx-w*0.035, baseY-h*0.55, w*0.07, h*0.55);
-      const r = w*0.3, ly = baseY-h*0.68;
+      editorCtx.fillRect(cx-w*0.035, ly, w*0.07, baseY-ly);
       editorCtx.save();
       editorCtx.beginPath(); editorCtx.arc(cx, ly, r, 0, Math.PI*2); editorCtx.clip();
       editorCtx.fillStyle = '#fff8ec';
