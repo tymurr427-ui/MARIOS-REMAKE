@@ -231,8 +231,8 @@
       ctx.restore();
     }
 
-    // HIGH+: aureola wokol slonca
-    if(gfxQuality >= 2){
+    // HIGH+: aureola wokol slonca (w biomie "space" w tym miejscu jest zamiast tego duza planeta, bez aureoli/promieni)
+    if(gfxQuality >= 2 && level.bg !== 'space'){
       ctx.save();
       ctx.globalAlpha = 0.35;
       const sunGlow = ctx.createRadialGradient(W*0.82,H*0.16,10,W*0.82,H*0.16,60);
@@ -243,7 +243,7 @@
       ctx.restore();
     }
     // ULTRA: delikatne promienie slonca (obracajace sie powoli)
-    if(gfxQuality >= 3){
+    if(gfxQuality >= 3 && level.bg !== 'space'){
       ctx.save();
       ctx.translate(W*0.82, H*0.16);
       ctx.rotate((timeAlive||0)*0.002);
@@ -449,14 +449,21 @@
     ctx.restore();
   }
   function drawPlanetScatter(){
+    // Duza planeta w miejscu, gdzie w innych biomach jest slonce (W*0.82, H*0.16) - stala pozycja na ekranie,
+    // nie przesuwa sie z parallaksa, zeby zawsze byla widoczna jako "glowna" planeta sceny.
+    drawPlanet(W*0.82, H*0.16, 46, '#d98fd1', 'rgba(255,255,255,.3)');
     const planets = [
       {r:30, color:'#e07a3f', ring:null},
       {r:22, color:'#5fb3d9', ring:'rgba(255,255,255,.4)'},
       {r:16, color:'#c45b8f', ring:null},
       {r:26, color:'#8fd19e', ring:'rgba(200,200,255,.35)'},
       {r:14, color:'#e8c15a', ring:null},
+      {r:20, color:'#7a6fe0', ring:'rgba(255,230,180,.4)'},
+      {r:12, color:'#e0a9e8', ring:null},
+      {r:18, color:'#4f9d8a', ring:null},
+      {r:24, color:'#d9533f', ring:'rgba(255,255,255,.3)'},
     ];
-    const periodW = 1900;
+    const periodW = 2200;
     for(let i=0;i<planets.length;i++){
       const p = planets[i];
       const x0 = i*(periodW/planets.length) + Math.sin(i*5.1)*80;
