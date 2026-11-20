@@ -302,6 +302,17 @@
     }
     return null;
   }
+  // Czy pod wrogiem, w miejscu gdzie chce isc (aheadX), jest jeszcze podloga? Sprawdzamy maly pasek
+  // tuz pod jego stopami - jesli nic tam nie ma, to przed nim przepasc/koniec platformy.
+  function enemyGroundAhead(e, aheadX){
+    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...(level.movers||[]), ...(level.blinkers||[]), ...(level.gates||[])]);
+    const probe = { x: aheadX, y: e.y + e.h - 1, w: 2, h: 6 };
+    for(const p of solids){
+      if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid) || (p.isGate && !p.solid)) continue;
+      if(rectsOverlap(probe, p)) return true;
+    }
+    return false;
+  }
   function applyEnemyWallBlock(e){
     const hit = enemySolidHit(e);
     if(hit){
@@ -365,6 +376,18 @@
           }
         }
       } else {
+        // Zwykly wrog: jak dawniej patroluje swoj kawalek (minX..maxX), ale teraz "widzi" gracza -
+        // gdy jest blisko i na podobnej wysokosci, skreca w jego strone zamiast chodzic losowo w prawo-lewo.
+        // Zawsze jednak sprawdza najpierw czy przed nim jest jeszcze podloga (enemyGroundAhead) - jesli
+        // przed nim koniec platformy/dziura, zawraca zamiast wejsc w powietrze i spasc albo "chodzic po niczym".
+        const detectRange = 260;
+        const seesPlayer = !player.spectating && Math.abs(player.x - e.x) < detectRange && Math.abs(player.y - e.y) < 90;
+        const speed = Math.abs(e.vx) || 0.55;
+        let dir = e.vx >= 0 ? 1 : -1;
+        if(seesPlayer) dir = player.x < e.x ? -1 : 1;
+        const aheadX = dir > 0 ? e.x + e.w + 4 : e.x - 4;
+        if(!enemyGroundAhead(e, aheadX)) dir = -dir; // koniec platformy przed nim - zawraca
+        e.vx = dir * speed;
         e.x += e.vx * ENEMY_SPEED_K;
         if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
         if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
