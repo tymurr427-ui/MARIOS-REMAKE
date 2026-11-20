@@ -703,6 +703,15 @@
     player.vy += GRAVITY;
     if(player.vy > 16 * JUMP_TIME_K) player.vy = 16 * JUMP_TIME_K;
 
+    // Twarde zabezpieczenie na KAZDA klatke (nie tylko gdy wcisniety ruch/skok) - gdyby ktos wpisal
+    // w konsoli np. player.vx=9999 albo player.vy=-9999, te wartosci i tak zostana tu przyciete
+    // zanim ruszy sie gracz, wiec taki "hack" dziala najwyzej czesc jednej klatki, nie caly bieg/skok.
+    const HARD_MAX_VX = RUN_MAX;
+    if(player.vx > HARD_MAX_VX) player.vx = HARD_MAX_VX;
+    else if(player.vx < -HARD_MAX_VX) player.vx = -HARD_MAX_VX;
+    const HARD_MAX_VY_UP = Math.abs(TRAMPOLINE_VELOCITY) + 2; // trampolina odbija mocniej niz zwykly skok - to ona jest realnym maksimum
+    if(player.vy < -HARD_MAX_VY_UP) player.vy = -HARD_MAX_VY_UP;
+
     updateMovers();
     const movers = level.movers || [];
     const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...movers, ...(level.blinkers||[]), ...(level.gates||[])]);
