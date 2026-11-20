@@ -288,14 +288,24 @@
     if(level.bg === 'autumn') drawLeafScatter();
     if(level.bg === 'space') drawPlanetScatter();
 
-    if(level.bg !== 'space'){
+    if(level.bg === 'underwater'){
+      // Osobna, gestsza pula rybek (nie dzielimy slotow z chmurami) - wiecej sztuk na ekranie i
+      // rozne rozmiary (fishSizes), zeby ławica wygladala naturalnie a nie jak 6-8 powtorzonych chmur.
+      const fishCount = gfxQuality >= 2 ? 16 : 11;
+      const fishSizes = [0.75, 1, 1.3, 0.9, 1.15];
+      const period = level.width + 260;
+      for(let i=0;i<fishCount;i++){
+        const cx = ((i*220 - camera.x*0.3) % period + period) % period - 130;
+        const bob = gfxQuality >= 2 ? Math.sin((timeAlive||0)*0.01 + i)*4 : 0;
+        const fy = H*0.08 + ((i*5) % 4) * (H*0.14);
+        drawFish(cx, fy + bob, i%2===0, i, fishSizes[i % fishSizes.length]);
+      }
+    } else if(level.bg !== 'space'){
       ctx.fillStyle = 'rgba(255,255,255,.9)';
       const cloudCount = gfxQuality >= 2 ? 8 : 6;
       for(let i=0;i<cloudCount;i++){
         const cx = ((i*300 - camera.x*0.3) % (level.width+300) + level.width+300) % (level.width+300) - 150;
         const bob = gfxQuality >= 2 ? Math.sin((timeAlive||0)*0.01 + i)*4 : 0;
-        // Pod woda nie ma chmur ani slonca na niebie - zamiast tego plywaja rybki.
-        if(level.bg === 'underwater'){ drawFish(cx, H*0.15 + (i%3)*70 + bob, i%2===0, i); continue; }
         drawCloud(cx, H*0.15 + (i%2)*30 + bob);
       }
     }
@@ -480,45 +490,56 @@
     }
   }
 
-  // variant: 0=okragla rybka (jak wczesniej), 1=pomaranczowa z paskami (jak nemo), 2=fioletowa wydluzona
-  // z pletwa grzbietowa, 3=zolta pekata (jak flądra/fugu) - rozne ryby zamiast jednego powtarzajacego sie ksztaltu.
-  function drawFish(x, y, flip, variant){
+  // variant: 0=okragla rybka (jak wczesniej), 1=pomaranczowa w paski (jak nemo), 2=fioletowa wydluzona
+  // z pletwa grzbietowa, 3=zolta pekata (jak fugu) - rozne ryby zamiast jednego powtarzajacego sie ksztaltu.
+  // scale: mnoznik rozmiaru (dla roznorodnosci wielkosci rybek na ekranie, domyslnie 1).
+  function drawFish(x, y, flip, variant, scale){
     const t = (timeAlive||0)*0.0025 + x*0.01;
     const wob = Math.sin(t*3)*3;
     const fx = flip ? -1 : 1;
+    const sc = scale || 1;
     const v = variant % 4;
-    const colors = ['rgba(255,255,255,.55)', 'rgba(255,140,60,.85)', 'rgba(170,120,255,.75)', 'rgba(255,220,70,.8)'];
+    const colors = ['rgba(255,255,255,.6)', 'rgba(255,140,60,.9)', 'rgba(170,120,255,.8)', 'rgba(255,220,70,.85)'];
     const bodyColor = colors[v];
     ctx.save();
     ctx.translate(x, y+wob);
-    ctx.scale(fx, 1);
+    ctx.scale(fx*sc, sc);
 
-    if(v === 3){
-      // pekata, okragla rybka (jak fugu) - szersza niz dluga
-      ctx.fillStyle = bodyColor;
-      ctx.beginPath(); ctx.ellipse(0, 0, 13, 12, 0, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(-10, 0); ctx.lineTo(-18, -7); ctx.lineTo(-18, 7); ctx.closePath(); ctx.fill();
-    } else {
-      ctx.fillStyle = bodyColor;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, v===2?20:16, v===2?7:9, 0, 0, Math.PI*2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(v===2?-18:-14, 0);
-      ctx.lineTo(v===2?-28:-24, -8);
-      ctx.lineTo(v===2?-28:-24, 8);
-      ctx.closePath();
-      ctx.fill();
-    }
+    const bodyRx = v===3 ? 13 : (v===2 ? 20 : 16);
+    const bodyRy = v===3 ? 12 : (v===2 ? 7 : 9);
+    const tailX = v===3 ? -10 : (v===2 ? -18 : -14);
+    const tailTipX = v===3 ? -18 : (v===2 ? -28 : -24);
+
+    // ogon
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.moveTo(tailX, 0); ctx.lineTo(tailTipX, -8); ctx.lineTo(tailTipX, 8); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(15,25,35,.4)'; ctx.lineWidth = 1; ctx.stroke();
+
+    // korpus - cienkowany gradient + cienka ciemna obwodka, zeby wygladalo jak "normalna" ryba a nie plaska plama
+    const bodyGrad = ctx.createRadialGradient(-bodyRx*0.2, -bodyRy*0.3, 1, 0, 0, bodyRx*1.1);
+    bodyGrad.addColorStop(0, 'rgba(255,255,255,.35)');
+    bodyGrad.addColorStop(0.4, bodyColor);
+    bodyGrad.addColorStop(1, bodyColor);
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(0, 0, bodyRx, bodyRy, 0, 0, Math.PI*2);
+    ctx.clip();
+    ctx.fillStyle = bodyGrad;
+    ctx.fillRect(-bodyRx, -bodyRy, bodyRx*2, bodyRy*2);
     if(v === 1){
-      // paski na grzbiecie (jak nemo)
-      ctx.strokeStyle = 'rgba(255,255,255,.7)';
-      ctx.lineWidth = 2.5;
-      for(const sx of [-6, 2]){
-        ctx.beginPath(); ctx.moveTo(sx, -8); ctx.lineTo(sx, 8); ctx.stroke();
-      }
+      // paski na grzbiecie (jak nemo), przyciete do sylwetki ciala zeby nie wystawaly poza kontur
+      ctx.fillStyle = 'rgba(255,255,255,.85)';
+      ctx.fillRect(-8, -bodyRy, 4, bodyRy*2);
+      ctx.fillRect(1, -bodyRy, 4, bodyRy*2);
     }
+    ctx.restore();
+    ctx.beginPath();
+    ctx.ellipse(0, 0, bodyRx, bodyRy, 0, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(15,25,35,.4)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
     if(v === 2){
       // pletwa grzbietowa
       ctx.fillStyle = bodyColor;
@@ -526,7 +547,7 @@
     }
     ctx.beginPath();
     ctx.arc(v===3?6:8, -2, 2, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(20,30,40,.6)';
+    ctx.fillStyle = 'rgba(20,30,40,.7)';
     ctx.fill();
     ctx.restore();
   }
