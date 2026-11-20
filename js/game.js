@@ -380,18 +380,30 @@
         // gdy jest blisko i na podobnej wysokosci, skreca w jego strone zamiast chodzic losowo w prawo-lewo.
         // Zawsze jednak sprawdza najpierw czy przed nim jest jeszcze podloga (enemyGroundAhead) - jesli
         // przed nim koniec platformy/dziura, zawraca zamiast wejsc w powietrze i spasc albo "chodzic po niczym".
+        //
+        // WAZNE (poprawka po buggu): jesli sciezka w strone gracza jest zablokowana (rura/sciana/krawedz
+        // WLASNEGO terytorium minX..maxX - gracz stoi poza obszarem patrolu wroga), wrog odpuszcza pogon
+        // na chaseBlockTimer klatek i wraca do zwyklego patrolu, zamiast co klatke na nowo probowac przejsc
+        // przez ta sama przeszkode - bez tego wyglada to jak calkowite zamrozenie w miejscu (stoi dociskajac
+        // sie do przeszkody, bo kazda klatka resetuje kierunek z powrotem w strone gracza).
         const detectRange = 260;
         const seesPlayer = !player.spectating && Math.abs(player.x - e.x) < detectRange && Math.abs(player.y - e.y) < 90;
         const speed = Math.abs(e.vx) || 0.55;
+        e.chaseBlockTimer = Math.max(0, (e.chaseBlockTimer||0) - 1);
         let dir = e.vx >= 0 ? 1 : -1;
-        if(seesPlayer) dir = player.x < e.x ? -1 : 1;
+        if(seesPlayer && e.chaseBlockTimer <= 0) dir = player.x < e.x ? -1 : 1;
         const aheadX = dir > 0 ? e.x + e.w + 4 : e.x - 4;
-        if(!enemyGroundAhead(e, aheadX)) dir = -dir; // koniec platformy przed nim - zawraca
+        const hasGround = enemyGroundAhead(e, aheadX);
+        if(!hasGround) dir = -dir; // koniec platformy przed nim - zawraca
         e.vx = dir * speed;
         e.x += e.vx * ENEMY_SPEED_K;
-        if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); }
-        if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); }
+        let blocked = !hasGround;
+        if(e.x < e.minX){ e.x = e.minX; e.vx = Math.abs(e.vx); blocked = blocked || dir < 0; }
+        if(e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx = -Math.abs(e.vx); blocked = blocked || dir > 0; }
+        const preWallX = e.x;
         applyEnemyWallBlock(e);
+        if(e.x !== preWallX) blocked = true;
+        if(seesPlayer && blocked) e.chaseBlockTimer = 45; // nie da rady dojsc - chwila patrolu, potem kolejna proba
       }
 
       if(e.type === 'boss'){
