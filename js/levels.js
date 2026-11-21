@@ -33,7 +33,9 @@
     row(150, GROUND_Y-60, 3, 26);
     row(880, GROUND_Y-60, 5, 30);
     const enemies = [
-      {x:520, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:460, maxX:700, alive:true},
+      // x:520 pokrywalo sie z rura (520-566) - wrog byl wiecznie odbijany w to samo miejsce, w ogole
+      // sie nie ruszal. Przesuniety za rure (minX od 570), patroluje teraz normalnie do 700.
+      {x:580, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:570, maxX:700, alive:true},
       {x:1150, y:GROUND_Y-134, w:34, h:34, vx:0.56, minX:1130, maxX:1235, alive:true},
       {x:1580, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:1550, maxX:1720, alive:true},
     ];
@@ -148,7 +150,9 @@
     row(1830, GROUND_Y-140, 3, 26);
     const enemies = [
       {x:100, y:GROUND_Y-34, w:34, h:34, vx:0.6, minX:40, maxX:220, alive:true},
-      {x:920, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:880, maxX:1020, alive:true},
+      // x:920 pokrywalo sie z rura (900-946) - wrog byl wiecznie odbijany w to samo miejsce.
+      // Przesuniety za rure, patroluje teraz 950-1040.
+      {x:960, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:950, maxX:1040, alive:true},
       {x:2100, y:GROUND_Y-34, w:34, h:34, vx:0.68, minX:2040, maxX:2300, alive:true},
     ];
     return { name:'Wieża Chmur', platforms, pipes, coins, enemies, flag:{x:2400,y:GROUND_Y-220,w:14,h:220}, width:2500, bg:'night' };
@@ -227,7 +231,9 @@
     row(1830, GROUND_Y-140, 3, 26);
     const enemies = [
       {x:100, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:40, maxX:220, alive:true},
-      {x:920, y:GROUND_Y-34, w:34, h:34, vx:0.68, minX:880, maxX:1020, alive:true},
+      // x:920 pokrywalo sie z rura (900-946) - wrog byl wiecznie odbijany w to samo miejsce.
+      // Przesuniety za rure, patroluje teraz 950-1040.
+      {x:960, y:GROUND_Y-34, w:34, h:34, vx:0.68, minX:950, maxX:1040, alive:true},
       {x:2050, y:GROUND_Y-34, w:34, h:34, vx:0.72, minX:2040, maxX:2160, alive:true},
       {x:2280, y:GROUND_Y-34, w:34, h:34, vx:0.64, minX:2200, maxX:2400, alive:true},
     ];
@@ -267,7 +273,9 @@
     ];
     const enemies = [
       {x:530, y:GROUND_Y-140, w:32, h:32, vx:0.52, minX:400, maxX:750, baseY:GROUND_Y-140, amp:35, type:'flyer', alive:true},
-      {x:1450, y:GROUND_Y-34, w:34, h:34, vx:0.56, minX:1300, maxX:1600, alive:true},
+      // x:1450 stal nad dziura (tam gdzie jezdzi most-platforma, nie ma stalego gruntu) -
+      // przeniesiony na prawdziwy grunt (mkGround 900-1100), patroluje normalnie.
+      {x:950, y:GROUND_Y-34, w:34, h:34, vx:0.56, minX:910, maxX:1080, alive:true},
     ];
     return { name:'Latający Szlak', platforms, pipes, coins, enemies, movers, hazards, flag:{x:2350,y:GROUND_Y-220,w:14,h:220}, width:2450, bg:'desert' };
   }

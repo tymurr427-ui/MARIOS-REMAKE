@@ -313,6 +313,29 @@
     }
     return false;
   }
+  // Jednorazowe (przy pierwszej klatce) zabezpieczenie: jesli wrog zostal postawiony w danych poziomu
+  // dokladnie na rurze/platformie (np. przez pomylke w edytorze), fizyka odbijalaby go non-stop w to samo
+  // miejsce i wygladaloby to jak "stoi i sie nie rusza". Tutaj wykrywamy taki przypadek i przesuwamy go
+  // na najblizsze wolne miejsce w obrebie jego wlasnego minX..maxX, zamiast zostawiac go zablokowanego.
+  function fixEnemySpawnOverlap(e){
+    if(e.minX === undefined || e.maxX === undefined) return;
+    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...(level.movers||[]), ...(level.blinkers||[]), ...(level.gates||[])]);
+    function blockedAt(x){
+      const probe = { x, y: e.y, w: e.w, h: e.h };
+      for(const p of solids){
+        if(p.isGround) continue; // podloga pod nim to nie przeszkoda
+        if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid) || (p.isGate && !p.solid)) continue;
+        if(rectsOverlap(probe, p)) return true;
+      }
+      return false;
+    }
+    if(!blockedAt(e.x)) return;
+    const step = 4, rightCap = e.maxX - e.w, leftCap = e.minX;
+    for(let d = step; d <= 500; d += step){
+      if(e.x + d <= rightCap && !blockedAt(e.x + d)){ e.x = e.x + d; return; }
+      if(e.x - d >= leftCap && !blockedAt(e.x - d)){ e.x = e.x - d; return; }
+    }
+  }
   function applyEnemyWallBlock(e){
     const hit = enemySolidHit(e);
     if(hit){
@@ -323,6 +346,7 @@
   function updateEnemies(){
     level.enemies.forEach((e, idx) => {
       if(!e.alive) return;
+      if(!e._spawnFixed){ fixEnemySpawnOverlap(e); e._spawnFixed = true; }
       e.animT = (e.animT||0) + 0.09 * ENEMY_SPEED_K;
 
       if(e.type === 'flyer'){
