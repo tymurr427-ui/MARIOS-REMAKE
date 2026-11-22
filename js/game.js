@@ -336,6 +336,36 @@
       if(e.x - d >= leftCap && !blockedAt(e.x - d)){ e.x = e.x - d; return; }
     }
   }
+  // Jednorazowe (przy pierwszej klatce) przyciecie minX/maxX do RZECZYWISCIE dostepnego gruntu.
+  // Domyslne +-90px (albo wartosc z danych poziomu) to tylko deklaracja - jesli wrog stoi na waskiej
+  // wyspie/platformie krotszej niz ta deklaracja, krawedz gruntu jest blizej niz minX/maxX, wiec silnik
+  // (patrz enemyGroundAhead w glownej petli) zawraca go niemal natychmiast w obie strony -> wyglada jak
+  // calkowite zamrozenie w miejscu. Tutaj sprawdzamy od razu jak daleko NAPRAWDE moze isc w kazda strone
+  // (pelna szerokosc stop na podlozu, nie tylko czubek) i realnie przycinamy minX/maxX do tego zakresu.
+  function clampEnemyRangeToGround(e){
+    if(e.minX === undefined || e.maxX === undefined) return;
+    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...(level.movers||[]), ...(level.blinkers||[]), ...(level.gates||[])]);
+    function supported(px){
+      const probe = { x: px, y: e.y + e.h - 1, w: 2, h: 6 };
+      for(const p of solids){
+        if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid) || (p.isGate && !p.solid)) continue;
+        if(rectsOverlap(probe, p)) return true;
+      }
+      return false;
+    }
+    // CALA stopa musi stac na gruncie (przedni i tylny kraniec), nie tylko jej kawalek -
+    // inaczej wrog moglby zwisac czescia ciala nad krawedzia i to by liczylo sie jako "jest grunt".
+    function groundUnder(x){ return supported(x + 1) && supported(x + e.w - 3); }
+    const step = 4;
+    const rightCap = e.maxX - e.w;
+    let right = e.x;
+    while(right + step <= rightCap && groundUnder(right + step)) right += step;
+    let left = e.x;
+    while(left - step >= e.minX && groundUnder(left - step)) left -= step;
+    e.maxX = Math.min(e.maxX, right + e.w);
+    e.minX = Math.max(e.minX, left);
+    if(e.minX > e.maxX - e.w) e.minX = e.maxX = e.x; // skrajny przypadek: wyspa wezsza niz sam wrog
+  }
   function applyEnemyWallBlock(e){
     const hit = enemySolidHit(e);
     if(hit){
@@ -346,7 +376,7 @@
   function updateEnemies(){
     level.enemies.forEach((e, idx) => {
       if(!e.alive) return;
-      if(!e._spawnFixed){ fixEnemySpawnOverlap(e); e._spawnFixed = true; }
+      if(!e._spawnFixed){ fixEnemySpawnOverlap(e); clampEnemyRangeToGround(e); e._spawnFixed = true; }
       e.animT = (e.animT||0) + 0.09 * ENEMY_SPEED_K;
 
       if(e.type === 'flyer'){
