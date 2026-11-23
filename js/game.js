@@ -418,15 +418,20 @@
           e.vx = (player.x < e.x ? -1 : 1) * 3.3;
         }
         if(e.charging){
-          e.x += e.vx * ENEMY_SPEED_K;
-          const hit = enemySolidHit(e);
-          if(hit){
-            e.x = e.vx > 0 ? hit.x - e.w : hit.x + hit.w;
+          const aheadX = e.vx > 0 ? e.x + e.w + 4 : e.x - 4;
+          if(!enemyGroundAhead(e, aheadX)){
             e.charging = false; e.vx = 0;
-          }
-          if(e.x <= e.minX || e.x + e.w >= e.maxX){
-            e.x = Math.max(e.minX, Math.min(e.maxX - e.w, e.x));
-            e.charging = false; e.vx = 0;
+          } else {
+            e.x += e.vx * ENEMY_SPEED_K;
+            const hit = enemySolidHit(e);
+            if(hit){
+              e.x = e.vx > 0 ? hit.x - e.w : hit.x + hit.w;
+              e.charging = false; e.vx = 0;
+            }
+            if(e.x <= e.minX || e.x + e.w >= e.maxX){
+              e.x = Math.max(e.minX, Math.min(e.maxX - e.w, e.x));
+              e.charging = false; e.vx = 0;
+            }
           }
         }
       } else {
