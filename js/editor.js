@@ -769,6 +769,24 @@
   }
 
   // odleglosc punktu od slupka checkpointa (odcinek od y-220 do y)
+  // Wrog postawiony "na oko" przez klikniecie bywa o kilka pikseli za wysoko/nisko wzgledem realnej
+  // gornej krawedzi gruntu/platformy (klikniecie to dowolny punkt, a nie dokladnie krawedz) - w grze
+  // taka drobna niezgodnosc powoduje, ze sprawdzanie "czy jest podloze pod stopami" wychodzi falszywie
+  // negatywne caly czas, i wrog zaczyna ignorowac minX/maxX i realne krawedzie (patrz game.js). Tutaj
+  // przy stawianiu wroga od razu dociagamy Y do najblizszej gornej krawedzi gruntu/platformy pod/nad
+  // kursorem, zeby zapisane dane byly od razu poprawne.
+  function snapEnemyYToGround(levelX, levelY, enemyH){
+    let best = null, bestDist = 999999;
+    editorElements.forEach(el => {
+      if(el.kind !== 'ground' && el.kind !== 'platform') return;
+      const w = el.w || 200;
+      if(levelX + 2 < el.x || levelX - 2 > el.x + w) return; // musi byc pod/nad tym kawalkiem
+      const dist = Math.abs(el.y - (levelY + enemyH));
+      if(dist < bestDist){ bestDist = dist; best = el.y; }
+    });
+    if(best !== null && bestDist < 150) return best - enemyH;
+    return levelY;
+  }
   function editorCheckpointDist(levelX, levelY){
     const top = editorCheckpoint.y - 220, bot = editorCheckpoint.y;
     const dy = levelY < top ? top - levelY : (levelY > bot ? levelY - bot : 0);
@@ -927,11 +945,11 @@
       }
       editorElements.push({kind:'coin', x:levelX, y:levelY});
     }
-    else if(editorTool === 'walker'){ editorElements.push({kind:'enemy', enemyType:'walker', x:levelX, y:levelY}); }
+    else if(editorTool === 'walker'){ editorElements.push({kind:'enemy', enemyType:'walker', x:levelX, y:snapEnemyYToGround(levelX, levelY, 34)}); }
     else if(editorTool === 'flyer'){ editorElements.push({kind:'enemy', enemyType:'flyer', x:levelX, y:levelY}); }
-    else if(editorTool === 'jumper'){ editorElements.push({kind:'enemy', enemyType:'jumper', x:levelX, y:levelY}); }
-    else if(editorTool === 'shooter'){ editorElements.push({kind:'enemy', enemyType:'shooter', x:levelX, y:levelY}); }
-    else if(editorTool === 'charger'){ editorElements.push({kind:'enemy', enemyType:'charger', x:levelX, y:levelY}); }
+    else if(editorTool === 'jumper'){ editorElements.push({kind:'enemy', enemyType:'jumper', x:levelX, y:snapEnemyYToGround(levelX, levelY, 34)}); }
+    else if(editorTool === 'shooter'){ editorElements.push({kind:'enemy', enemyType:'shooter', x:levelX, y:snapEnemyYToGround(levelX, levelY, 34)}); }
+    else if(editorTool === 'charger'){ editorElements.push({kind:'enemy', enemyType:'charger', x:levelX, y:snapEnemyYToGround(levelX, levelY, 32)}); }
     else if(editorTool === 'hazard'){ editorElements.push({kind:'hazard', x:levelX, y:levelY, w:40}); }
     else if(editorTool === 'mover'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'x', range:60}); }
     else if(editorTool === 'mover_y'){ editorElements.push({kind:'mover', x:levelX, y:levelY, axis:'y', range:110}); }

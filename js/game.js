@@ -313,6 +313,35 @@
     }
     return false;
   }
+  // Jednorazowe (przy pierwszej klatce) zabezpieczenie: jesli wrog ma w danych poziomu troche zle Y
+  // (np. edytor zapisal go kilka pikseli nad gruntem zamiast dokladnie na nim - roznica moze byc
+  // niewidoczna na oko, ale enemyGroundAhead/clampEnemyRangeToGround sprawdzaja WASKI pasek tuz pod
+  // stopami; jak ten pasek o 1px nie dotyka gruntu, kazde sprawdzenie "czy jest podloze" wychodzi
+  // falszywie negatywne, NAWET wtedy gdy wrog stoi na litej ziemi). Skutek byl taki, ze taki wrog
+  // co klatke "widzial" koniec podloza wszedzie, wiec co klatke zawracal kierunek - a poniewaz to
+  // zawracanie dzialo sie zawsze w ta sama strone (zalezne od minX/maxX), w praktyce szedl bez przerwy
+  // w jedna strone, ignorujac minX/maxX i realne krawedzie/przepascie, az trafil na prawdziwa sciane.
+  // Tutaj dociagamy Y do najblizszego miejsca, gdzie stopy faktycznie dotykaja gruntu.
+  function snapEnemyToGround(e){
+    if(e.type === 'flyer' || e.type === 'jumper' || e.type === 'boss') return;
+    const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...(level.movers||[]), ...(level.blinkers||[]), ...(level.gates||[])]);
+    // Jesli juz stoi dokladnie na czyms (pasek pod stopami faktycznie dotyka gruntu) - nic nie ruszamy.
+    const okNow = { x: e.x + 2, y: e.y + e.h - 1, w: e.w - 4, h: 6 };
+    for(const p of solids){
+      if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid) || (p.isGate && !p.solid)) continue;
+      if(rectsOverlap(okNow, p)) return;
+    }
+    // Nie stoi dobrze - znajdz najblizsza powierzchnie (od gory) pod jego stopami i dociagnij go dokladnie na nia.
+    const footMin = e.x + 2, footMax = e.x + e.w - 2;
+    let bestTop = null;
+    for(const p of solids){
+      if((p.isCrumbler && p.state === 'gone') || (p.isBlinker && !p.solid) || (p.isGate && !p.solid)) continue;
+      if(p.x < footMax && p.x + p.w > footMin && p.y >= e.y - 2){
+        if(bestTop === null || p.y < bestTop) bestTop = p.y;
+      }
+    }
+    if(bestTop !== null) e.y = bestTop - e.h;
+  }
   // Jednorazowe (przy pierwszej klatce) zabezpieczenie: jesli wrog zostal postawiony w danych poziomu
   // dokladnie na rurze/platformie (np. przez pomylke w edytorze), fizyka odbijalaby go non-stop w to samo
   // miejsce i wygladaloby to jak "stoi i sie nie rusza". Tutaj wykrywamy taki przypadek i przesuwamy go
@@ -376,7 +405,7 @@
   function updateEnemies(){
     level.enemies.forEach((e, idx) => {
       if(!e.alive) return;
-      if(!e._spawnFixed){ fixEnemySpawnOverlap(e); clampEnemyRangeToGround(e); e._spawnFixed = true; }
+      if(!e._spawnFixed){ snapEnemyToGround(e); fixEnemySpawnOverlap(e); clampEnemyRangeToGround(e); e._spawnFixed = true; }
       e.animT = (e.animT||0) + 0.09 * ENEMY_SPEED_K;
 
       if(e.type === 'flyer'){
