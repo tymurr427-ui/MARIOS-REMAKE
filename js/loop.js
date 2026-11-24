@@ -1,5 +1,14 @@
 // draw(), limit FPS + licznik, staly krok fizyki 60/s z interpolacja, glowna petla.
 // Klasyczny skrypt (bez IIFE): wspolny zasieg globalny z pozostalymi plikami js/.
+// Promise na zakonczenie pobrania poprawek wbudowanych poziomow (builtInOverrides) z Supabase.
+// Menu jest klikalne natychmiast po zaladowaniu strony, ale ten fetch leci w tle asynchronicznie -
+// jak gracz kliknie "graj"/poziom ZANIM sie skonczy, startLevel() dostaje puste builtInOverrides
+// i buduje poziom ze STARYCH, zaszytych w kodzie danych (LEVELS[index]), zamiast z poprawek admina.
+// Stad wrazenie "poziomy wracaja do starego wygladu po wejsciu, a po odswiezeniu stron sa ok" -
+// przy refreshu zdarza sie czesciej, ze fetch (albo jego cache w przegladarce) zdazy sie skonczyc
+// zanim user zdazy kliknac. Ekrany startowe poziomu (screens.js) czekaja na ten promise przed
+// wywolaniem startLevel(), zeby to wyeliminowac calkowicie, a nie tylko "zwykle zdazyc".
+var overridesReadyPromise = Promise.resolve();
   function draw(){
     if(!levelDone && !mpChannel){
       runElapsedMs = performance.now() - levelStartTime;
@@ -158,7 +167,10 @@
   updateSettingsUI();
 
   if(sb){
-    loadBuiltInOverrides();
+    overridesReadyPromise = loadBuiltInOverrides().then(() => {
+      // lista poziomow mogla sie juz wyrenderowac ze starymi nazwami (patrz renderLevels) - odswiez ja
+      if(typeof renderLevels === 'function' && typeof levelScreen !== 'undefined' && !levelScreen.classList.contains('hidden')) renderLevels();
+    });
     sb.auth.getSession().then(({data}) => {
       if(data.session){
         currentUser = data.session.user;

@@ -166,7 +166,7 @@
     }
   }
 
-  document.getElementById('btnPlay').onclick = () => { showScreen('game'); startLevel(state.unlockedLevel); };
+  document.getElementById('btnPlay').onclick = async () => { await overridesReadyPromise; showScreen('game'); startLevel(state.unlockedLevel); };
   document.getElementById('btnShop').onclick = () => { showScreen('shop'); renderShop(); };
   document.getElementById('btnBack').onclick = () => showScreen('menu');
   document.getElementById('btnLevels').onclick = () => { showScreen('levels'); renderLevels(); };
@@ -330,7 +330,7 @@
       card.className = 'level-card' + (locked ? ' locked':'');
       card.innerHTML = `<span class="num">${i+1}</span><span class="lbl">${locked ? '🔒 zablokowany' : escapeHtml(name)}</span>`;
       if(!locked){
-        card.onclick = () => { showScreen('game'); startLevel(i); };
+        card.onclick = async () => { await overridesReadyPromise; showScreen('game'); startLevel(i); };
       }
       grid.appendChild(card);
     }
