@@ -373,6 +373,7 @@
   // (pelna szerokosc stop na podlozu, nie tylko czubek) i realnie przycinamy minX/maxX do tego zakresu.
   function clampEnemyRangeToGround(e){
     if(e.minX === undefined || e.maxX === undefined) return;
+    if(e.type === 'flyer') return; // lata w powietrzu - nie ma tu gruntu do ktorego cokolwiek przycinac
     const solids = level.allSolids || (level.allSolids = [...level.platforms, ...level.pipes, ...(level.movers||[]), ...(level.blinkers||[]), ...(level.gates||[])]);
     function supported(px){
       const probe = { x: px, y: e.y + e.h - 1, w: 2, h: 6 };
